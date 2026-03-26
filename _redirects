@@ -1,0 +1,15 @@
+# Cloudflare Pages — Redirections SPA
+#
+# Ordre de priorité Cloudflare Pages :
+#   1. Functions (functions/) — s'exécutent en premier, AVANT les redirections
+#   2. _redirects — s'appliquent ensuite pour les autres routes
+#
+# NOTE IMPORTANTE :
+# La ligne "/api/* ..." a été SUPPRIMÉE intentionnellement.
+# Les routes /api/tables/* sont gérées par la Cloudflare Function :
+#   functions/api/tables/[[path]].js
+# Cloudflare Pages donne toujours la priorité aux Functions sur les redirections.
+# Ajouter une règle /api/* ici créerait un conflit.
+#
+# Toutes les routes non-gérées par les Functions → SPA (index.html)
+/*   /index.html   200

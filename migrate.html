@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="gs-project-id" content="1841535f-f023-46ed-b48d-9d7afe8e2ba2">
+  <title>Migration D1 — CR Master</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', Arial, sans-serif; background: #f5f7fa; color: #1a1a2e; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #002D72; font-size: 28px; margin-bottom: 8px; }
+    h2 { color: #002D72; font-size: 18px; margin: 24px 0 12px; }
+    .subtitle { color: #666; margin-bottom: 32px; }
+    .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+    .step-num { background: #002D72; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+    .step-content h3 { font-size: 16px; margin-bottom: 6px; }
+    .step-content p { color: #555; font-size: 14px; line-height: 1.6; }
+    code { background: #f0f4ff; padding: 2px 8px; border-radius: 4px; font-size: 13px; color: #002D72; }
+    pre { background: #1a1a2e; color: #e8f4f8; padding: 16px; border-radius: 8px; font-size: 13px; overflow-x: auto; line-height: 1.6; margin: 8px 0; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all .2s; }
+    .btn-primary { background: #002D72; color: #fff; }
+    .btn-primary:hover { background: #001a4a; }
+    .btn-danger { background: #E8007D; color: #fff; }
+    .btn-danger:hover { background: #b5005e; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .status { margin-top: 16px; }
+    .log { background: #1a1a2e; color: #e8f4f8; padding: 16px; border-radius: 8px; font-size: 12px; font-family: monospace; max-height: 400px; overflow-y: auto; line-height: 1.8; }
+    .log .ok { color: #4ade80; }
+    .log .err { color: #f87171; }
+    .log .warn { color: #fbbf24; }
+    .log .info { color: #60a5fa; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .alert { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+    .alert-info { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+    .alert-warn { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+    .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .table-status { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .table-status th { text-align: left; padding: 8px 12px; background: #f0f4ff; color: #002D72; }
+    .table-status td { padding: 8px 12px; border-bottom: 1px solid #f0f4ff; }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🔧 Migration vers Cloudflare D1</h1>
+  <p class="subtitle">Configuration de la base de données pour CR Master en production</p>
+
+  <!-- Étape 1 : Créer D1 -->
+  <div class="card">
+    <h2>Étape 1 — Créer la base de données Cloudflare D1</h2>
+    <div class="alert alert-info">
+      ℹ️ Cloudflare D1 est une base de données SQLite gratuite, incluse dans votre plan Cloudflare Pages. Pas de coût supplémentaire.
+    </div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Ouvrir le Dashboard Cloudflare</h3>
+        <p>Aller sur <a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a> → votre compte → <strong>Workers & Pages</strong></p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Créer une base D1</h3>
+        <p>Dans le menu gauche → <strong>D1 SQL Database</strong> → <strong>Create database</strong></p>
+        <p>Nom de la base : <code>cr-master-db</code></p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Lier D1 à votre projet Pages</h3>
+        <p>Workers & Pages → votre projet <strong>cr-master</strong> → <strong>Settings</strong> → <strong>Functions</strong></p>
+        <p>Section <strong>D1 database bindings</strong> → <strong>Add binding</strong></p>
+        <p>Variable name : <code>DB</code> &nbsp;|&nbsp; D1 database : <code>cr-master-db</code></p>
+        <p><strong>Save</strong> puis <strong>redéployer</strong> le projet.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test de connexion -->
+  <div class="card">
+    <h2>Étape 2 — Vérifier la connexion</h2>
+    <button class="btn btn-primary" id="btnTestD1" onclick="testD1()">🔍 Tester la connexion D1</button>
+    <div class="status" id="statusD1"></div>
+  </div>
+
+  <!-- Migration des données -->
+  <div class="card">
+    <h2>Étape 3 — Migrer vos données depuis Genspark</h2>
+    <div class="alert alert-warn">
+      ⚠️ Cette migration doit être effectuée <strong>depuis le sandbox Genspark</strong> (genspark.ai) où vous avez accès aux données. Elle copie toutes vos données vers D1.
+    </div>
+    <p style="color:#555;font-size:14px;margin-bottom:16px">
+      Si vous êtes sur Cloudflare, cette migration ne peut pas accéder aux données Genspark (CORS). 
+      Ouvrez d'abord <a href="https://www.genspark.ai/api/code_sandbox_light/preview/1841535f-f023-46ed-b48d-9d7afe8e2ba2/index.html" target="_blank">l'application dans le sandbox Genspark</a>, connectez-vous, puis revenez ici.
+    </p>
+    <div id="migrationStatus"></div>
+    <button class="btn btn-primary" id="btnMigrate" onclick="startMigration()" style="margin-top:12px">
+      📦 Lancer la migration
+    </button>
+    <div class="log" id="migrationLog" style="margin-top:16px;display:none"></div>
+  </div>
+
+  <!-- Étape 4 : Vérification finale -->
+  <div class="card">
+    <h2>Étape 4 — Vérification des données</h2>
+    <div id="tableStats" class="grid-2">
+      <p style="color:#666;font-size:14px">Lancez d'abord le test de connexion (Étape 2)</p>
+    </div>
+    <button class="btn btn-primary" id="btnCheckData" onclick="checkData()" style="margin-top:16px">
+      📊 Vérifier les données dans D1
+    </button>
+  </div>
+</div>
+
+<script>
+const GS_PROJECT_ID = '1841535f-f023-46ed-b48d-9d7afe8e2ba2';
+const GS_SANDBOX    = `https://www.genspark.ai/api/code_sandbox_light/preview/${GS_PROJECT_ID}/tables`;
+const D1_API        = 'api/tables'; // proxy Cloudflare Function → D1
+
+const TABLES = ['user_profiles','projects','meeting_reports','participant_profiles','project_members','cr_templates'];
+
+/* ── Logger ── */
+function log(msg, type = 'info') {
+  const el = document.getElementById('migrationLog');
+  el.style.display = 'block';
+  const line = document.createElement('div');
+  line.className = type;
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ── Test D1 ── */
+async function testD1() {
+  const btn = document.getElementById('btnTestD1');
+  const status = document.getElementById('statusD1');
+  btn.disabled = true;
+  btn.textContent = '⏳ Test en cours...';
+  try {
+    const r = await fetch(`${D1_API}/user_profiles?limit=1`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const body = await r.json().catch(() => ({}));
+    if (r.ok) {
+      status.innerHTML = `<div class="alert alert-success">✅ D1 connecté ! <code>user_profiles</code> accessible — ${body.total ?? 0} enregistrement(s).</div>`;
+    } else if (r.status === 503 && body.error === 'D1_NOT_CONFIGURED') {
+      status.innerHTML = `<div class="alert alert-warn">⚠️ D1 non configuré. Suivez l'Étape 1 ci-dessus puis redéployez.</div>`;
+    } else {
+      status.innerHTML = `<div class="alert alert-warn">⚠️ HTTP ${r.status} : ${body.message || body.error || 'Erreur inconnue'}</div>`;
+    }
+  } catch(e) {
+    status.innerHTML = `<div class="alert" style="background:#fee2e2;color:#991b1b;border-left:4px solid #ef4444">❌ Impossible de joindre le proxy : ${e.message}</div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = '🔍 Tester la connexion D1';
+}
+
+/* ── Migration ── */
+async function startMigration() {
+  const btn = document.getElementById('btnMigrate');
+  btn.disabled = true;
+  btn.textContent = '⏳ Migration en cours...';
+  
+  document.getElementById('migrationLog').innerHTML = '';
+  log('Démarrage de la migration Genspark → Cloudflare D1', 'info');
+
+  let totalOk = 0, totalErr = 0;
+
+  for (const table of TABLES) {
+    log(`\n📋 Table: ${table}`, 'info');
+    
+    // 1. Lire depuis Genspark
+    let gsData = [];
+    try {
+      const r = await fetch(`${GS_SANDBOX}/${table}?limit=500`, {
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (r.ok) {
+        const d = await r.json();
+        gsData = d.data || [];
+        log(`  → Genspark: ${gsData.length} enregistrement(s) trouvé(s)`, 'ok');
+      } else {
+        log(`  → Genspark: HTTP ${r.status} — table ignorée`, 'warn');
+        continue;
+      }
+    } catch(e) {
+      log(`  → Genspark: CORS bloqué (${e.message.substring(0,60)})`, 'warn');
+      log(`  → Cette migration nécessite d'être sur le sandbox Genspark`, 'warn');
+      continue;
+    }
+
+    // 2. Écrire vers D1 via le proxy
+    for (const record of gsData) {
+      try {
+        const existing = await fetch(`${D1_API}/${table}/${record.id}`);
+        const method = existing.ok ? 'PUT' : 'POST';
+        const url    = existing.ok ? `${D1_API}/${table}/${record.id}` : `${D1_API}/${table}`;
+        
+        const r = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(record)
+        });
+        
+        if (r.ok || r.status === 201) {
+          totalOk++;
+        } else {
+          const err = await r.json().catch(() => ({}));
+          log(`  ❌ ${record.id}: ${err.message || r.status}`, 'err');
+          totalErr++;
+        }
+      } catch(e) {
+        log(`  ❌ ${record.id}: ${e.message}`, 'err');
+        totalErr++;
+      }
+    }
+    log(`  ✓ ${table}: migré (${gsData.length} enreg.)`, 'ok');
+  }
+
+  log(`\n✅ Migration terminée : ${totalOk} succès, ${totalErr} erreur(s)`, totalErr > 0 ? 'warn' : 'ok');
+  
+  const migStatus = document.getElementById('migrationStatus');
+  if (totalOk > 0) {
+    migStatus.innerHTML = `<div class="alert alert-success">✅ Migration réussie — ${totalOk} enregistrements copiés vers D1. Vous pouvez maintenant utiliser l'application normalement.</div>`;
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '📦 Relancer la migration';
+  
+  // Actualiser les stats
+  checkData();
+}
+
+/* ── Vérification des données ── */
+async function checkData() {
+  const container = document.getElementById('tableStats');
+  container.innerHTML = '<p style="color:#666">Chargement...</p>';
+  
+  const stats = [];
+  for (const table of TABLES) {
+    try {
+      const r = await fetch(`${D1_API}/${table}?limit=1`);
+      if (r.ok) {
+        const d = await r.json();
+        stats.push({ table, count: d.total ?? 0, ok: true });
+      } else {
+        stats.push({ table, count: 0, ok: false, err: r.status });
+      }
+    } catch(e) {
+      stats.push({ table, count: 0, ok: false, err: e.message });
+    }
+  }
+  
+  container.innerHTML = `
+    <table class="table-status" style="grid-column:1/-1">
+      <thead><tr><th>Table</th><th>Enregistrements</th><th>Statut</th></tr></thead>
+      <tbody>
+        ${stats.map(s => `
+          <tr>
+            <td><code>${s.table}</code></td>
+            <td>${s.ok ? s.count : '—'}</td>
+            <td>
+              ${s.ok 
+                ? `<span class="badge badge-green">✅ OK</span>` 
+                : `<span class="badge badge-red">❌ ${s.err}</span>`}
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// Auto-test au chargement
+window.addEventListener('load', () => setTimeout(testD1, 500));
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Diagnostic D1 — CR Master</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 60px auto; padding: 20px; }
+    h1 { color: #002D72; }
+    .box { padding: 20px; border-radius: 8px; margin: 16px 0; font-size: 16px; }
+    .ok  { background: #d1fae5; color: #065f46; border: 2px solid #10b981; }
+    .err { background: #fee2e2; color: #991b1b; border: 2px solid #ef4444; }
+    .warn{ background: #fef3c7; color: #92400e; border: 2px solid #f59e0b; }
+    .info{ background: #dbeafe; color: #1e40af; border: 2px solid #3b82f6; }
+    pre  { background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 6px; font-size: 13px; overflow-x: auto; white-space: pre-wrap; }
+    button { background: #002D72; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; cursor: pointer; }
+    button:hover { background: #001a4a; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Diagnostic Cloudflare D1</h1>
+  <p>Cette page teste si votre base D1 est correctement liée à votre projet Cloudflare Pages.</p>
+
+  <button onclick="runDiag()">▶ Lancer le diagnostic</button>
+
+  <div id="result" style="margin-top:24px"></div>
+
+  <script>
+  async function runDiag() {
+    const out = document.getElementById('result');
+    out.innerHTML = '<div class="box info">⏳ Test en cours...</div>';
+
+    try {
+      const r = await fetch('/api/tables/user_profiles?limit=1');
+      const text = await r.text();
+      let body = {};
+      try { body = JSON.parse(text); } catch(e) {}
+
+      if (r.status === 200) {
+        out.innerHTML = `
+          <div class="box ok">
+            ✅ <strong>D1 fonctionne parfaitement !</strong><br><br>
+            HTTP 200 — ${body.total ?? 0} enregistrement(s) dans user_profiles.<br>
+            Votre application est prête à être utilisée.
+          </div>`;
+
+      } else if (r.status === 500) {
+        let cause = 'Erreur interne dans la Cloudflare Function.';
+        let fix = '';
+
+        if (text.includes('DB') || text.includes('undefined') || text.includes('D1_NOT_CONFIGURED')) {
+          cause = 'Le binding D1 "DB" n\'est pas configuré dans Cloudflare Dashboard.';
+          fix = `
+            <strong>Solution — 3 étapes dans Cloudflare Dashboard :</strong><br><br>
+            1. Allez sur <a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a><br>
+            2. Workers &amp; Pages → <strong>cr-master</strong> → <strong>Settings</strong> → <strong>Functions</strong><br>
+            3. Section <strong>"D1 database bindings"</strong> → <strong>"Add binding"</strong><br>
+            &nbsp;&nbsp;&nbsp;• Variable name : <code>DB</code><br>
+            &nbsp;&nbsp;&nbsp;• D1 database : <code>cr-master-db</code><br>
+            4. Cliquez <strong>Save</strong><br>
+            5. Revenez sur l'onglet principal → <strong>Deployments</strong> → <strong>Retry deployment</strong>
+          `;
+        } else {
+          fix = 'Vérifiez les logs dans Cloudflare Dashboard → Functions → Logs.';
+        }
+
+        out.innerHTML = `
+          <div class="box err">
+            ❌ <strong>HTTP 500 — ${cause}</strong><br><br>
+            ${fix}
+          </div>
+          <pre>Réponse brute :\n${text.substring(0, 800)}</pre>`;
+
+      } else if (r.status === 404) {
+        out.innerHTML = `
+          <div class="box err">
+            ❌ <strong>HTTP 404 — La Cloudflare Function n'est pas déployée.</strong><br><br>
+            Le fichier <code>functions/api/tables/[[path]].js</code> n'est pas reconnu.<br><br>
+            <strong>Solution :</strong><br>
+            1. Vérifiez que le fichier existe bien dans votre projet Genspark<br>
+            2. Redéployez depuis le <strong>tab Publish</strong><br>
+            3. Attendez 60 secondes que le déploiement se termine
+          </div>
+          <pre>Réponse brute :\n${text.substring(0, 400)}</pre>`;
+
+      } else if (r.status === 503) {
+        out.innerHTML = `
+          <div class="box warn">
+            ⚠️ <strong>HTTP 503 — D1 explicitement non configuré.</strong><br><br>
+            La Function répond mais détecte que le binding "DB" est absent.<br><br>
+            <strong>Solution :</strong> Ajoutez le binding D1 dans Cloudflare Dashboard.
+          </div>`;
+
+      } else {
+        out.innerHTML = `
+          <div class="box warn">
+            ⚠️ HTTP ${r.status} — Réponse inattendue.
+          </div>
+          <pre>Réponse :\n${text.substring(0, 800)}</pre>`;
+      }
+
+    } catch(e) {
+      out.innerHTML = `
+        <div class="box err">
+          ❌ <strong>Impossible de joindre /api/tables/</strong><br><br>
+          Erreur : ${e.message}<br><br>
+          Cela signifie que la Cloudflare Function ne répond pas du tout.<br>
+          Redéployez depuis le <strong>tab Publish</strong>.
+        </div>`;
+    }
+  }
+
+  // Lancer automatiquement
+  window.addEventListener('load', () => setTimeout(runDiag, 300));
+  </script>
+</body>
+</html>

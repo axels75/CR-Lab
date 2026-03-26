@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head><title>Favicon Generator</title></head>
+<body>
+<canvas id="c16" width="16" height="16" style="display:none"></canvas>
+<canvas id="c32" width="32" height="32" style="display:none"></canvas>
+<canvas id="c48" width="48" height="48" style="display:none"></canvas>
+<canvas id="c180" width="180" height="180" style="display:none"></canvas>
+<canvas id="c192" width="192" height="192" style="display:none"></canvas>
+<canvas id="c512" width="512" height="512" style="display:none"></canvas>
+
+<script>
+function drawFavicon(canvas) {
+  const ctx = canvas.getContext('2d');
+  const s = canvas.width;
+  const r = s * 0.19; // border radius ratio
+
+  // Background gradient
+  const grad = ctx.createLinearGradient(0, 0, s, s);
+  grad.addColorStop(0, '#001F5B');
+  grad.addColorStop(1, '#003399');
+
+  // Rounded rectangle
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(s - r, 0);
+  ctx.quadraticCurveTo(s, 0, s, r);
+  ctx.lineTo(s, s - r);
+  ctx.quadraticCurveTo(s, s, s - r, s);
+  ctx.lineTo(r, s);
+  ctx.quadraticCurveTo(0, s, 0, s - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Pink accent bar bottom-right
+  const bw = s * 0.25;
+  const bh = s * 0.125;
+  const bx = s - bw - s * 0.0;
+  const by = s - bh - s * 0.0;
+  const br = bh / 2;
+  ctx.beginPath();
+  ctx.moveTo(bx + br, by);
+  ctx.lineTo(bx + bw - br, by);
+  ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
+  ctx.lineTo(bx + bw, by + bh - br);
+  ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
+  ctx.lineTo(bx + br, by + bh);
+  ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
+  ctx.lineTo(bx, by + br);
+  ctx.quadraticCurveTo(bx, by, bx + br, by);
+  ctx.closePath();
+  ctx.fillStyle = '#E8007D';
+  ctx.fill();
+
+  // CR text
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = `900 ${Math.round(s * 0.44)}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.letterSpacing = '-1px';
+  ctx.fillText('CR', s / 2, s * 0.47);
+}
+
+const sizes = [16, 32, 48, 180, 192, 512];
+const results = {};
+
+sizes.forEach(sz => {
+  const canvas = document.getElementById('c' + sz);
+  drawFavicon(canvas);
+  results[sz] = canvas.toDataURL('image/png');
+  // Remove the data:image/png;base64, prefix
+  const b64 = results[sz].split(',')[1];
+  console.log('FAVICON_' + sz + '=' + b64.substring(0, 50) + '...');
+});
+
+// Output all as JSON
+const out = {};
+sizes.forEach(sz => { out[sz] = results[sz].split(',')[1]; });
+console.log('FAVDATA=' + JSON.stringify(out));
+
+// Show preview
+document.body.innerHTML += '<h3>Preview</h3>';
+sizes.forEach(sz => {
+  const img = document.createElement('img');
+  img.src = results[sz];
+  img.width = sz > 64 ? 64 : sz;
+  img.style.margin = '4px';
+  img.style.background = '#eee';
+  document.body.appendChild(img);
+  document.body.appendChild(document.createTextNode(' ' + sz + 'px '));
+});
+</script>
+</body>
+</html>

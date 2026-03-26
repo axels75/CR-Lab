@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wavestone CR Master</title>
+
+  <!-- PROJECT ID GENSPARK — requis pour le fonctionnement en production Cloudflare -->
+  <meta name="gs-project-id" content="1841535f-f023-46ed-b48d-9d7afe8e2ba2" />
+
+  <!-- Favicon multi-format -->
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="images/favicon-source.png" />
+  <link rel="apple-touch-icon" href="images/favicon-source.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#002D72" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" />
+  <!-- Quill WYSIWYG Editor -->
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css?v=20260228" />
+  <!-- Login redesign -->
+  <link rel="stylesheet" href="css/login.css?v=20260228" />
+  <!-- Responsive -->
+  <link rel="stylesheet" href="css/responsive.css?v=20260228" />
+</head>
+<body>
+
+<!-- ===================================================
+     ÉCRAN DE CONNEXION — Redesign split-screen v2
+=================================================== -->
+<div id="loginScreen">
+
+  <!-- Toggle langue login -->
+  <div class="auth-lang-toggle" id="authLangToggle">
+    <button class="auth-lang-btn" onclick="toggleLang()" id="authLangBtn" title="Switch language">
+      <span class="lang-flag">🇬🇧</span> <span id="authLangLabel">EN</span>
+    </button>
+  </div>
+
+  <!-- ── COLONNE GAUCHE : BRANDING ────────────────── -->
+  <div class="auth-left">
+    <div class="auth-left-grid"></div>
+    <div class="auth-left-content">
+      <img src="images/wavestone-logo.png" alt="Wavestone" class="auth-brand-logo" />
+      <div class="auth-brand-divider"></div>
+      <div class="auth-brand-title">CR <span>Master</span></div>
+      <div class="auth-brand-desc" data-i18n="auth_brand_desc">La plateforme professionnelle de gestion de comptes-rendus pour les équipes Wavestone.</div>
+
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+          <span data-i18n="auth_feature_mfa">Double authentification obligatoire</span>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="fa-solid fa-users"></i></div>
+          <span data-i18n="auth_feature_collab">Travail collaboratif en temps réel</span>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="fa-solid fa-file-lines"></i></div>
+          <span data-i18n="auth_feature_export">Comptes-rendus structurés et exportables</span>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon"><i class="fa-solid fa-calendar-check"></i></div>
+          <span data-i18n="auth_feature_agenda">Agenda et planning intégrés</span>
+        </div>
+      </div>
+    </div>
+    <div class="auth-left-footer" data-i18n="auth_footer">© 2026 Wavestone — Confidentiel</div>
+  </div>
+
+  <!-- ── COLONNE DROITE : FORMULAIRE ──────────────── -->
+  <div class="auth-right">
+    <div class="auth-form-card">
+
+      <!-- En-tête carte -->
+      <div class="auth-card-header">
+        <img src="images/wavestone-logo.png" alt="Wavestone" class="auth-card-logo" />
+        <div class="auth-card-titles">
+          <div class="auth-card-title">CR Master</div>
+          <div class="auth-card-sub" data-i18n="auth_card_sub">Comptes-rendus professionnels</div>
+        </div>
+      </div>
+
+      <!-- Onglets -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span data-i18n="login_title">Se connecter</span>
+        </button>
+        <button class="auth-tab" id="tabRegister">
+          <i class="fa-solid fa-user-plus"></i>
+          <span data-i18n="register_title">Créer un compte</span>
+        </button>
+      </div>
+
+      <!-- Badge 2FA obligatoire -->
+      <div class="auth-mfa-badge">
+        <div class="auth-mfa-badge-left">
+          <i class="fa-solid fa-shield-halved auth-mfa-badge-shield"></i>
+          <div class="auth-mfa-badge-text">
+            <strong>Double authentification <strong>obligatoire</strong></strong>
+            <span>Requise pour accéder à l'application</span>
+          </div>
+        </div>
+        <div class="auth-mfa-apps-row">
+          <div class="auth-mfa-app-chip" title="Google Authenticator">
+            <div class="auth-mfa-app-chip-icon" style="background:#4285F4">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <span>Google</span>
+          </div>
+          <div class="auth-mfa-app-chip" title="Microsoft Authenticator">
+            <div class="auth-mfa-app-chip-icon" style="background:#00A4EF">
+              <i class="fa-brands fa-microsoft"></i>
+            </div>
+            <span>Microsoft</span>
+          </div>
+          <div class="auth-mfa-app-chip" title="Authy">
+            <div class="auth-mfa-app-chip-icon" style="background:#EC1C24">
+              <i class="fa-solid fa-lock"></i>
+            </div>
+            <span>Authy</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PANEL LOGIN ─────────────────────────── -->
+      <div id="loginPanel">
+        <div class="auth-form-body">
+          <form id="loginForm" autocomplete="on">
+            <div class="auth-field">
+              <label for="loginUsername">
+                <i class="fa-solid fa-user"></i>
+                <span data-i18n="username">Identifiant</span>
+              </label>
+              <input type="text" id="loginUsername" class="auth-input"
+                     autocomplete="username" placeholder="ex : jean.dupont" required />
+            </div>
+            <div class="auth-field">
+              <label for="loginPassword">
+                <i class="fa-solid fa-lock"></i>
+                <span data-i18n="password">Mot de passe</span>
+              </label>
+              <div class="auth-input-wrap">
+                <input type="password" id="loginPassword" class="auth-input"
+                       autocomplete="current-password" placeholder="Votre mot de passe" required />
+                <button type="button" class="auth-toggle-pass"><i class="fa-solid fa-eye"></i></button>
+              </div>
+            </div>
+            <div class="auth-error" id="loginError"></div>
+            <span class="auth-forgot-link" id="btnForgotPassword" onclick="showForgotPanel()">
+              <i class="fa-solid fa-key" style="font-size:.7rem"></i>
+              <span data-i18n="forgot_password">Mot de passe oublié ?</span>
+            </span>
+            <button type="submit" class="auth-btn-primary" id="btnLogin">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span data-i18n="login_btn">Se connecter</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── PANEL MOT DE PASSE OUBLIÉ ─────────── -->
+      <div id="forgotPanel" style="display:none;">
+        <div class="auth-form-body" style="padding-top:4px;">
+          <button class="auth-forgot-back" onclick="hideForgotPanel()">
+            <i class="fa-solid fa-arrow-left"></i> Retour à la connexion
+          </button>
+          <div class="auth-forgot-title">
+            <i class="fa-solid fa-key"></i> Récupérer l'accès
+          </div>
+
+          <!-- Étape 1 -->
+          <div class="auth-step active" id="forgotStep1">
+            <div class="auth-step-desc">Saisissez votre identifiant pour retrouver votre compte. Vous devrez ensuite répondre à votre question de sécurité.</div>
+            <div class="auth-field">
+              <label for="forgotUsername"><i class="fa-solid fa-user"></i> Identifiant</label>
+              <input type="text" id="forgotUsername" class="auth-input" placeholder="ex : jean.dupont" />
+            </div>
+            <div class="auth-error" id="forgotError1"></div>
+            <button type="button" class="auth-btn-primary" id="btnForgotStep1" onclick="forgotStep1()">
+              <i class="fa-solid fa-arrow-right"></i> Continuer
+            </button>
+          </div>
+
+          <!-- Étape 2 -->
+          <div class="auth-step" id="forgotStep2">
+            <div class="auth-step-desc">Répondez à votre question de sécurité pour vérifier votre identité.</div>
+            <div class="auth-security-question" id="forgotQuestion">Chargement…</div>
+            <div class="auth-field">
+              <label>Votre réponse</label>
+              <input type="text" id="forgotAnswer" class="auth-input" placeholder="Votre réponse" />
+            </div>
+            <div class="auth-error" id="forgotError2"></div>
+            <button type="button" class="auth-btn-primary" id="btnForgotStep2" onclick="forgotStep2()">
+              <i class="fa-solid fa-circle-check"></i> Vérifier
+            </button>
+          </div>
+
+          <!-- Étape 3 -->
+          <div class="auth-step" id="forgotStep3">
+            <div class="auth-step-desc">Identité vérifiée ! Choisissez votre nouveau mot de passe.</div>
+            <form autocomplete="new-password" onsubmit="return false;">
+              <input type="text" name="username" autocomplete="username" style="display:none;" aria-hidden="true" />
+              <div class="auth-field">
+                <label><i class="fa-solid fa-lock"></i> Nouveau mot de passe *</label>
+                <div class="auth-input-wrap">
+                  <input type="password" id="forgotNewPwd" class="auth-input"
+                         placeholder="Minimum 6 caractères" autocomplete="new-password" />
+                  <button type="button" class="auth-toggle-pass"><i class="fa-solid fa-eye"></i></button>
+                </div>
+              </div>
+              <div class="auth-field">
+                <label><i class="fa-solid fa-lock"></i> Confirmer le mot de passe *</label>
+                <div class="auth-input-wrap">
+                  <input type="password" id="forgotNewPwd2" class="auth-input"
+                         placeholder="Répéter le mot de passe" autocomplete="new-password" />
+                  <button type="button" class="auth-toggle-pass"><i class="fa-solid fa-eye"></i></button>
+                </div>
+              </div>
+            </form>
+            <div class="auth-error" id="forgotError3"></div>
+            <button type="button" class="auth-btn-primary" id="btnForgotStep3" onclick="forgotStep3()">
+              <i class="fa-solid fa-floppy-disk"></i> Enregistrer le nouveau mot de passe
+            </button>
+          </div>
+
+          <!-- Étape 4 : Succès -->
+          <div class="auth-step" id="forgotStep4">
+            <div class="auth-success-box">
+              <i class="fa-solid fa-circle-check"></i>
+              <div>Mot de passe réinitialisé avec succès ! <strong>Vos données sont préservées.</strong> Vous pouvez maintenant vous connecter.</div>
+            </div>
+            <button type="button" class="auth-btn-primary" onclick="hideForgotPanel()">
+              <i class="fa-solid fa-right-to-bracket"></i> Se connecter
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PANEL INSCRIPTION ──────────────────── -->
+      <div id="registerPanel" style="display:none;">
+        <div class="auth-form-body">
+          <form id="registerForm" autocomplete="on" onsubmit="handleRegisterSubmit(); return false;">
+            <div class="auth-row-2">
+              <div class="auth-field">
+                <label>Prénom *</label>
+                <input type="text" id="regFirstName" class="auth-input" placeholder="Jean" />
+              </div>
+              <div class="auth-field">
+                <label>Nom</label>
+                <input type="text" id="regLastName" class="auth-input" placeholder="Dupont" />
+              </div>
+            </div>
+            <div class="auth-field">
+              <label for="regUsername">
+                <i class="fa-solid fa-user"></i> Identifiant *
+                <span class="auth-label-hint">(min. 3 car.)</span>
+              </label>
+              <input type="text" id="regUsername" class="auth-input"
+                     autocomplete="username" placeholder="ex : jean.dupont" />
+            </div>
+            <div class="auth-field">
+              <label for="regPassword">
+                <i class="fa-solid fa-lock"></i> Mot de passe *
+                <span class="auth-label-hint">(min. 6 car.)</span>
+              </label>
+              <div class="auth-input-wrap">
+                <input type="password" id="regPassword" class="auth-input"
+                       autocomplete="new-password" placeholder="Choisir un mot de passe" />
+                <button type="button" class="auth-toggle-pass"><i class="fa-solid fa-eye"></i></button>
+              </div>
+            </div>
+            <div class="auth-field">
+              <label for="regPassword2">
+                <i class="fa-solid fa-lock"></i> Confirmer le mot de passe *
+              </label>
+              <div class="auth-input-wrap">
+                <input type="password" id="regPassword2" class="auth-input"
+                       autocomplete="new-password" placeholder="Répéter le mot de passe" />
+                <button type="button" class="auth-toggle-pass"><i class="fa-solid fa-eye"></i></button>
+              </div>
+            </div>
+            <div class="auth-field">
+              <label>
+                <i class="fa-solid fa-shield-halved"></i> Question de sécurité *
+                <span class="auth-label-hint">(récupération)</span>
+              </label>
+              <select id="regSecurityQuestion" class="auth-select">
+                <option value="">-- Choisir une question --</option>
+                <option value="Quel est le nom de votre premier animal de compagnie ?">Quel est le nom de votre premier animal de compagnie ?</option>
+                <option value="Quel est le nom de jeune fille de votre mère ?">Quel est le nom de jeune fille de votre mère ?</option>
+                <option value="Dans quelle ville êtes-vous né(e) ?">Dans quelle ville êtes-vous né(e) ?</option>
+                <option value="Quel est le nom de votre école primaire ?">Quel est le nom de votre école primaire ?</option>
+                <option value="Quel est le prénom de votre meilleur(e) ami(e) d'enfance ?">Quel est le prénom de votre meilleur(e) ami(e) d'enfance ?</option>
+                <option value="Quelle est votre équipe sportive préférée ?">Quelle est votre équipe sportive préférée ?</option>
+              </select>
+            </div>
+            <div class="auth-field">
+              <label>Votre réponse *</label>
+              <input type="text" id="regSecurityAnswer" class="auth-input"
+                     placeholder="Réponse à la question de sécurité" />
+            </div>
+            <div class="auth-error" id="registerError"></div>
+            <button type="submit" class="auth-btn-primary" id="btnRegister">
+              <i class="fa-solid fa-user-plus"></i> Créer mon compte
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Pied de carte -->
+      <div class="auth-card-footer">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span data-i18n="login_info">Vos données sont protégées par votre mot de passe et la double authentification.</span>
+      </div>
+
+    </div><!-- fin auth-form-card -->
+  </div><!-- fin auth-right -->
+
+</div><!-- fin loginScreen -->
+
+<!-- ===================================================
+     ÉCRAN MFA VÉRIFICATION — Redesign v2
+=================================================== -->
+<div id="mfaScreen" style="display:none;" class="auth-mfa-screen">
+  <div class="auth-mfa-card">
+
+    <!-- Header -->
+    <div class="auth-mfa-header">
+      <img src="images/wavestone-logo.png" alt="Wavestone" class="auth-mfa-logo" />
+      <div class="auth-mfa-icon-wrap">
+        <div class="auth-mfa-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      </div>
+      <div class="auth-mfa-heading" data-i18n="mfa_screen_title">Vérification en deux étapes</div>
+      <div class="auth-mfa-subheading">Saisissez le code de votre application</div>
+    </div>
+
+    <!-- Corps -->
+    <div class="auth-mfa-body">
+
+      <!-- Utilisateur -->
+      <div style="display:flex;justify-content:center;margin-bottom:14px;">
+        <div class="auth-mfa-user-badge">
+          <div class="auth-mfa-user-avatar"><i class="fa-solid fa-user" style="font-size:.7rem"></i></div>
+          <span id="mfaLoginName"></span>
+        </div>
+      </div>
+
+      <!-- Apps compatibles -->
+      <div class="auth-mfa-pills">
+        <div class="auth-mfa-pill">
+          <div class="auth-mfa-pill-icon" style="background:#4285F4"><i class="fa-solid fa-shield-halved"></i></div>
+          <span>Google Auth.</span>
+        </div>
+        <div class="auth-mfa-pill">
+          <div class="auth-mfa-pill-icon" style="background:#00A4EF"><i class="fa-brands fa-microsoft"></i></div>
+          <span>Microsoft Auth.</span>
+        </div>
+        <div class="auth-mfa-pill">
+          <div class="auth-mfa-pill-icon" style="background:#EC1C24"><i class="fa-solid fa-lock"></i></div>
+          <span>Authy</span>
+        </div>
+      </div>
+
+      <!-- Code -->
+      <div class="auth-mfa-code-label">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        Code à 6 chiffres
+      </div>
+      <input type="text" id="mfaLoginCode"
+             maxlength="6" pattern="[0-9]{6}"
+             placeholder="● ● ● ● ● ●"
+             autocomplete="one-time-code"
+             inputmode="numeric"
+             class="auth-code-input"
+             oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+             onkeydown="if(event.key==='Enter') submitMFALogin()" />
+      <div id="mfaLoginCountdown" class="auth-mfa-countdown"></div>
+      <div class="auth-mfa-error" id="mfaLoginError"></div>
+
+      <button type="button" class="auth-mfa-verify-btn" id="btnMFALogin" onclick="submitMFALogin()">
+        <i class="fa-solid fa-unlock"></i>
+        <span data-i18n="mfa_verify_btn">Vérifier le code</span>
+      </button>
+
+      <div style="text-align:center;">
+        <button type="button" class="auth-mfa-cancel-btn" onclick="cancelMFALogin()">
+          <i class="fa-solid fa-arrow-left-long"></i>
+          <span data-i18n="mfa_cancel">Utiliser un autre compte</span>
+        </button>
+      </div>
+
+      <!-- Lien déblocage -->
+      <div class="auth-mfa-trouble">
+        <button type="button" class="auth-mfa-trouble-btn" onclick="showMFAResetPanel()">
+          <i class="fa-solid fa-key"></i> Problème d'accès ? Réinitialiser le 2FA
+        </button>
+      </div>
+
+      <!-- Panneau de réinitialisation -->
+      <div id="mfaResetPanel" style="display:none;" class="mfa-reset-panel">
+        <div class="mfa-reset-panel-title">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Réinitialisation de la double authentification
+        </div>
+        <p class="mfa-reset-panel-sub">Pour confirmer votre identité, saisissez vos identifiants. La 2FA sera réinitialisée et vous devrez la reconfigurer à la prochaine connexion.</p>
+        <form onsubmit="submitMFAReset(); return false;" autocomplete="on">
+          <div class="mfa-reset-fields">
+            <input type="text" id="mfaResetUsername" placeholder="Identifiant" autocomplete="username" class="mfa-reset-input" />
+            <input type="password" id="mfaResetPassword" placeholder="Mot de passe" autocomplete="current-password" class="mfa-reset-input" />
+          </div>
+          <div class="mfa-reset-error" id="mfaResetError"></div>
+          <button type="submit" class="mfa-reset-btn" id="btnMFAReset">
+            <i class="fa-solid fa-rotate"></i> Réinitialiser et reconfigurer
+          </button>
+        </form>
+      </div>
+
+    </div><!-- fin auth-mfa-body -->
+  </div><!-- fin auth-mfa-card -->
+</div>
+
+<!-- ===================================================
+     SETUP 2FA OBLIGATOIRE — Redesign v2
+=================================================== -->
+<div id="mfaSetupScreen" style="display:none;" class="auth-mfa-screen">
+  <div class="auth-setup-card">
+
+    <!-- Header -->
+    <div class="auth-mfa-header">
+      <img src="images/wavestone-logo.png" alt="Wavestone" class="auth-mfa-logo" />
+      <div class="auth-mfa-heading">Configuration de la double authentification</div>
+      <div class="auth-mfa-subheading" id="mfaSetupScreenContext">Pour accéder à l'application, configurez une application d'authentification.</div>
+    </div>
+
+    <!-- Bandeau obligatoire -->
+    <div class="auth-setup-mandatory-banner">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div>
+        <strong data-i18n="mfa_mandatory_banner_title">Double authentification obligatoire</strong>
+        <p>La 2FA protège votre compte. Elle vous sera demandée à chaque connexion.</p>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div class="auth-setup-body">
+
+      <!-- ÉTAPE 1 : Installer une app -->
+      <div class="auth-setup-step">
+        <div class="auth-setup-step-header">
+          <div class="auth-step-num">1</div>
+          <div>
+            <div class="auth-setup-step-title">Installez une application d'authentification</div>
+            <div class="auth-setup-step-sub">Choisissez l'une des applications suivantes</div>
+          </div>
+        </div>
+        <div class="auth-apps-grid">
+          <div class="auth-app-card">
+            <div class="auth-app-card-icon" style="background:#4285F4"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="auth-app-card-info">
+              <strong>Google Auth.</strong>
+              <div class="auth-app-card-links">
+                <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" rel="noopener"><i class="fa-brands fa-google-play"></i> Play</a>
+                <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank" rel="noopener"><i class="fa-brands fa-app-store-ios"></i> iOS</a>
+              </div>
+            </div>
+          </div>
+          <div class="auth-app-card">
+            <div class="auth-app-card-icon" style="background:#00A4EF"><i class="fa-brands fa-microsoft"></i></div>
+            <div class="auth-app-card-info">
+              <strong>Microsoft Auth.</strong>
+              <div class="auth-app-card-links">
+                <a href="https://play.google.com/store/apps/details?id=com.azure.authenticator" target="_blank" rel="noopener"><i class="fa-brands fa-google-play"></i> Play</a>
+                <a href="https://apps.apple.com/app/microsoft-authenticator/id983156458" target="_blank" rel="noopener"><i class="fa-brands fa-app-store-ios"></i> iOS</a>
+              </div>
+            </div>
+          </div>
+          <div class="auth-app-card">
+            <div class="auth-app-card-icon" style="background:#EC1C24"><i class="fa-solid fa-lock"></i></div>
+            <div class="auth-app-card-info">
+              <strong>Authy</strong>
+              <div class="auth-app-card-links">
+                <a href="https://play.google.com/store/apps/details?id=com.authy.authy" target="_blank" rel="noopener"><i class="fa-brands fa-google-play"></i> Play</a>
+                <a href="https://apps.apple.com/app/authy/id494168017" target="_blank" rel="noopener"><i class="fa-brands fa-app-store-ios"></i> iOS</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÉTAPES 2 + 3 côte à côte -->
+      <div class="auth-steps-row">
+
+        <!-- Étape 2 : QR Code -->
+        <div class="auth-setup-step">
+          <div class="auth-setup-step-header">
+            <div class="auth-step-num">2</div>
+            <div>
+              <div class="auth-setup-step-title">Scannez le QR code</div>
+              <div class="auth-setup-step-sub">Avec votre application</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div class="auth-qr-wrap">
+              <img id="mfaSetupScreenQR" src="" alt="QR Code" class="auth-qr-img" />
+              <div id="mfaSetupScreenQRFallback" style="display:none;" class="auth-qr-fallback">
+                <i class="fa-solid fa-qrcode"></i>
+                <span>QR indisponible — utilisez la saisie manuelle</span>
+              </div>
+            </div>
+            <button type="button" class="auth-regen-btn" onclick="regenerateMFASetupQR()">
+              <i class="fa-solid fa-arrows-rotate"></i> Nouveau QR
+            </button>
+            <details class="auth-manual-details" open style="width:100%;margin-top:6px;">
+              <summary><i class="fa-solid fa-keyboard" style="font-size:.65rem"></i> Saisie manuelle</summary>
+              <div class="auth-secret-wrap">
+                <code id="mfaSetupScreenSecret" class="auth-secret-code"></code>
+                <button type="button" class="auth-btn-icon-sm" onclick="copyMFASetupScreenSecret()" title="Copier">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </div>
+              <p class="auth-secret-hint">Dans l'app → "Ajouter" → "Saisir une clé de configuration"</p>
+            </details>
+          </div>
+        </div>
+
+        <!-- Étape 3 : Entrer le code -->
+        <div class="auth-setup-step">
+          <div class="auth-setup-step-header">
+            <div class="auth-step-num">3</div>
+            <div>
+              <div class="auth-setup-step-title">Entrez le code</div>
+              <div class="auth-setup-step-sub">Le code à 6 chiffres de l'app</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+            <div class="auth-mfa-code-label" style="margin-bottom:4px;">
+              <i class="fa-solid fa-mobile-screen-button"></i> Code à 6 chiffres
+            </div>
+            <input type="text" id="mfaSetupScreenCode"
+                   maxlength="6" pattern="[0-9]{6}"
+                   placeholder="● ● ● ● ● ●"
+                   inputmode="numeric"
+                   autocomplete="one-time-code"
+                   class="auth-code-input"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                   onkeydown="if(event.key==='Enter') confirmMFASetupScreen()" />
+            <div id="mfaSetupCountdown" class="auth-mfa-countdown"></div>
+            <div class="auth-mfa-error" id="mfaSetupScreenError" style="text-align:center;"></div>
+            <button type="button" class="auth-mfa-verify-btn" id="btnConfirmMFAScreen"
+                    onclick="confirmMFASetupScreen()" style="margin-top:4px;">
+              <i class="fa-solid fa-circle-check"></i>
+              <span data-i18n="mfa_activate_access">Activer et accéder</span>
+            </button>
+          </div>
+        </div>
+
+      </div><!-- fin auth-steps-row -->
+
+      <!-- Footer -->
+      <div class="auth-setup-footer">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>La 2FA protège votre compte et vos données. Elle vous sera demandée à chaque connexion.</span>
+      </div>
+
+      <!-- Annuler -->
+      <div style="text-align:center;margin-top:8px;">
+        <button type="button" class="auth-mfa-cancel-btn" onclick="cancelMFASetupScreen()">
+          <i class="fa-solid fa-arrow-left-long"></i>
+          <span data-i18n="mfa_cancel_and_logout">Annuler et se déconnecter</span>
+        </button>
+      </div>
+
+    </div><!-- fin auth-setup-body -->
+  </div><!-- fin auth-setup-card -->
+</div>
+
+<!-- ===================================================
+     APPLICATION PRINCIPALE (masquée jusqu'à connexion)
+=================================================== -->
+<div id="appRoot" style="display:none;">
+
+<!-- Overlay sidebar mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarMobile()"></div>
+
+<!-- ===================================================
+     SIDEBAR
+=================================================== -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Logo + Brand -->
+  <div class="sidebar-header">
+    <div class="sidebar-logo-wrap">
+      <img src="images/wavestone-logo.png" alt="Wavestone" class="sidebar-logo" id="sidebarLogo" />
+    </div>
+    <span class="sidebar-app-name">CR Master</span>
+  </div>
+
+  <!-- Actions rapides -->
+  <div class="sidebar-actions">
+    <button class="btn-new-cr" id="btnNewCR">
+      <i class="fa-solid fa-plus"></i> <span data-i18n="new_cr">Nouveau CR</span>
+    </button>
+  </div>
+
+  <!-- Agenda raccourci -->
+  <button class="sidebar-myspace-btn" id="btnSidebarAgenda" onclick="showAgendaView()">
+    <i class="fa-solid fa-calendar-days"></i>
+    <span data-i18n="agenda">Agenda / Planning</span>
+    <i class="fa-solid fa-chevron-right" style="margin-left:auto;font-size:.6rem;opacity:.5"></i>
+  </button>
+
+  <!-- Mon Espace raccourci -->
+  <button class="sidebar-myspace-btn" id="btnSidebarMySpace">
+    <i class="fa-solid fa-circle-user"></i>
+    <span data-i18n="my_space">Mon Espace</span>
+    <i class="fa-solid fa-chevron-right" style="margin-left:auto;font-size:.6rem;opacity:.5"></i>
+  </button>
+
+  <!-- Recherche -->
+  <div class="sidebar-search">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" id="searchInput" data-i18n-placeholder="search_cr" placeholder="Rechercher un CR…" />
+  </div>
+
+  <!-- Navigation projects -->
+  <nav class="sidebar-nav" id="sidebarNav">
+    <div class="nav-section-label" data-i18n="my_projects">MES PROJETS</div>
+    <div id="projectsList"></div>
+
+    <button class="btn-add-project" id="btnAddProject">
+      <i class="fa-solid fa-folder-plus"></i> <span data-i18n="new_project">Nouveau projet</span>
+    </button>
+  </nav>
+
+  <!-- Badge invitations sidebar -->
+  <div id="sidebarInvitationsWrap">
+    <button class="sidebar-invitations-btn" onclick="showMySpaceView(); setTimeout(()=>scrollToInvitations(),300)">
+      <i class="fa-solid fa-envelope"></i>
+      <span>Invitations reçues</span>
+      <span class="invitations-badge-pill" id="sidebarInvitationsBadge" style="display:none;">0</span>
+    </button>
+  </div>
+
+  <!-- Paramètres + User Widget en bas -->
+  <div class="sidebar-footer">
+    <!-- Toggle langue dans la sidebar -->
+    <button class="btn-lang sidebar-lang-btn" id="sidebarLangBtn" onclick="toggleLang()" title="Switch language">
+      <span class="lang-flag">🇬🇧</span> <span class="sidebar-lang-label">EN</span>
+    </button>
+    <button class="btn-settings" id="btnSettings">
+      <i class="fa-solid fa-gear"></i> <span data-i18n="settings_template">Paramètres du template</span>
+    </button>
+    <!-- Widget utilisateur -->
+    <div class="user-widget" id="userWidget">
+      <!-- Rempli par JS -->
+    </div>
+  </div>
+</aside>
+
+<!-- ===================================================
+     MAIN CONTENT
+=================================================== -->
+<main class="main-content" id="mainContent">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <button class="btn-toggle-sidebar" id="btnToggleSidebar">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="topbar-breadcrumb" id="topbarBreadcrumb">
+      <span>Tableau de bord</span>
+    </div>
+    <div class="topbar-actions" id="topbarActions">
+      <!-- Bouton langue -->
+      <button class="btn-lang" id="langToggleBtn" onclick="toggleLang()" title="Switch language">
+        <span class="lang-flag">🇬🇧</span> EN
+      </button>
+      <button class="btn-dark-mode" id="btnDarkMode" onclick="toggleDarkMode()" title="Mode sombre/clair">
+        <i class="fa-solid fa-moon" id="darkModeIcon"></i>
+        <span id="darkModeLabel" data-i18n="dark_mode">Mode sombre</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Zone d'affichage dynamique -->
+  <div class="content-area" id="contentArea">
+
+    <!-- ==== VUE DASHBOARD ==== -->
+    <div id="viewDashboard" class="view active">
+      <div class="dashboard-hero">
+        <div class="hero-text">
+          <h1 data-i18n-html="dashboard_welcome">Bienvenue sur <span>Wavestone CR Master</span></h1>
+          <p data-i18n="dashboard_sub">Rédigez, archivez et exportez vos comptes-rendus de réunion en quelques clics.</p>
+        </div>
+        <div class="hero-stats" id="heroStats"></div>
+      </div>
+      <div class="dashboard-grid" id="dashboardGrid"></div>
+    </div>
+
+    <!-- ==== VUE LISTE CRs D'UN PROJET ==== -->
+    <div id="viewProjectCRs" class="view">
+      <div class="view-header">
+        <h2 id="projectCRsTitle">Projet</h2>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-secondary" id="btnProjectDashboard" onclick="showProjectDashboardView()">
+            <i class="fa-solid fa-chart-line"></i> <span data-i18n="project_dashboard">Tableau de bord projet</span>
+          </button>
+          <button class="btn-primary" id="btnNewCRInProject">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="new_cr">Nouveau CR</span>
+          </button>
+        </div>
+      </div>
+      <div id="crListContainer"></div>
+    </div>
+
+    <!-- ==== VUE TABLEAU DE BORD PROJET ==== -->
+    <div id="viewProjectDashboard" class="view">
+      <div class="view-header" style="flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 id="pdTitle" style="margin-bottom:2px;">Tableau de bord</h2>
+          <p id="pdSubtitle" style="font-size:.85rem;color:var(--gray-500);margin:0;"></p>
+        </div>
+        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;">
+          <button class="btn-secondary" onclick="showProjectCRsFromDashboard()">
+            <i class="fa-solid fa-list"></i> <span data-i18n="list_crs">Liste des CRs</span>
+          </button>
+          <button class="btn-collab" id="btnCollabProject" onclick="openCollabModal(STATE.currentProjectId)" title="Gérer les collaborateurs">
+            <i class="fa-solid fa-user-group"></i> <span data-i18n="collaborators">Collaborateurs</span>
+            <span class="collab-members-count" id="collabMembersCount" style="display:none;"></span>
+          </button>
+          <button class="btn-leave-project" id="btnLeaveProject" style="display:none;" title="Quitter ce projet partagé">
+            <i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="leave_project">Quitter</span>
+          </button>
+          <button class="btn-primary" id="btnNewCRFromDashboard">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="new_cr">Nouveau CR</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="pd-kpi-grid" id="pdKpiGrid"></div>
+
+      <!-- Section collaborateurs du projet -->
+      <div class="pd-section" id="pdCollabSection">
+        <div class="pd-section-title" style="display:flex;align-items:center;gap:10px;">
+          <span><i class="fa-solid fa-user-group"></i> <span data-i18n="collab_section">Collaborateurs du projet</span></span>
+          <button class="pd-collab-invite-btn" onclick="openCollabModal(STATE.currentProjectId)">
+            <i class="fa-solid fa-user-plus"></i> <span data-i18n="invite_btn">Inviter</span>
+          </button>
+        </div>
+        <div id="pdCollabMembersGrid" class="pd-collab-grid"></div>
+      </div>
+
+      <!-- Section équipe projet -->
+      <div class="pd-section">
+        <div class="pd-section-title"><i class="fa-solid fa-users"></i> <span data-i18n="project_team">Équipe Projet</span></div>
+        <div class="pd-participants-grid" id="pdParticipantsGrid"></div>
+      </div>
+
+      <!-- Section suivi des actions -->
+      <div class="pd-section">
+        <div class="pd-section-title" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span><i class="fa-solid fa-list-check"></i> <span data-i18n="action_tracking_full">Suivi des actions consolidées</span></span>
+          <div style="display:flex;gap:6px;margin-left:auto;">
+            <button class="pd-filter-btn active" data-filter="all" onclick="filterPdActions('all',this)" data-i18n="all_actions">Toutes</button>
+            <button class="pd-filter-btn" data-filter="todo" onclick="filterPdActions('todo',this)" data-i18n="todo">À faire</button>
+            <button class="pd-filter-btn" data-filter="wip" onclick="filterPdActions('wip',this)" data-i18n="in_progress">En cours</button>
+            <button class="pd-filter-btn" data-filter="done" onclick="filterPdActions('done',this)" data-i18n="done">Terminées</button>
+            <button class="pd-filter-btn" data-filter="blocked" onclick="filterPdActions('blocked',this)" data-i18n="blocked">Bloquées</button>
+          </div>
+        </div>
+        <div class="pd-actions-table-wrap">
+          <table class="pd-actions-table" id="pdActionsTable">
+            <thead>
+              <tr>
+                <th data-i18n="action">Action</th>
+                <th data-i18n="owner">Porteur</th>
+                <th data-i18n="meeting_name">Réunion</th>
+                <th data-i18n="due_date">Échéance</th>
+                <th data-i18n="status">Statut</th>
+              </tr>
+            </thead>
+            <tbody id="pdActionsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section suivi des échéances -->
+      <div class="pd-section">
+        <div class="pd-section-title"><i class="fa-solid fa-calendar-check"></i> <span data-i18n="deadlines">Suivi des échéances</span></div>
+        <div id="pdDeadlines"></div>
+      </div>
+    </div>
+
+    <!-- ==== VUE AGENDA / PLANNING ==== -->
+    <div id="viewAgenda" class="view">
+      <div class="view-header" style="flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 style="margin-bottom:2px;"><i class="fa-solid fa-calendar-days" style="color:var(--primary)"></i> <span data-i18n="agenda_title">Agenda & Planning</span></h2>
+          <p style="font-size:.85rem;color:var(--gray-500);margin:0;" data-i18n="agenda_sub">Toutes vos to-do de tous les projets</p>
+        </div>
+        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;align-items:center;">
+          <!-- Filtres statut -->
+          <div class="agenda-filter-group">
+            <button class="pd-filter-btn active" onclick="filterAgenda('all',this)" data-i18n="all_actions">Toutes</button>
+            <button class="pd-filter-btn" onclick="filterAgenda('todo',this)" data-i18n="todo">À faire</button>
+            <button class="pd-filter-btn" onclick="filterAgenda('wip',this)" data-i18n="in_progress">En cours</button>
+            <button class="pd-filter-btn" onclick="filterAgenda('done',this)" data-i18n="done">Terminées</button>
+            <button class="pd-filter-btn" onclick="filterAgenda('blocked',this)" data-i18n="blocked">Bloquées</button>
+          </div>
+          <!-- Export ICS -->
+          <div style="position:relative;" id="agendaExportWrap">
+            <button class="btn-primary" id="btnExportICS" onclick="openAgendaExportModal()">
+              <i class="fa-solid fa-calendar-arrow-up"></i> <span data-i18n="export_ics">Exporter vers Outlook</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vue calendrier mensuel -->
+      <div class="agenda-calendar-wrap">
+        <div class="agenda-cal-header">
+          <button class="agenda-nav-btn" onclick="agendaNavMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+          <span id="agendaMonthLabel" class="agenda-month-label"></span>
+          <button class="agenda-nav-btn" onclick="agendaNavMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+          <button class="agenda-nav-btn" onclick="agendaGoToday()" style="margin-left:8px;font-size:.75rem;padding:4px 10px;" data-i18n="today">Aujourd'hui</button>
+        </div>
+        <div class="agenda-calendar" id="agendaCalendar"></div>
+      </div>
+
+      <!-- Liste des to-do groupées par projet -->
+      <div class="agenda-list-section">
+        <div class="pd-section-title" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+          <span><i class="fa-solid fa-list-check"></i> <span data-i18n="tasks_list">Liste des tâches</span></span>
+          <select id="agendaProjectFilter" class="agenda-select" onchange="renderAgendaList()">
+            <option value="all" data-i18n="all_projects">Tous les projets</option>
+          </select>
+          <select id="agendaGroupBy" class="agenda-select" onchange="renderAgendaList()">
+            <option value="project" data-i18n="by_project">Par projet</option>
+            <option value="date" data-i18n="by_date">Par date</option>
+            <option value="status" data-i18n="by_status">Par statut</option>
+          </select>
+        </div>
+        <div id="agendaListContainer"></div>
+      </div>
+    </div>
+
+    <!-- ==== VUE MON ESPACE ==== -->
+    <div id="viewMySpace" class="view">
+      <!-- Hero -->
+      <div class="myspace-hero">
+        <div class="myspace-hero-avatar" id="msHeroAvatar" style="background:#002D72">?</div>
+        <div>
+          <div class="myspace-hero-name" id="msHeroName">Mon compte</div>
+          <div class="myspace-hero-role" id="msHeroRole">Configurer votre profil →</div>
+          <div class="myspace-hero-id" id="msHeroId"></div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="myspace-stats" id="msViewStats">
+        <div class="myspace-stat"><div class="myspace-stat-val" id="msViewStatProjects">0</div><div class="myspace-stat-label" data-i18n="projects">Projets</div></div>
+        <div class="myspace-stat"><div class="myspace-stat-val" id="msViewStatCRs">0</div><div class="myspace-stat-label" data-i18n="total_crs">CRs totaux</div></div>
+        <div class="myspace-stat"><div class="myspace-stat-val" id="msViewStatFinal">0</div><div class="myspace-stat-label" data-i18n="finalized">Finalisés</div></div>
+        <div class="myspace-stat"><div class="myspace-stat-val" id="msViewStatDraft">0</div><div class="myspace-stat-label" data-i18n="drafts">Brouillons</div></div>
+      </div>
+
+      <!-- Section invitations reçues -->
+      <div class="form-section" style="max-width:700px;" id="invitationsSection">
+        <div class="section-header">
+          <span class="section-icon" style="background:linear-gradient(135deg,#002D72,#E8007D);"><i class="fa-solid fa-envelope" style="color:#fff"></i></span>
+          <h3><span data-i18n="pending_invitations">Invitations reçues</span> <span class="invitations-badge-pill" id="invitationsBadge" style="display:none;margin-left:8px;">0</span></h3>
+        </div>
+        <div class="section-body" id="pendingInvitationsPanel">
+          <div class="collab-empty-invitations">
+            <i class="fa-solid fa-envelope-open" style="font-size:2rem;opacity:.3;display:block;margin-bottom:8px;"></i>
+            Aucune invitation en attente.
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2FA -->
+      <div class="form-section" style="max-width:700px;" id="mfaSection">
+        <div class="section-header">
+          <span class="section-icon" style="background:linear-gradient(135deg,#002D72,#6366F1);"><i class="fa-solid fa-shield-halved" style="color:#fff"></i></span>
+          <h3 data-i18n="mfa_section_title">Double authentification (2FA)</h3>
+        </div>
+        <div class="section-body" id="mfaPanel">
+          <!-- Rempli par renderMFAPanel() -->
+        </div>
+      </div>
+
+      <!-- Formulaire profil -->
+      <div class="form-section" style="max-width:700px">
+        <div class="section-header">
+          <span class="section-icon"><i class="fa-solid fa-id-card"></i></span>
+          <h3 data-i18n="personal_info">Informations personnelles</h3>
+        </div>
+        <div class="section-body">
+          <div class="form-row two-col">
+            <div class="form-group"><label data-i18n="first_name">Prénom *</label><input type="text" id="msViewFirstName" placeholder="Jean" /></div>
+            <div class="form-group"><label data-i18n="last_name">Nom *</label><input type="text" id="msViewLastName" placeholder="Dupont" /></div>
+          </div>
+          <div class="form-row two-col">
+            <div class="form-group"><label data-i18n="job_title">Poste / Titre</label><input type="text" id="msViewJobTitle" placeholder="Senior Manager" /></div>
+            <div class="form-group"><label data-i18n="organization">Organisation</label><input type="text" id="msViewOrganization" placeholder="Wavestone" /></div>
+          </div>
+          <div class="form-row two-col">
+            <div class="form-group"><label data-i18n="email">Email professionnel</label><input type="email" id="msViewEmail" placeholder="j.dupont@wavestone.com" /></div>
+            <div class="form-group"><label data-i18n="phone">Téléphone</label><input type="tel" id="msViewPhone" placeholder="+33 6 00 00 00 00" /></div>
+          </div>
+          <div class="form-group">
+            <label data-i18n="avatar_color">Couleur de l'avatar</label>
+            <div class="color-picker-row">
+              <input type="color" id="msViewAvatarColor" value="#002D72" />
+              <input type="text" id="msViewAvatarColorHex" value="#002D72" maxlength="7" style="width:90px" />
+            </div>
+          </div>
+          <div class="myspace-info-box">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div>Vos données sont stockées et associées à votre identifiant local. Elles ne sont pas partagées ni accessibles par d'autres utilisateurs.</div>
+          </div>
+
+          <!-- Section sécurité : question de récupération -->
+          <div class="section-header" style="margin-top:20px">
+            <span class="section-icon"><i class="fa-solid fa-key"></i></span>
+            <h3 data-i18n="password_recovery">Récupération de mot de passe</h3>
+          </div>
+          <div style="background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:4px;">
+            <div class="form-group" style="margin-bottom:12px">
+              <label><i class="fa-solid fa-shield-halved"></i> <span data-i18n="security_question">Question de sécurité</span></label>
+              <select id="msViewSecQuestion" class="login-select" style="background:#fff;">
+                <option value="">-- Aucune question définie --</option>
+                <option value="Quel est le nom de votre premier animal de compagnie ?">Quel est le nom de votre premier animal de compagnie ?</option>
+                <option value="Quel est le nom de jeune fille de votre mère ?">Quel est le nom de jeune fille de votre mère ?</option>
+                <option value="Dans quelle ville êtes-vous né(e) ?">Dans quelle ville êtes-vous né(e) ?</option>
+                <option value="Quel est le nom de votre école primaire ?">Quel est le nom de votre école primaire ?</option>
+                <option value="Quel est le prénom de votre meilleur(e) ami(e) d'enfance ?">Quel est le prénom de votre meilleur(e) ami(e) d'enfance ?</option>
+                <option value="Quelle est votre équipe sportive préférée ?">Quelle est votre équipe sportive préférée ?</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>Nouvelle réponse <span style="font-size:.75rem;color:var(--gray-400)">(laisser vide pour ne pas modifier)</span></label>
+              <input type="text" id="msViewSecAnswer" placeholder="Votre réponse secrète" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-save-bar" style="max-width:700px">
+        <button type="button" class="btn-secondary btn-danger-outline" onclick="confirmLogout()">
+          <i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="logout">Déconnexion</span>
+        </button>
+        <button type="button" class="btn-secondary" onclick="goToDashboard()">
+          <i class="fa-solid fa-house"></i> <span data-i18n="dashboard_title">Tableau de bord</span>
+        </button>
+        <button type="button" class="btn-primary" id="btnSaveMySpaceView">
+          <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="save_profile">Enregistrer le profil</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==== VUE ÉDITION CR ==== -->
+    <div id="viewEditor" class="view">
+
+      <!-- Import zone -->
+      <div class="import-zone" id="importZone">
+        <div class="import-drop-area" id="dropArea">
+          <i class="fa-solid fa-file-import"></i>
+          <div class="import-drop-text">
+            <span>Importez un document pour pré-remplir le CR</span>
+            <small>Glissez un <strong>.txt</strong>, <strong>.eml</strong> ou <strong>.docx</strong> ici, ou collez du texte brut</small>
+          </div>
+          <div class="import-drop-btns">
+            <input type="file" id="fileImportInput" accept=".txt,.eml,.doc,.docx" hidden />
+            <button class="btn-outline" type="button" onclick="document.getElementById('fileImportInput').click()">
+              <i class="fa-solid fa-file-arrow-up"></i> Choisir un fichier
+            </button>
+            <button class="btn-outline" type="button" id="btnPasteImport">
+              <i class="fa-solid fa-paste"></i> Coller du texte
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulaire CR -->
+      <form id="crForm" class="cr-form" novalidate>
+
+        <!-- Barre template -->
+        <div class="cr-template-bar">
+          <button type="button" class="btn-template-choose" onclick="openTemplateLibrary()">
+            <i class="fa-solid fa-table-columns"></i>
+            <span data-i18n="choose_template">Choisir un template</span>
+          </button>
+          <span class="cr-template-badge" id="currentTemplateBadge" style="display:none;"></span>
+        </div>
+
+        <!-- Section CONTEXTE -->
+        <section class="form-section" id="sectionContext" data-section-icon="fa-briefcase" data-section-color="#002D72">
+          <div class="section-header">
+            <span class="section-icon section-icon-editable" onclick="openSectionIconPicker('sectionContext')" title="Modifier icône">
+              <i class="fa-solid fa-briefcase"></i>
+            </span>
+            <h3 class="section-title-editable" ondblclick="startEditSectionTitle(this)" data-i18n="cr_context">Contexte de la réunion</h3>
+            <button type="button" class="section-edit-btn" onclick="openSectionIconPicker('sectionContext')" title="Modifier titre et icône"><i class="fa-solid fa-pen-to-square"></i></button>
+          </div>
+          <div class="section-body">
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label data-i18n="mission_name">Nom de la mission *</label>
+                <input type="text" id="fieldMission" placeholder="ex : Transformation SI – Client Alpha" required />
+              </div>
+              <div class="form-group">
+                <label data-i18n="meeting_name">Nom de la réunion *</label>
+                <input type="text" id="fieldMeetingName" placeholder="ex : Comité de pilotage #3" required />
+              </div>
+            </div>
+            <div class="form-row three-col">
+              <div class="form-group">
+                <label data-i18n="date">Date</label>
+                <input type="date" id="fieldDate" />
+              </div>
+              <div class="form-group">
+                <label data-i18n="location">Lieu / Modalité</label>
+                <input type="text" id="fieldLocation" placeholder="ex : Paris / Teams" />
+              </div>
+              <div class="form-group">
+                <label data-i18n="facilitator">Animateur</label>
+                <input type="text" id="fieldFacilitator" placeholder="Prénom Nom" />
+              </div>
+            </div>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label data-i18n="author">Rédacteur du CR</label>
+                <input type="text" id="fieldAuthor" placeholder="Prénom Nom" />
+              </div>
+              <div class="form-group">
+                <label data-i18n="status">Statut</label>
+                <select id="fieldStatus">
+                  <option value="draft" data-i18n="draft">Brouillon</option>
+                  <option value="final" data-i18n="final">Final</option>
+                  <option value="archived" data-i18n="archived">Archivé</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section PARTICIPANTS -->
+        <section class="form-section" id="sectionParticipants" data-section-icon="fa-users" data-section-color="#0066CC">
+          <div class="section-header">
+            <span class="section-icon section-icon-editable" onclick="openSectionIconPicker('sectionParticipants')" title="Modifier icône">
+              <i class="fa-solid fa-users"></i>
+            </span>
+            <h3 class="section-title-editable" ondblclick="startEditSectionTitle(this)" data-i18n="participants">Participants</h3>
+            <button type="button" class="section-edit-btn" onclick="openSectionIconPicker('sectionParticipants')" title="Modifier titre et icône"><i class="fa-solid fa-pen-to-square"></i></button>
+          </div>
+          <div class="section-body">
+            <div id="participantsList" class="participants-list"></div>
+            <button type="button" class="btn-add-row" id="btnAddParticipant">
+              <i class="fa-solid fa-user-plus"></i> <span data-i18n="add_participant">Ajouter un participant</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Section SUIVI DES ACTIONS -->
+        <section class="form-section" id="sectionActions" data-section-icon="fa-list-check" data-section-color="#6366F1">
+          <div class="section-header">
+            <span class="section-icon section-icon-editable" onclick="openSectionIconPicker('sectionActions')" title="Modifier icône">
+              <i class="fa-solid fa-list-check"></i>
+            </span>
+            <h3 class="section-title-editable" ondblclick="startEditSectionTitle(this)" data-i18n="action_tracking">Suivi des actions</h3>
+            <button type="button" class="section-edit-btn" onclick="openSectionIconPicker('sectionActions')" title="Modifier titre et icône"><i class="fa-solid fa-pen-to-square"></i></button>
+          </div>
+          <div class="section-body">
+            <div class="actions-table-wrap">
+              <table class="actions-table" id="actionsTable">
+                <thead>
+                  <tr>
+                    <th style="width:42%" data-i18n="action">Action</th>
+                    <th style="width:25%" data-i18n="owner">Porteur</th>
+                    <th style="width:20%" data-i18n="due_date">Échéance</th>
+                    <th style="width:8%" data-i18n="status">Statut</th>
+                    <th style="width:5%"></th>
+                  </tr>
+                </thead>
+                <tbody id="actionsTableBody"></tbody>
+              </table>
+            </div>
+            <button type="button" class="btn-add-row" id="btnAddAction">
+              <i class="fa-solid fa-circle-plus"></i> <span data-i18n="add_action">Ajouter une action</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Section POINTS STRUCTURANTS -->
+        <section class="form-section" id="sectionKeyPoints" data-section-icon="fa-file-lines" data-section-color="#0EA5E9">
+          <div class="section-header">
+            <span class="section-icon section-icon-editable" onclick="openSectionIconPicker('sectionKeyPoints')" title="Modifier icône">
+              <i class="fa-solid fa-file-lines"></i>
+            </span>
+            <h3 class="section-title-editable" ondblclick="startEditSectionTitle(this)" data-i18n="key_points">Points structurants</h3>
+            <button type="button" class="section-edit-btn" onclick="openSectionIconPicker('sectionKeyPoints')" title="Modifier titre et icône"><i class="fa-solid fa-pen-to-square"></i></button>
+          </div>
+          <div class="section-body">
+            <div id="quillEditor" style="min-height:300px;"></div>
+          </div>
+        </section>
+
+        <!-- Boutons de sauvegarde -->
+        <div class="form-save-bar">
+          <button type="button" class="btn-secondary" id="btnCancelEdit">
+            <i class="fa-solid fa-xmark"></i> <span data-i18n="cancel">Annuler</span>
+          </button>
+          <button type="submit" class="btn-primary" id="btnSaveCR">
+            <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="save_cr">Enregistrer le CR</span>
+          </button>
+        </div>
+
+      </form>
+
+      <!-- ===== BARRE D'EXPORT (visible après enregistrement) ===== -->
+      <div class="export-bar" id="exportBar" style="display:none">
+        <span class="export-label"><i class="fa-solid fa-share-nodes"></i> <span data-i18n="export_cr">Exporter ce CR :</span></span>
+        <button class="btn-export btn-email" id="btnExportEmail">
+          <i class="fa-solid fa-envelope"></i> <span data-i18n="export_email">Copier pour Email</span>
+        </button>
+        <button class="btn-export btn-word" id="btnExportWord">
+          <i class="fa-solid fa-file-word"></i> Export Word
+        </button>
+        <button class="btn-export btn-pdf" id="btnExportPDF">
+          <i class="fa-solid fa-print"></i> Imprimer / PDF
+        </button>
+      </div>
+
+    </div><!-- fin viewEditor -->
+
+  </div><!-- fin contentArea -->
+</main>
+
+<!-- ===================================================
+     MODALES
+=================================================== -->
+
+<!-- Modale : Nouveau Projet -->
+<div class="modal-overlay" id="modalProject" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-folder-plus"></i> <span data-i18n="new_project">Nouveau projet</span></h3>
+      <button class="modal-close" data-close="modalProject"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Aperçu logo + galerie -->
+      <div id="projectLogoPreviewWrap" style="display:none;margin-bottom:14px;">
+        <div class="proj-logo-preview-row">
+          <img id="projectLogoPreviewImg" src="" alt="" class="proj-logo-preview-img" />
+          <div class="proj-logo-preview-info">
+            <span id="projectLogoPreviewName" style="font-weight:700;font-size:.88rem;color:var(--gray-800)"></span>
+            <span style="font-size:.74rem;color:var(--gray-400)">Logo sélectionné</span>
+          </div>
+          <button class="proj-logo-clear-btn" onclick="clearProjectLogo()" title="Supprimer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Galerie de logos trouvés -->
+      <div id="projectLogoGallery" style="display:none;margin-bottom:12px;">
+        <div style="font-size:.73rem;font-weight:600;color:var(--gray-500);margin-bottom:6px;">
+          <i class="fa-solid fa-images"></i> Logos trouvés — cliquez pour sélectionner :
+        </div>
+        <div id="projectLogoGalleryItems" class="proj-logo-gallery"></div>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-building"></i> Société / Client *
+          <span style="font-size:.72rem;color:var(--gray-400);font-weight:400;margin-left:4px;">Le logo sera chargé automatiquement</span>
+        </label>
+        <div class="proj-company-input-wrap">
+          <input type="text" id="newProjectCompany"
+            placeholder="ex : BNP Paribas, Orange, Capgemini…"
+            oninput="onProjectCompanyInput(this.value)"
+            autocomplete="off" />
+          <div id="projectLogoStatus" class="proj-logo-status"></div>
+        </div>
+        <div id="projectCompanySuggestions" class="proj-suggestions" style="display:none;"></div>
+        <!-- Upload manuel -->
+        <div class="proj-logo-upload-row">
+          <label class="proj-logo-upload-btn" for="projectLogoFileInput" title="Charger un logo manuellement">
+            <i class="fa-solid fa-upload"></i> Charger un logo
+          </label>
+          <input type="file" id="projectLogoFileInput" accept="image/*" style="display:none" onchange="onProjectLogoFileChange(this)" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="project_name">Nom du projet *</label>
+        <input type="text" id="newProjectName" placeholder="ex : Transformation Digitale – Refonte SI" />
+      </div>
+      <div class="form-group">
+        <label data-i18n="project_desc">Description</label>
+        <textarea id="newProjectDesc" rows="2" placeholder="Brève description du projet…"></textarea>
+      </div>
+      <div class="form-group">
+        <label data-i18n="project_color">Couleur du projet</label>
+        <div class="color-picker-row">
+          <input type="color" id="newProjectColor" value="#002D72"
+            oninput="document.getElementById('newProjectColorHex').textContent=this.value" />
+          <span id="newProjectColorHex">#002D72</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalProject" data-i18n="cancel">Annuler</button>
+      <button class="btn-primary" id="btnCreateProject" data-i18n="create_project">Créer le projet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : Collaborateurs / Co-édition -->
+<div class="modal-overlay" id="modalCollab" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-user-group" style="color:var(--primary)"></i> <span id="collabModalTitle" data-i18n="collaborators">Collaborateurs</span></h3>
+      <button class="modal-close" data-close="modalCollab"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Membres actuels -->
+      <div class="collab-section-label" data-i18n="members">Membres du projet</div>
+      <div id="collabMembersList" class="collab-members-list">
+        <div class="collab-loading"><i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n="loading">Chargement…</span></div>
+      </div>
+
+      <!-- Lien d'invitation rapide -->
+      <div class="collab-invite-link-section" id="collabInviteLinkSection">
+        <div class="collab-section-label" style="margin-top:20px;">
+          <i class="fa-solid fa-link" style="color:var(--primary)"></i> Lien d'invitation rapide
+        </div>
+        <p style="font-size:.78rem;color:var(--gray-500);margin:4px 0 10px;">
+          Partagez ce lien — toute personne avec un compte peut rejoindre le projet directement.
+        </p>
+        <div class="collab-link-row">
+          <input type="text" id="collabInviteLinkInput" readonly class="collab-link-input"
+                 data-i18n-placeholder="invite_link_placeholder" placeholder="Génération du lien…" />
+          <button class="btn-secondary" onclick="copyInviteLink()" id="btnCopyInviteLink" data-i18n-title="copied" title="Copier le lien">
+            <i class="fa-solid fa-copy"></i> <span data-i18n="invite_link_copy_btn">Copier</span>
+          </button>
+          <button class="btn-danger-outline" onclick="revokeInviteLink()" id="btnRevokeInviteLink" data-i18n-title="invite_link_revoke_btn" title="Révoquer ce lien">
+            <i class="fa-solid fa-rotate"></i> <span data-i18n="invite_link_revoke_btn">Nouveau lien</span>
+          </button>
+        </div>
+        <div id="collabLinkStatus" style="font-size:.72rem;margin-top:5px;color:var(--gray-400);"></div>
+      </div>
+
+      <!-- Formulaire invitation -->
+      <div class="collab-invite-section">
+        <div class="collab-section-label" style="margin-top:20px;" data-i18n="invite_member">Inviter par identifiant / email</div>
+        <p class="collab-invite-hint">
+          <i class="fa-solid fa-circle-info"></i>
+          Saisissez l'<strong>identifiant</strong> ou l'<strong>email</strong> du collaborateur. Il recevra une notification dans son Espace.
+        </p>
+        <div class="collab-invite-row">
+          <input type="text" id="collabInviteInput"
+                 data-i18n-placeholder="invite_placeholder"
+                 placeholder="identifiant ou email…"
+                 class="collab-invite-input"
+                 onkeydown="if(event.key==='Enter')inviteMember()" />
+          <select id="collabInviteRole" class="collab-role-select-invite">
+            <option value="editor" data-i18n="role_editor">Editeur</option>
+            <option value="viewer" data-i18n="role_viewer">Lecteur</option>
+          </select>
+          <button class="btn-primary" id="btnCollabInvite" onclick="inviteMember()">
+            <i class="fa-solid fa-paper-plane"></i> <span data-i18n="invite_btn">Inviter</span>
+          </button>
+        </div>
+        <div class="collab-invite-error" id="collabInviteError"></div>
+
+        <!-- Légende des rôles -->
+        <div class="collab-roles-legend">
+          <div class="collab-role-item">
+            <span class="collab-role-badge editor">Editeur</span>
+            <span>Peut créer, modifier et supprimer les CRs du projet</span>
+          </div>
+          <div class="collab-role-item">
+            <span class="collab-role-badge viewer">Lecteur</span>
+            <span>Peut uniquement consulter les CRs du projet</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalCollab" data-i18n="close">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : Rejoindre par lien d'invitation -->
+<div class="modal-overlay" id="modalJoinByLink" hidden>
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-link" style="color:var(--primary)"></i> <span data-i18n="join_project_title">Rejoindre un projet</span></h3>
+      <button class="modal-close" data-close="modalJoinByLink"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="joinByLinkContent">
+        <div style="text-align:center;padding:20px 0;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;color:var(--primary)"></i>
+          <p style="margin-top:10px;color:var(--gray-500);"><span data-i18n="loading">Chargement…</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" id="joinByLinkFooter" style="display:none;">
+      <button class="btn-secondary" data-close="modalJoinByLink" data-i18n="cancel">Annuler</button>
+      <button class="btn-primary" id="btnConfirmJoinByLink" onclick="confirmJoinByLink()">
+        <i class="fa-solid fa-check"></i> <span data-i18n="join_btn">Rejoindre le projet</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : Paramètres Template -->
+<div class="modal-overlay" id="modalSettings" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-sliders"></i> <span data-i18n="settings_title">Paramètres du template</span></h3>
+      <button class="modal-close" data-close="modalSettings"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <!-- Bandeau projet actif -->
+    <div id="settingsProjectBanner" class="settings-project-banner" style="display:none"></div>
+    <div class="modal-body settings-grid">
+      <div class="settings-group">
+        <label data-i18n="primary_color">Couleur principale</label>
+        <div class="color-picker-row">
+          <input type="color" id="settingPrimaryColor" value="#002D72" />
+          <input type="text" id="settingPrimaryHex" value="#002D72" maxlength="7" style="width:90px" />
+        </div>
+      </div>
+      <div class="settings-group">
+        <label data-i18n="accent_color">Couleur secondaire / Accent</label>
+        <div class="color-picker-row">
+          <input type="color" id="settingAccentColor" value="#E8007D" />
+          <input type="text" id="settingAccentHex" value="#E8007D" maxlength="7" style="width:90px" />
+        </div>
+      </div>
+      <div class="settings-group">
+        <label data-i18n="logo">Logo (upload)</label>
+        <div class="logo-upload-area" id="logoUploadArea">
+          <img id="settingsLogoPreview" src="images/wavestone-logo.png" alt="Logo preview" class="settings-logo-preview" />
+          <button class="btn-outline" id="btnChangeLogo">
+            <i class="fa-solid fa-image"></i> <span data-i18n="upload_logo">Changer le logo</span>
+          </button>
+          <input type="file" id="logoFileInput" accept="image/*" hidden />
+        </div>
+      </div>
+      <div class="settings-group settings-group--full">
+        <label data-i18n="font">Police de caractères</label>
+        <div class="font-picker" id="fontPicker">
+          <div class="font-option selected" data-font="Inter, Arial, sans-serif" data-gfont="" style="font-family:Inter,Arial,sans-serif">
+            <span class="font-name">Inter</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Helvetica Neue', Helvetica, Arial, sans-serif" data-gfont="" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+            <span class="font-name">Helvetica Neue</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="Arial, sans-serif" data-gfont="" style="font-family:Arial,sans-serif">
+            <span class="font-name">Arial</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Roboto', sans-serif" data-gfont="Roboto:wght@400;700" style="font-family:'Roboto',sans-serif">
+            <span class="font-name">Roboto</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Open Sans', sans-serif" data-gfont="Open+Sans:wght@400;700" style="font-family:'Open Sans',sans-serif">
+            <span class="font-name">Open Sans</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Lato', sans-serif" data-gfont="Lato:wght@400;700" style="font-family:'Lato',sans-serif">
+            <span class="font-name">Lato</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Montserrat', sans-serif" data-gfont="Montserrat:wght@400;700" style="font-family:'Montserrat',sans-serif">
+            <span class="font-name">Montserrat</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Raleway', sans-serif" data-gfont="Raleway:wght@400;700" style="font-family:'Raleway',sans-serif">
+            <span class="font-name">Raleway</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Poppins', sans-serif" data-gfont="Poppins:wght@400;700" style="font-family:'Poppins',sans-serif">
+            <span class="font-name">Poppins</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Source Sans 3', sans-serif" data-gfont="Source+Sans+3:wght@400;700" style="font-family:'Source Sans 3',sans-serif">
+            <span class="font-name">Source Sans 3</span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Georgia', 'Times New Roman', serif" data-gfont="" style="font-family:Georgia,'Times New Roman',serif">
+            <span class="font-name">Georgia <em style="font-size:.65rem;color:#9AA3B0;font-style:normal">(serif)</em></span><span class="font-sample" style="font-family:Georgia,serif">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+          <div class="font-option" data-font="'Merriweather', serif" data-gfont="Merriweather:wght@400;700" style="font-family:'Merriweather',serif">
+            <span class="font-name">Merriweather <em style="font-size:.65rem;color:#9AA3B0;font-style:normal">(serif)</em></span><span class="font-sample">Aa Bb — WAVESTONE 2026</span>
+            <span class="font-check"><i class="fa-solid fa-check"></i></span>
+          </div>
+        </div>
+        <!-- Champ caché pour la valeur -->
+        <input type="hidden" id="settingFont" value="Inter, Arial, sans-serif" />
+      </div>
+      <div class="settings-group">
+        <label data-i18n="font_size">Taille de base du texte</label>
+        <div class="range-row">
+          <input type="range" id="settingFontSize" min="12" max="18" value="14" step="1" />
+          <span id="settingFontSizeVal">14px</span>
+        </div>
+      </div>
+      <div class="settings-group">
+        <label data-i18n="org_name">Nom de l'organisation</label>
+        <input type="text" id="settingOrgName" value="Wavestone" data-i18n-placeholder="org_name" placeholder="Nom de votre organisation" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="btnResetSettings" data-i18n="reset">Réinitialiser</button>
+      <button class="btn-primary" id="btnApplySettings" data-i18n="save_settings">Appliquer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : Copier HTML Email -->
+<div class="modal-overlay" id="modalEmailCopy" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-envelope"></i> Copier pour Email / Outlook</h3>
+      <button class="modal-close" data-close="modalEmailCopy"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="helper-text">
+        <i class="fa-solid fa-circle-info"></i>
+        <div>
+          <strong>Comment coller dans Outlook :</strong><br/>
+          Cliquez <strong>« Copier le contenu »</strong> ci-dessous, puis faites <strong>Ctrl+V</strong> directement dans le corps d'un nouvel email — la mise en forme sera conservée.<br/>
+          <span style="font-size:.8rem;color:var(--gray-400);margin-top:4px;display:block;">
+            💡 Fonctionne aussi dans Gmail. Si votre navigateur bloque la copie formatée, utilisez plutôt <em>Export Word</em> → copiez depuis Word.
+          </span>
+        </div>
+      </div>
+      <div class="email-preview-wrap" id="emailPreviewWrap"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalEmailCopy">Fermer</button>
+      <button class="btn-primary" id="btnCopyHTML">
+        <i class="fa-solid fa-copy"></i> Copier le contenu mis en forme
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification (global, accessible depuis login et app) -->
+<div class="toast" id="toast"></div>
+
+<!-- ===================================================
+     MODALE : Export Agenda / ICS
+=================================================== -->
+<div class="modal-overlay" id="modalAgendaExport" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-calendar-arrow-up" style="color:var(--primary)"></i> Exporter vers Outlook / Calendrier</h3>
+      <button class="modal-close" data-close="modalAgendaExport"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="helper-text">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Exportez vos tâches au format <strong>.ics</strong> pour les importer dans Outlook, Google Calendar ou tout autre calendrier.</span>
+      </p>
+
+      <!-- Filtre statuts -->
+      <div class="form-group" style="margin-top:14px;">
+        <label>Statuts à inclure</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+          <label class="agenda-check-label"><input type="checkbox" class="ics-status-check" value="todo" checked> À faire</label>
+          <label class="agenda-check-label"><input type="checkbox" class="ics-status-check" value="wip" checked> En cours</label>
+          <label class="agenda-check-label"><input type="checkbox" class="ics-status-check" value="done"> Terminées</label>
+          <label class="agenda-check-label"><input type="checkbox" class="ics-status-check" value="blocked" checked> Bloquées</label>
+        </div>
+      </div>
+
+      <!-- Filtre projets -->
+      <div class="form-group" style="margin-top:12px;">
+        <label>Projets à inclure</label>
+        <div id="icsProjectList" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;"></div>
+      </div>
+
+      <!-- Option durée -->
+      <div class="form-group" style="margin-top:12px;">
+        <label>Durée par défaut de l'événement (si pas de date)</label>
+        <select id="icsDuration" class="agenda-select">
+          <option value="0">Événement sans durée (tâche)</option>
+          <option value="60" selected>1 heure</option>
+          <option value="120">2 heures</option>
+          <option value="allday">Journée entière</option>
+        </select>
+      </div>
+
+      <!-- Option rappel -->
+      <div class="form-group" style="margin-top:12px;">
+        <label>Rappel avant l'échéance</label>
+        <select id="icsReminder" class="agenda-select">
+          <option value="0">Pas de rappel</option>
+          <option value="60" selected>1 heure avant</option>
+          <option value="1440">1 jour avant</option>
+          <option value="2880">2 jours avant</option>
+          <option value="10080">1 semaine avant</option>
+        </select>
+      </div>
+
+      <!-- Prévisualisation -->
+      <div class="form-group" style="margin-top:14px;">
+        <label>Aperçu — <span id="icsPreviewCount" style="color:var(--primary);font-weight:600;">0</span> tâche(s) sélectionnée(s)</label>
+        <div id="icsPreview" class="ics-preview-box"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalAgendaExport">Annuler</button>
+      <button class="btn-primary" onclick="downloadICS()">
+        <i class="fa-solid fa-download"></i> Télécharger le fichier .ics
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : Profil participant -->
+<!-- Modale : Configuration MFA (Google Authenticator) -->
+<div class="modal-overlay" id="modalMFASetup" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-shield-halved" style="color:var(--primary)"></i> <span data-i18n="mfa_setup_title">Activer la double authentification</span></h3>
+      <button class="modal-close" data-close="modalMFASetup"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="mfa-setup-steps">
+        <!-- Étape 1 -->
+        <div class="mfa-step">
+          <div class="mfa-step-num">1</div>
+          <div class="mfa-step-content">
+            <strong data-i18n="mfa_setup_step1">Installez Google Authenticator ou Authy</strong>
+            <div class="mfa-app-links">
+              <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" class="mfa-app-btn">
+                <i class="fa-brands fa-google-play"></i> Google Play
+              </a>
+              <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank" class="mfa-app-btn">
+                <i class="fa-brands fa-app-store-ios"></i> App Store
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Étape 2 -->
+        <div class="mfa-step">
+          <div class="mfa-step-num">2</div>
+          <div class="mfa-step-content">
+            <strong data-i18n="mfa_setup_step2">Scannez ce QR code</strong>
+            <div class="mfa-qr-wrap">
+              <img id="mfaQRCode" src="" alt="QR Code MFA" class="mfa-qr-img" />
+            </div>
+            <details class="mfa-manual-details">
+              <summary data-i18n="mfa_manual_entry">Entrée manuelle</summary>
+              <div class="mfa-secret-wrap">
+                <code id="mfaSecretDisplay" class="mfa-secret"></code>
+                <button type="button" class="btn-icon" onclick="copyMFASecret()" title="Copier">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </div>
+            </details>
+          </div>
+        </div>
+        <!-- Étape 3 -->
+        <div class="mfa-step">
+          <div class="mfa-step-num">3</div>
+          <div class="mfa-step-content">
+            <strong data-i18n="mfa_setup_step3">Saisissez le code affiché</strong>
+            <div class="mfa-verify-row">
+              <input type="text" id="mfaVerifyCode" maxlength="6" pattern="[0-9]{6}"
+                     placeholder="000000" inputmode="numeric"
+                     class="mfa-code-input"
+                     onkeydown="if(event.key==='Enter') confirmMFASetup()" />
+              <button type="button" class="btn-primary" id="btnConfirmMFA" onclick="confirmMFASetup()">
+                <i class="fa-solid fa-check"></i> <span data-i18n="confirm">Confirmer</span>
+              </button>
+            </div>
+            <div class="mfa-setup-error" id="mfaSetupError"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalMFASetup" data-i18n="cancel">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : Bibliothèque de templates -->
+<div class="modal-overlay" id="modalTemplateLibrary" hidden>
+  <div class="modal modal-fullwide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-table-columns" style="color:var(--primary)"></i> <span data-i18n="template_library">Bibliothèque de templates</span></h3>
+      <button class="modal-close" data-close="modalTemplateLibrary"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:20px;">
+      <div id="templateLibraryGrid"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalTemplateLibrary" data-i18n="close">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale : Éditeur de template personnalisé -->
+<div class="modal-overlay" id="modalTemplateEditor" hidden>
+  <div class="modal modal-fullwide tpl-editor-modal">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary)"></i> <span data-i18n="create_template">Créer / Modifier un template</span></h3>
+      <button class="modal-close" data-close="modalTemplateEditor"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body tpl-editor-body">
+      <div class="tpl-editor-layout">
+
+        <!-- COLONNE GAUCHE : config + catalogue -->
+        <div class="tpl-editor-left">
+          <!-- Nom + description + couleur -->
+          <div class="tpl-editor-section">
+            <div class="tpl-editor-label" data-i18n="template_name">Nom du template</div>
+            <input type="text" id="tplEditorName" class="tpl-name-input" placeholder="Nom du template…" />
+          </div>
+          <div class="tpl-editor-section">
+            <div class="tpl-editor-label" data-i18n="template_desc">Description</div>
+            <textarea id="tplEditorDesc" class="tpl-desc-input" rows="2" placeholder="Description courte…"></textarea>
+          </div>
+          <div class="tpl-editor-section" style="display:flex;gap:10px;align-items:center;">
+            <div style="flex:1">
+              <div class="tpl-editor-label">Couleur</div>
+              <div class="color-picker-row">
+                <input type="color" id="tplEditorColor" value="#6366F1" oninput="tplSyncColor(this)" onchange="tplSyncColor(this)" />
+                <input type="text" id="tplEditorColorHex" value="#6366F1" maxlength="7" style="width:90px" oninput="tplSyncColor(this)" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Catalogue de modules prédéfinis -->
+          <div class="tpl-editor-section">
+            <div class="tpl-editor-label" data-i18n="template_modules">
+              Modules disponibles
+              <button class="tpl-create-custom-module-btn" onclick="openCustomModuleEditor(null)">
+                <i class="fa-solid fa-plus"></i> Créer un module
+              </button>
+            </div>
+            <div id="tplModuleCatalog" class="tpl-module-catalog"></div>
+          </div>
+        </div>
+
+        <!-- COLONNE DROITE : structure du template -->
+        <div class="tpl-editor-right">
+          <div class="tpl-editor-label">
+            <i class="fa-solid fa-grip-dots-vertical" style="opacity:.4;margin-right:4px;"></i>
+            Structure du template
+            <span style="font-size:.72rem;color:var(--gray-400);font-weight:400;margin-left:6px;">Glissez pour réordonner</span>
+          </div>
+          <div id="tplActiveModules" class="tpl-active-modules"></div>
+        </div>
+      </div>
+
+      <!-- PANNEAU ÉDITEUR DE MODULE PERSONNALISÉ (glisse depuis la droite) -->
+      <div id="customModuleEditorPanel" class="cme-panel" style="display:none;">
+        <div class="cme-panel-header">
+          <div class="cme-panel-title">
+            <i class="fa-solid fa-puzzle-piece"></i>
+            <span id="cmeTitle">Nouveau module</span>
+          </div>
+          <button class="cme-panel-close" onclick="closeCustomModuleEditor()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Infos de base du module -->
+        <div class="cme-section">
+          <div class="cme-row">
+            <div class="cme-field" style="flex:2">
+              <label>Nom du module *</label>
+              <input type="text" id="cmeModuleName" placeholder="ex : Décisions clés" maxlength="40" />
+            </div>
+            <div class="cme-field" style="flex:1">
+              <label>Couleur</label>
+              <input type="color" id="cmeModuleColor" value="#6366F1" style="height:38px;width:100%;cursor:pointer;border-radius:8px;border:1.5px solid var(--gray-200)" />
+            </div>
+          </div>
+          <div class="cme-row">
+            <div class="cme-field" style="flex:1">
+              <label>Icône</label>
+              <div class="cme-icon-picker" id="cmeIconPicker"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blocs de contenu -->
+        <div class="cme-section">
+          <div class="cme-section-title">
+            Contenu du module
+            <span class="cme-section-sub">Ajoutez des blocs pour composer votre module</span>
+          </div>
+          <div class="cme-blocks-toolbar">
+            <button class="cme-add-block-btn" onclick="cmeAddBlock('text')"><i class="fa-solid fa-align-left"></i> Texte libre</button>
+            <button class="cme-add-block-btn" onclick="cmeAddBlock('table')"><i class="fa-solid fa-table"></i> Tableau</button>
+            <button class="cme-add-block-btn" onclick="cmeAddBlock('checklist')"><i class="fa-solid fa-list-check"></i> Liste à cocher</button>
+            <button class="cme-add-block-btn" onclick="cmeAddBlock('columns')"><i class="fa-solid fa-table-columns"></i> 2 colonnes</button>
+            <button class="cme-add-block-btn" onclick="cmeAddBlock('kpi')"><i class="fa-solid fa-gauge-high"></i> KPI</button>
+            <button class="cme-add-block-btn" onclick="cmeAddBlock('separator')"><i class="fa-solid fa-minus"></i> Séparateur</button>
+          </div>
+          <div id="cmeBlocksList" class="cme-blocks-list"></div>
+        </div>
+
+        <div class="cme-actions">
+          <button class="btn-secondary" onclick="closeCustomModuleEditor()">Annuler</button>
+          <button class="btn-primary" onclick="saveCustomModule()">
+            <i class="fa-solid fa-check"></i> Ajouter ce module au template
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalTemplateEditor" data-i18n="cancel">Annuler</button>
+      <button class="btn-primary" id="btnSaveTemplate" onclick="saveTemplate()">
+        <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="save_template">Enregistrer</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalParticipantProfile" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-user-circle" style="color:var(--primary)"></i> Profil participant</h3>
+      <button class="modal-close" data-close="modalParticipantProfile"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="pp-avatar-section">
+        <div class="pp-photo-wrap">
+          <img id="ppPhotoPreview" src="" alt="" style="display:none" class="pp-photo" />
+          <div id="ppPhotoNoImg" class="pp-photo-placeholder"><i class="fa-solid fa-user"></i></div>
+          <label class="pp-photo-btn" title="Ajouter une photo">
+            <i class="fa-solid fa-camera"></i>
+            <input type="file" id="ppPhotoInput" accept="image/*" style="display:none" onchange="previewParticipantPhoto(this)" />
+          </label>
+        </div>
+        <div class="pp-color-section">
+          <label style="font-size:.8rem;font-weight:600;color:var(--gray-700)">Couleur avatar</label>
+          <input type="color" id="ppColorPicker" value="#002D72" class="pp-color-input" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nom complet *</label>
+        <input type="text" id="ppName" placeholder="Prénom Nom" />
+      </div>
+      <div class="form-row two-col">
+        <div class="form-group"><label>Poste / Rôle</label><input type="text" id="ppRole" placeholder="Senior Manager" /></div>
+        <div class="form-group"><label>Société / Entité</label><input type="text" id="ppCompany" placeholder="Wavestone" /></div>
+      </div>
+      <div class="pp-info">
+        <i class="fa-solid fa-circle-info"></i> La photo et les informations seront proposées automatiquement dans les prochains CRs.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalParticipantProfile">Annuler</button>
+      <button class="btn-primary" onclick="saveParticipantProfile()">
+        <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /#appRoot -->
+
+<!-- ===================================================
+     MODALE : Confirmation générique
+=================================================== -->
+<div class="modal-overlay" id="modalConfirm" hidden>
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 id="confirmModalTitle"><i class="fa-solid fa-exclamation-triangle"></i> Confirmer</h3>
+      <button class="modal-close" data-close="modalConfirm"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmModalMessage" style="font-size:.9rem;color:var(--gray-700);line-height:1.6;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="btnCancelConfirm" data-close="modalConfirm" data-i18n="cancel">Annuler</button>
+      <button class="btn-primary btn-danger" id="btnConfirmAction">
+        <i class="fa-solid fa-check"></i> <span data-i18n="confirm">Confirmer</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================
+     MODALE : Mon Espace
+=================================================== -->
+<div class="modal-overlay" id="modalMySpace" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-circle-user" style="color:var(--primary)"></i> <span data-i18n="my_space_title">Mon Espace</span></h3>
+      <button class="modal-close" data-close="modalMySpace"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Stats utilisateur -->
+      <div class="myspace-stats">
+        <div class="myspace-stat">
+          <div class="myspace-stat-val" id="msStatProjects">0</div>
+          <div class="myspace-stat-label">Projets</div>
+        </div>
+        <div class="myspace-stat">
+          <div class="myspace-stat-val" id="msStatCRs">0</div>
+          <div class="myspace-stat-label">CRs totaux</div>
+        </div>
+        <div class="myspace-stat">
+          <div class="myspace-stat-val" id="msStatFinal">0</div>
+          <div class="myspace-stat-label">Finalisés</div>
+        </div>
+        <div class="myspace-stat">
+          <div class="myspace-stat-val" id="msStatDraft">0</div>
+          <div class="myspace-stat-label">Brouillons</div>
+        </div>
+      </div>
+
+      <!-- Avatar + identité -->
+      <div class="myspace-grid">
+        <div class="myspace-avatar-col">
+          <div class="myspace-avatar-preview" id="msAvatarPreview">?</div>
+          <div class="form-group" style="margin-top:10px;">
+            <label>Couleur de l'avatar</label>
+            <div class="color-picker-row">
+              <input type="color" id="msAvatarColor" value="#002D72" />
+              <input type="text" id="msAvatarColorHex" value="#002D72" maxlength="7" style="width:90px" />
+            </div>
+          </div>
+          <div class="myspace-userid">
+            <span>ID : </span><code id="msUserId"></code>
+            <div style="font-size:.7rem;color:var(--gray-400);margin-top:4px;">Vos données sont liées à cet identifiant local. Gardez-le si vous souhaitez migrer vos données.</div>
+          </div>
+        </div>
+
+        <div class="myspace-form-col">
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label>Prénom *</label>
+              <input type="text" id="msFirstName" placeholder="Jean" />
+            </div>
+            <div class="form-group">
+              <label>Nom *</label>
+              <input type="text" id="msLastName" placeholder="Dupont" />
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label>Poste / Titre</label>
+              <input type="text" id="msJobTitle" placeholder="Senior Manager" />
+            </div>
+            <div class="form-group">
+              <label>Organisation</label>
+              <input type="text" id="msOrganization" placeholder="Wavestone" />
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label>Email professionnel</label>
+              <input type="email" id="msEmail" placeholder="j.dupont@wavestone.com" />
+            </div>
+            <div class="form-group">
+              <label>Téléphone</label>
+              <input type="tel" id="msPhone" placeholder="+33 6 00 00 00 00" />
+            </div>
+          </div>
+          <div class="myspace-info-box">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div>Vos données sont stockées localement et associées à votre identifiant de session. Elles ne sont pas partagées ni accessibles par d'autres utilisateurs.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary btn-danger-outline" onclick="confirmLogout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+      </button>
+      <div style="flex:1"></div>
+      <button class="btn-secondary" data-close="modalMySpace">Fermer</button>
+      <button class="btn-primary" id="btnSaveMySpace">
+        <i class="fa-solid fa-floppy-disk"></i> Enregistrer le profil
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================
+     MODALE : Import texte collé
+=================================================== -->
+<div class="modal-overlay" id="modalPasteImport" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-paste" style="color:var(--primary)"></i> Importer du texte</h3>
+      <button class="modal-close" data-close="modalPasteImport"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="helper-text">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Collez ici le contenu de votre email, compte-rendu Word, ou tout texte. L'application analysera le texte et pré-remplira les champs automatiquement.</span>
+      </p>
+      <div class="form-group" style="margin-top:12px;">
+        <label>Texte à analyser</label>
+        <textarea id="pasteImportText" rows="12"
+          placeholder="Collez ici le contenu de votre réunion, email ou CR existant…&#10;&#10;Exemple :&#10;Objet : Comité de pilotage – Projet Alpha&#10;Date : 15/02/2026&#10;Participants : Jean Dupont, Marie Martin, Pierre Durand&#10;Actions :&#10;- Préparer le rapport – Jean Dupont – 28/02/2026&#10;- Valider le budget – Marie Martin – 05/03/2026"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalPasteImport">Annuler</button>
+      <button class="btn-primary" id="btnAnalysePaste">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Analyser et pré-remplir
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL : ÉDITION SECTION (Titre + Icône) ===== -->
+<div class="modal-overlay" id="modalSectionEdit" hidden>
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-pen-to-square"></i> Modifier la section</h2>
+      <button class="modal-close" data-close="modalSectionEdit">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:20px 24px;">
+      <!-- Titre -->
+      <div class="form-group" style="margin-bottom:16px;">
+        <label style="font-weight:600;font-size:.85rem;">Titre de la section</label>
+        <input type="text" id="sectionEditTitle" placeholder="Nom de la section…"
+               style="padding:8px 12px;border:1.5px solid var(--gray-300);border-radius:8px;font-size:.95rem;width:100%;box-sizing:border-box;" />
+      </div>
+      <!-- Couleur -->
+      <div class="form-group" style="margin-bottom:16px;">
+        <label style="font-weight:600;font-size:.85rem;">Couleur de l'icône</label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <input type="color" id="sectionEditColor" value="#002D72"
+                 style="width:42px;height:36px;border:1.5px solid var(--gray-300);border-radius:8px;padding:2px;cursor:pointer;" />
+          <div id="sectionColorPresets" style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#002D72';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#002D72;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#002D72"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#E8007D';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#E8007D;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#E8007D"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#0066CC';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#0066CC;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#0066CC"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#6366F1';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#6366F1;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#6366F1"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#7C3AED';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#7C3AED;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#7C3AED"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#059669';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#059669;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#059669"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#D97706';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#D97706;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#D97706"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#DC2626';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#DC2626;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#DC2626"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#0EA5E9';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#0EA5E9;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#0EA5E9"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#10B981';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#10B981;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#10B981"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#F59E0B';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#F59E0B;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#F59E0B"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#EF4444';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#EF4444;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#EF4444"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#8B5CF6';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#8B5CF6;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#8B5CF6"></button>
+            <button type="button" onclick="document.getElementById('sectionEditColor').value='#64748B';_sectionEditUpdatePreview()" style="width:22px;height:22px;background:#64748B;border-radius:50%;border:2px solid transparent;cursor:pointer;" title="#64748B"></button>
+          </div>
+        </div>
+      </div>
+      <!-- Icônes -->
+      <div class="form-group">
+        <label style="font-weight:600;font-size:.85rem;">Icône <span style="font-size:.75rem;color:var(--gray-400);font-weight:400;">(cliquez pour sélectionner)</span></label>
+        <div id="sectionIconGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;max-height:240px;overflow-y:auto;padding:8px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;margin-top:6px;">
+        </div>
+      </div>
+      <!-- Prévisualisation -->
+      <div style="margin-top:16px;padding:12px 16px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;display:flex;align-items:center;gap:12px;">
+        <span id="sectionEditPreviewIcon" style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;"></span>
+        <span id="sectionEditPreviewTitle" style="font-size:.95rem;font-weight:700;color:var(--gray-900);"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalSectionEdit">Annuler</button>
+      <button class="btn-primary" id="btnApplySectionEdit">
+        <i class="fa-solid fa-check"></i> Appliquer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL : ÉDITION PROJET (vignette) ===== -->
+<div class="modal-overlay" id="modalEditProject" hidden>
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-folder-pen"></i> Modifier le projet</h2>
+      <button class="modal-close" data-close="modalEditProject">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:20px 24px;">
+      <input type="hidden" id="editProjectId" />
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="font-weight:600;font-size:.85rem;">Nom du projet *</label>
+        <input type="text" id="editProjectName" placeholder="Nom du projet…"
+               style="padding:8px 12px;border:1.5px solid var(--gray-300);border-radius:8px;font-size:.95rem;width:100%;box-sizing:border-box;" />
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="font-weight:600;font-size:.85rem;">Description (optionnel)</label>
+        <textarea id="editProjectDescription" rows="2" placeholder="Courte description…"
+                  style="padding:8px 12px;border:1.5px solid var(--gray-300);border-radius:8px;font-size:.9rem;width:100%;box-sizing:border-box;resize:vertical;"></textarea>
+      </div>
+      <div class="form-row two-col" style="margin-bottom:14px;">
+        <div class="form-group">
+          <label style="font-weight:600;font-size:.85rem;">Nom du client</label>
+          <input type="text" id="editProjectClient" placeholder="Nom du client…"
+                 style="padding:8px 12px;border:1.5px solid var(--gray-300);border-radius:8px;font-size:.9rem;width:100%;box-sizing:border-box;" />
+        </div>
+        <div class="form-group">
+          <label style="font-weight:600;font-size:.85rem;">Couleur</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="color" id="editProjectColor" value="#002D72"
+                   style="width:42px;height:36px;border:1.5px solid var(--gray-300);border-radius:8px;padding:2px;cursor:pointer;" />
+            <span style="font-size:.82rem;color:var(--gray-500);">Couleur de la carte</span>
+          </div>
+        </div>
+      </div>
+      <!-- Logo actuel + changer -->
+      <div class="form-group">
+        <label style="font-weight:600;font-size:.85rem;">Logo du projet</label>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+          <div id="editProjectLogoPreview" style="width:48px;height:48px;border-radius:8px;background:var(--gray-100);border:1px solid var(--gray-200);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:.8rem;color:var(--gray-400);">
+            <i class="fa-solid fa-image"></i>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button type="button" class="btn-secondary" onclick="document.getElementById('editProjectLogoFile').click()" style="font-size:.8rem;padding:5px 10px;">
+              <i class="fa-solid fa-upload"></i> Changer le logo
+            </button>
+            <button type="button" class="btn-secondary" id="btnRemoveEditLogo" style="font-size:.8rem;padding:5px 10px;color:#EF4444;border-color:#FCA5A5;">
+              <i class="fa-solid fa-trash"></i> Supprimer
+            </button>
+          </div>
+          <input type="file" id="editProjectLogoFile" accept="image/*" style="display:none" onchange="_handleEditProjectLogo(this)" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" data-close="modalEditProject">Annuler</button>
+      <button class="btn-primary" id="btnSaveEditProject">
+        <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Quill JS -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<!-- docx.js pour export Word -->
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<!-- JSZip pour lecture DOCX -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<!-- Mammoth.js pour extraction texte Word -->
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<!-- Scripts chargés séquentiellement avec defer pour garantir l'ordre -->
+<!-- v=20260233 — logo base64 dans exports -->
+<script src="js/i18n.js?v=20260228" defer></script>
+<script src="js/app.js?v=20260303b" defer></script>
+<script src="js/collaboration.js?v=20260303a" defer></script>
+<script src="js/settings.js?v=20260303b" defer></script>
+<script src="js/auth.js?v=20260302e" defer></script>
+<script src="js/mfa.js?v=20260302d" defer></script>
+<script src="js/export.js?v=20260303a" defer></script>
+<script src="js/import.js?v=20260226b" defer></script>
+<script src="js/project-dashboard.js?v=20260226b" defer></script>
+<script src="js/dark-mode.js?v=20260226b" defer></script>
+<script src="js/agenda.js?v=20260226b" defer></script>
+<script src="js/templates.js?v=20260226e" defer></script>
+<script src="js/module-reorder.js?v=20260226b" defer></script>
+<script src="js/module-layout.js?v=20260228b" defer></script>
+<script src="js/section-editor.js?v=20260228b" defer></script>
+</body>
+</html>

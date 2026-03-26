@@ -1,0 +1,260 @@
+/* =====================================================
+   WAVESTONE CR MASTER – RESPONSIVE.CSS
+   Responsive pour téléphone (< 600px) et tablette (600–900px)
+   ===================================================== */
+
+/* ─────────────────────────────────────────────
+   TABLETTE (≤ 900px)
+───────────────────────────────────────────── */
+@media (max-width: 900px) {
+
+  /* ── Sidebar : overlay sur mobile ─────────── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    z-index: 200;
+    transform: translateX(0);
+    transition: transform var(--transition, .2s ease);
+    box-shadow: 4px 0 20px rgba(0,0,0,.25);
+  }
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+    width: var(--sidebar-w, 280px);
+    min-width: var(--sidebar-w, 280px);
+  }
+  /* Overlay foncé quand sidebar ouverte */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 199;
+  }
+  .sidebar-overlay.active { display: block; }
+
+  /* ── Main content plein écran ──────────────── */
+  .main-content { width: 100%; }
+  .content-area { padding: 16px; }
+
+  /* ── Topbar compact ────────────────────────── */
+  .topbar { padding: 0 14px; gap: 10px; }
+  .topbar-breadcrumb { font-size: .82rem; }
+  .topbar-actions { gap: 6px; }
+  .topbar-actions .btn-secondary span { display: none; }
+  .topbar-actions .btn-secondary { padding: 7px 10px; }
+
+  /* ── Dashboard ─────────────────────────────── */
+  .dashboard-hero { flex-direction: column; gap: 16px; padding: 20px 20px 28px; }
+  .hero-stats { justify-content: center; flex-wrap: wrap; gap: 12px; }
+  .stat-card { padding: 12px 16px; }
+  .dashboard-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+
+  /* ── Formulaire CR ─────────────────────────── */
+  .form-row.two-col,
+  .form-row.three-col { grid-template-columns: 1fr; }
+  .participant-row { grid-template-columns: 44px 1fr 36px; }
+  .participant-row input:nth-child(3),
+  .participant-row input:nth-child(4) { display: none; }
+
+  /* ── Mon Espace ────────────────────────────── */
+  .myspace-grid { grid-template-columns: 1fr; }
+  .myspace-stats { grid-template-columns: repeat(2,1fr); }
+  .myspace-avatar-col { flex-direction: row; }
+
+  /* ── Modals ────────────────────────────────── */
+  .modal { padding: 12px; }
+  .modal-box { max-width: 100% !important; margin: 0; border-radius: 14px; }
+  .modal-fullwide { max-width: 100% !important; }
+
+  /* ── CR window ─────────────────────────────── */
+  .form-save-bar { flex-wrap: wrap; gap: 8px; }
+  .export-bar { flex-wrap: wrap; gap: 8px; }
+
+  /* ── Settings ─────────────────────────────── */
+  .settings-grid { grid-template-columns: 1fr; }
+}
+
+/* ─────────────────────────────────────────────
+   MOBILE (≤ 600px)
+───────────────────────────────────────────── */
+@media (max-width: 600px) {
+
+  /* ── Variables ─────────────────────────────── */
+  :root {
+    --topbar-h: 52px;
+  }
+
+  /* ── Topbar ────────────────────────────────── */
+  .topbar { padding: 0 12px; }
+  .topbar-breadcrumb { font-size: .78rem; }
+  .topbar-breadcrumb .sep + * { display: none; } /* cache les niveaux breadcrumb intermédiaires */
+
+  /* ── Content ───────────────────────────────── */
+  .content-area { padding: 12px; }
+
+  /* ── Dashboard hero ────────────────────────── */
+  .dashboard-hero { padding: 16px 16px 24px; }
+  .hero-text h1 { font-size: 1.2rem; }
+  .stat-card .stat-val { font-size: 1.4rem; }
+  .hero-stats { gap: 8px; }
+  .stat-card { padding: 10px 12px; min-width: 70px; }
+
+  /* ── Dashboard grid ────────────────────────── */
+  .dashboard-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  /* ── Formulaire CR ─────────────────────────── */
+  .form-save-bar { flex-direction: column; }
+  .export-bar { flex-direction: column; align-items: stretch; }
+  .btn-export { justify-content: center; }
+
+  /* ── Projet card ───────────────────────────── */
+  .cr-item-actions { display: flex; }
+  .pc-actions { opacity: 1; }
+
+  /* ── Modals ────────────────────────────────── */
+  .modal-header { padding: 14px 16px; }
+  .modal-body   { padding: 14px 16px; }
+  .modal-footer { padding: 12px 16px; flex-direction: column; gap: 8px; }
+  .modal-footer .btn-primary,
+  .modal-footer .btn-secondary { width: 100%; justify-content: center; }
+
+  /* ── Topbar actions ────────────────────────── */
+  .topbar-actions .btn-secondary { padding: 6px 8px; font-size: .78rem; }
+  .topbar-actions .btn-primary   { padding: 7px 12px; font-size: .78rem; }
+
+  /* ── Participants row ──────────────────────── */
+  .participant-row { grid-template-columns: 36px 1fr 32px; gap: 6px; }
+  .participant-row-avatar-wrap { width: 30px; height: 30px; }
+  .participant-row-avatar      { width: 30px; height: 30px; }
+
+  /* ── Mon Espace ────────────────────────────── */
+  .myspace-stats { grid-template-columns: 1fr 1fr; }
+  .myspace-avatar-col { flex-direction: column; align-items: center; }
+
+  /* ── Quill editor ──────────────────────────── */
+  .ql-toolbar.ql-snow { flex-wrap: wrap; }
+  .ql-container.ql-snow { font-size: .88rem; }
+
+  /* ── Section CR modules ────────────────────── */
+  .module-header { flex-wrap: wrap; gap: 6px; }
+  .module-actions { flex-wrap: wrap; }
+}
+
+/* ─────────────────────────────────────────────
+   TRÈS PETIT MOBILE (≤ 380px)
+───────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .auth-mfa-apps-row { display: none; }
+  .auth-mfa-badge { padding: 8px 10px; }
+  .auth-form-body { padding: 14px 16px 16px; }
+  .auth-row-2 { grid-template-columns: 1fr; }
+  .hero-stats { display: none; }
+}
+
+/* ─────────────────────────────────────────────
+   LOGIN SCREEN – RESPONSIVE AMÉLIORÉ
+───────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Split screen → stacked */
+  #loginScreen {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .auth-left {
+    flex: 0 0 auto;
+    min-width: unset;
+    width: 100%;
+    padding: 24px 20px 20px;
+  }
+  .auth-left-content { gap: 12px; }
+  .auth-brand-title  { font-size: 1.5rem; }
+  .auth-brand-desc   { display: none; }
+  .auth-features     { display: none; }
+  .auth-left-footer  { position: relative; bottom: unset; left: unset; right: unset; margin-top: 8px; }
+
+  .auth-right {
+    flex: 1;
+    padding: 16px 14px 24px;
+    background: #f5f7fc;
+    min-height: 0;
+  }
+  .auth-form-card {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  /* Badge 2FA compact sur mobile */
+  .auth-mfa-badge {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 10px 14px 0;
+  }
+  .auth-mfa-apps-row { align-self: flex-start; }
+
+  /* Formulaire */
+  .auth-form-body { padding: 14px 16px 16px; }
+
+  /* MFA screens */
+  .auth-mfa-card  { margin: 8px; border-radius: 16px; }
+  .auth-setup-card { margin: 8px; border-radius: 16px; }
+  .auth-mfa-header { padding: 20px 18px 16px; }
+  .auth-mfa-body  { padding: 16px 16px 18px; }
+  .auth-setup-body { padding: 0 14px 16px; }
+
+  /* Steps row en mobile : empilé */
+  .auth-steps-row { grid-template-columns: 1fr; }
+
+  /* Apps grid : 1 colonne sur très petit */
+}
+
+@media (max-width: 480px) {
+  .auth-apps-grid { grid-template-columns: 1fr; }
+  .auth-mfa-pills { gap: 5px; }
+  .auth-mfa-pill  { padding: 4px 8px 4px 4px; font-size: .65rem; }
+  .auth-code-input { font-size: 1.3rem; letter-spacing: .25em; }
+  .auth-steps-row { grid-template-columns: 1fr; }
+}
+
+/* ─────────────────────────────────────────────
+   HEIGHT CONTRAINT (petits téléphones en landscape)
+───────────────────────────────────────────── */
+@media (max-height: 600px) and (max-width: 900px) {
+  .auth-left { padding: 16px 20px; }
+  .auth-brand-logo { height: 32px; }
+  .auth-brand-title { font-size: 1.2rem; }
+  .auth-form-body { padding: 10px 16px 12px; }
+  .auth-field { margin-bottom: 10px; }
+  .auth-mfa-header { padding: 14px 18px 12px; }
+  .auth-mfa-icon { width: 44px; height: 44px; font-size: 1.1rem; }
+}
+
+/* ─────────────────────────────────────────────
+   APP ROOT – RESPONSIVE LAYOUT
+───────────────────────────────────────────── */
+@media (max-width: 900px) {
+
+  /* appRoot flex row → mais sidebar en overlay */
+  #appRoot {
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Bouton toggle sidebar toujours visible */
+  .btn-toggle-sidebar { display: flex; }
+
+  /* Topbar : réduire les actions moins importantes */
+  .topbar-actions > *:not(.btn-toggle-sidebar):not(#userWidget):not(.btn-primary) {
+    /* garder tous les boutons visibles sur tablette */
+  }
+}
+
+@media (max-width: 600px) {
+  /* Sur très petit écran, cacher certains boutons de la topbar */
+  .topbar-actions .btn-lang { display: none; }
+
+  /* Réduire la sidebar overlay */
+  :root { --sidebar-w: 260px; }
+}
