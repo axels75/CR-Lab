@@ -304,11 +304,23 @@ async function renderPdParticipants(projectId, reports) {
     });
   });
 
-  // Essayer de charger les profils participants depuis la table
+  // Essayer de charger les profils participants depuis la table.
+  // Les profils visibles : ceux que je possède OU ceux du projet courant
+  // (afin que les collaborateurs voient les photos partagées par le propriétaire).
   try {
     const storedProfiles = await apiGet('participant_profiles');
-    const userProfiles   = storedProfiles.filter(p => p.user_id === STATE.userId);
-    userProfiles.forEach(prof => {
+    const visibleProfiles = storedProfiles.filter(p =>
+      p.user_id === STATE.userId ||
+      (p.project_id && p.project_id === STATE.currentProjectId)
+    );
+    // Trier : profils scope-projet en dernier (ils écrasent les user-scope
+    // pour rendre la vue "projet" cohérente entre tous les collaborateurs).
+    visibleProfiles.sort((a, b) => {
+      const aProj = a.project_id === STATE.currentProjectId ? 1 : 0;
+      const bProj = b.project_id === STATE.currentProjectId ? 1 : 0;
+      return aProj - bProj;
+    });
+    visibleProfiles.forEach(prof => {
       const key = normalizeParticipantName(prof.name);
       if (participantMap.has(key)) {
         const entry = participantMap.get(key);
@@ -545,10 +557,15 @@ async function editParticipantProfile(nameKey, displayName) {
   document.getElementById('ppPhotoNoImg').style.display   = 'flex';
   document.getElementById('ppColorPicker').value = stringToColor(displayName);
 
-  // Charger le profil existant si disponible
+  // Charger le profil existant si disponible.
+  // Priorité : profil scope-projet courant > profil user-scope > premier match.
   try {
-    const all     = await apiGet('participant_profiles');
-    const profile = all.find(p => p.user_id === STATE.userId && normalizeParticipantName(p.name) === nameKey);
+    const all = await apiGet('participant_profiles');
+    const matches = all.filter(p => normalizeParticipantName(p.name) === nameKey);
+    const profile =
+      matches.find(p => p.project_id === STATE.currentProjectId) ||
+      matches.find(p => p.user_id === STATE.userId) ||
+      null;
     if (profile) {
       document.getElementById('ppRole').value    = profile.role    || '';
       document.getElementById('ppCompany').value = profile.company || '';
@@ -558,7 +575,9 @@ async function editParticipantProfile(nameKey, displayName) {
         document.getElementById('ppPhotoPreview').style.display  = 'block';
         document.getElementById('ppPhotoNoImg').style.display    = 'none';
       }
-      modal.dataset.profileId = profile.id;
+      // On ne réutilise l'id que si le profil est déjà scope-projet
+      // (sinon on crée un nouveau profil scope-projet, qui sera partagé)
+      modal.dataset.profileId = (profile.project_id === STATE.currentProjectId) ? profile.id : '';
     } else {
       modal.dataset.profileId = '';
     }
@@ -583,6 +602,7 @@ async function saveParticipantProfile() {
 
   const payload = {
     user_id:      STATE.userId,
+    project_id:   STATE.currentProjectId || null,  // scope projet → visible par tous les membres
     name:         displayName,
     role,
     company,
@@ -595,6 +615,11 @@ async function saveParticipantProfile() {
       await apiPatch('participant_profiles', profileId, payload);
     } else {
       await apiPost('participant_profiles', payload);
+    }
+    // Rafraîchir le cache global pour que les changements soient pris
+    // en compte par addParticipantRow / findParticipantProfile sans recharger
+    if (typeof fetchParticipantProfiles === 'function') {
+      await fetchParticipantProfiles();
     }
     showToast(t('participant_saved'), 'success');
     closeModal('modalParticipantProfile');
@@ -777,14 +802,20 @@ async function removeParticipantFromProject(participantKey, participantName, pro
       }
     }
 
-    // Supprimer le profil participant enregistré s'il existe
+    // Supprimer le(s) profil(s) participant enregistré(s) liés à ce projet
+    // (profil scope-projet + fallback profil user-scope que je possède)
     try {
       const allProfiles = await apiGet('participant_profiles');
-      const profile = allProfiles.find(prof =>
-        prof.user_id === STATE.userId &&
-        normalizeParticipantName(prof.name) === participantKey
+      const toDelete = allProfiles.filter(prof =>
+        normalizeParticipantName(prof.name) === participantKey &&
+        (
+          prof.project_id === projectId ||
+          (prof.user_id === STATE.userId && !prof.project_id)
+        )
       );
-      if (profile) await apiDelete('participant_profiles', profile.id);
+      for (const prof of toDelete) {
+        try { await apiDelete('participant_profiles', prof.id); } catch(e) {}
+      }
     } catch(e) { console.warn('Suppression profil participant:', e); }
 
     showToast(`"${participantName}" retiré de ${updatedCount} CR(s).`, 'success');

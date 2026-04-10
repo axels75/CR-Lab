@@ -90,11 +90,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Fetch parallèle avec timeout de sécurité
-    await Promise.allSettled([fetchProjects(), fetchReports(), fetchUserProfile(), fetchParticipantProfiles()]);
-    // Charger les projets/CRs partagés via co-édition
+    await Promise.allSettled([fetchProjects(), fetchReports(), fetchUserProfile()]);
+    // Charger les projets/CRs partagés via co-édition AVANT les profils de participants
+    // (pour que fetchParticipantProfiles puisse inclure les profils des projets partagés)
     if (typeof fetchSharedProjects === 'function') {
       await Promise.allSettled([fetchSharedProjects(), fetchSharedReports(), fetchProjectMembers()]);
     }
+    // Les profils sont chargés après, afin d'inclure ceux des projets partagés
+    await fetchParticipantProfiles();
     renderSidebar();
     renderDashboard();
     showView('viewDashboard');
@@ -274,20 +277,37 @@ async function fetchParticipantProfiles() {
   try {
     if (!STATE.userId) { STATE.participantProfiles = []; return; }
     const all = await apiGet('participant_profiles');
-    STATE.participantProfiles = all.filter(p => p.user_id === STATE.userId);
+    // Les profils sont visibles si :
+    //  - je les ai créés (user_id === moi)
+    //  - OU ils sont rattachés à un projet auquel j'ai accès (own + shared)
+    // Cela permet aux collaborateurs d'un projet de partager les photos
+    // et les métadonnées des participants récurrents.
+    const accessibleProjectIds = new Set((STATE.projects || []).map(p => p.id));
+    STATE.participantProfiles = all.filter(p =>
+      p.user_id === STATE.userId ||
+      (p.project_id && accessibleProjectIds.has(p.project_id))
+    );
   } catch(e) {
     console.warn('[CR Master] fetchParticipantProfiles failed:', e.message);
     STATE.participantProfiles = STATE.participantProfiles || [];
   }
 }
 
-/* Trouver le profil d'un participant par son nom (normalisation) */
+/* Trouver le profil d'un participant par son nom (normalisation).
+   Priorise : 1) profil du projet courant, 2) profil que je possède, 3) tout autre match. */
 function findParticipantProfile(name) {
   if (!name) return null;
   const key = name.toLowerCase().trim().replace(/\s+/g, ' ');
-  return STATE.participantProfiles.find(p =>
+  const matches = STATE.participantProfiles.filter(p =>
     (p.name || '').toLowerCase().trim().replace(/\s+/g, ' ') === key
-  ) || null;
+  );
+  if (matches.length === 0) return null;
+  const currentPid = STATE.currentProjectId;
+  return (
+    matches.find(p => p.project_id === currentPid) ||
+    matches.find(p => p.user_id === STATE.userId) ||
+    matches[0]
+  );
 }
 
 /* =====================================================
