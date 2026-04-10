@@ -214,7 +214,7 @@ function generateEmailHTML(d) {
   // Logo : data: URI directement (custom ou base64 pré-chargé), sinon texte fallback
   const logoEl = (d.logoSrc && d.logoSrc.startsWith('data:'))
     ? `<img src="${d.logoSrc}" alt="${escAttr(d.orgName)}" style="height:34px;width:auto;display:inline-block;" />`
-    : `<span style="font-size:20px;font-weight:800;color:#FFFFFF;letter-spacing:1px;font-family:Arial,sans-serif;display:inline-block;">${escHtml(d.orgName)}</span>`;
+    : `<span class="force-white" style="font-size:20px;font-weight:800;color:#FFFFFF;letter-spacing:1px;font-family:Arial,sans-serif;display:inline-block;">${escHtml(d.orgName)}</span>`;
 
   const dateStr = d.date ? formatDate(d.date) : '–';
 
@@ -245,7 +245,7 @@ function generateEmailHTML(d) {
       <!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:100%;height:36pt;"><v:fill type="solid" color="${pc}"/><v:textbox inset="6pt,6pt,6pt,6pt"><![endif]-->
       <table border="0" cellpadding="0" cellspacing="0" width="100%"><tr>
         <td bgcolor="${pc}" style="background-color:${pc} !important;padding:10px 14px;">
-          <font color="#FFFFFF"><span style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:.8px;display:block;">${text}</span></font>
+          <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:.8px;display:block;">${text}</span></font>
         </td>
       </tr></table>
       <!--[if mso]></v:textbox></v:rect><![endif]-->
@@ -343,12 +343,36 @@ function generateEmailHTML(d) {
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Force le mode clair : Outlook Desktop et Outlook.com en dark mode
+       essaient sinon d'inverser les couleurs du texte (blanc → noir).
+       Ces meta + CSS désactivent l'inversion sur les principaux clients. -->
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light only" />
   <!--[if mso]>
   <style type="text/css">
     table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
     body  { margin:0; padding:0; }
+    ul    { margin-left:0; padding-left:24px; }
+    ol    { margin-left:0; padding-left:24px; }
+    li    { mso-special-format:bullet; }
   </style>
   <![endif]-->
+  <style type="text/css">
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+    /* Outlook.com / Office 365 dark mode override (OGSC) */
+    [data-ogsc] .force-white,
+    [data-ogsb] .force-white,
+    .force-white { color: #FFFFFF !important; }
+    [data-ogsc] .force-white-pink,
+    .force-white-pink { color: #FFD6EE !important; }
+    [data-ogsc] .force-white-bg,
+    [data-ogsb] .force-white-bg { background-color: #FFFFFF !important; }
+    /* Empêche l'inversion auto des fonds colorés sombres */
+    u + .body .gmail-dark { background: transparent !important; }
+    /* Liste : force puces visibles dans tous les clients */
+    ul li { display: list-item !important; list-style-type: disc !important; }
+    ol li { display: list-item !important; list-style-type: decimal !important; }
+  </style>
   <title>CR – ${escHtml(d.meeting)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#F1F5F9;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;font-family:${d.fontFamily},Arial,sans-serif;">
@@ -369,7 +393,7 @@ function generateEmailHTML(d) {
               <table border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td bgcolor="${d.primaryColor}" style="background-color:${d.primaryColor} !important;border:1px solid rgba(255,255,255,0.4);border-radius:20px;padding:4px 12px;">
-                    <font color="#FFFFFF"><span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;letter-spacing:1px;text-transform:uppercase;">Compte-rendu</span></font>
+                    <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;letter-spacing:1px;text-transform:uppercase;">Compte-rendu</span></font>
                   </td>
                 </tr>
               </table>
@@ -382,8 +406,8 @@ function generateEmailHTML(d) {
     <!-- ═══ TITRE ═══ -->
     <tr>
       <td bgcolor="${d.accentColor}" style="background-color:${d.accentColor} !important;padding:16px 32px 18px;">
-        <font color="#FFFFFF"><div style="font-family:Arial,sans-serif;font-size:20px;font-weight:800;color:#FFFFFF !important;line-height:1.3;margin:0 0 4px 0;">${escHtml(d.meeting || 'Réunion sans titre')}</div></font>
-        <font color="#FFD6EE"><div style="font-family:Arial,sans-serif;font-size:13px;color:#FFD6EE !important;margin:0;">${escHtml(d.mission || '')}</div></font>
+        <font color="#FFFFFF"><div class="force-white" style="font-family:Arial,sans-serif;font-size:20px;font-weight:800;color:#FFFFFF !important;line-height:1.3;margin:0 0 4px 0;">${escHtml(d.meeting || 'Réunion sans titre')}</div></font>
+        <font color="#FFD6EE"><div class="force-white-pink" style="font-family:Arial,sans-serif;font-size:13px;color:#FFD6EE !important;margin:0;">${escHtml(d.mission || '')}</div></font>
       </td>
     </tr>
 
@@ -610,22 +634,22 @@ function _renderPlanningForEmail(html, primaryColor, planningRows) {
          style="border-collapse:collapse;border:1px solid ${BD};">
     <tr bgcolor="${pc}" style="background-color:${pc};">
       <td width="28%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;">
-        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Tâche / Étape</span>
+        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Tâche / Étape</span></font>
       </td>
       <td width="17%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Responsable</span>
+        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Responsable</span></font>
       </td>
       <td width="11%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Début</span>
+        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Début</span></font>
       </td>
       <td width="11%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Fin</span>
+        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Fin</span></font>
       </td>
       <td width="18%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Avancement</span>
+        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Avancement</span></font>
       </td>
       <td width="15%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Statut</span>
+        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Statut</span></font>
       </td>
     </tr>`;
 
@@ -758,6 +782,60 @@ function sanitizeQuillForEmail(html) {
   const div = document.createElement('div');
   div.innerHTML = html;
 
+  // ──────────────────────────────────────────────────────────────
+  // Quill 2.0 utilise <ol> + <li data-list="bullet|ordered"> au lieu
+  // des vraies <ul>/<li> HTML. Outlook ignore ces data-attributes et
+  // affiche une liste numérotée (ou rien). On convertit en vraies
+  // <ul>/<ol> avec <li> standard AVANT d'appliquer les styles inline.
+  // ──────────────────────────────────────────────────────────────
+  div.querySelectorAll('ol').forEach(ol => {
+    const items = Array.from(ol.children).filter(c => c.tagName === 'LI');
+    if (items.length === 0) return;
+    // Détecter si TOUS les <li> sont data-list="bullet" → convertir en <ul>
+    const allBullet = items.every(li => li.getAttribute('data-list') === 'bullet');
+    const hasMixed  = items.some(li => li.getAttribute('data-list') === 'bullet') && !allBullet;
+
+    if (allBullet) {
+      // Remplacer le <ol> par un <ul>
+      const ul = document.createElement('ul');
+      items.forEach(li => {
+        const newLi = document.createElement('li');
+        newLi.innerHTML = li.innerHTML;
+        ul.appendChild(newLi);
+      });
+      ol.replaceWith(ul);
+    } else if (hasMixed) {
+      // Cas rare : mélange bullet + ordered dans le même <ol>.
+      // On éclate en plusieurs listes successives.
+      const fragment = document.createDocumentFragment();
+      let currentList = null;
+      let currentType = null;
+      items.forEach(li => {
+        const type = li.getAttribute('data-list') === 'bullet' ? 'ul' : 'ol';
+        if (type !== currentType) {
+          currentList = document.createElement(type);
+          fragment.appendChild(currentList);
+          currentType = type;
+        }
+        const newLi = document.createElement('li');
+        newLi.innerHTML = li.innerHTML;
+        currentList.appendChild(newLi);
+      });
+      ol.replaceWith(fragment);
+    } else {
+      // Tous ordered → nettoyer les data-list inutiles
+      items.forEach(li => li.removeAttribute('data-list'));
+    }
+  });
+
+  // Les <ul> natifs (rare avec Quill mais possible) : nettoyer data-list
+  div.querySelectorAll('ul li[data-list]').forEach(li => {
+    li.removeAttribute('data-list');
+  });
+
+  // Supprimer les <span class="ql-ui"> qui contiennent les pseudo-puces Quill
+  div.querySelectorAll('.ql-ui, span.ql-ui').forEach(el => el.remove());
+
   // Appliquer styles inline sur les éléments courants
   div.querySelectorAll('p').forEach(el => {
     el.style.margin = '0 0 8px 0';
@@ -777,19 +855,24 @@ function sanitizeQuillForEmail(html) {
   });
 
   div.querySelectorAll('ul').forEach(el => {
-    el.style.margin      = '8px 0 8px 20px';
-    el.style.paddingLeft = '16px';
-    el.style.fontFamily  = 'Arial, sans-serif';
-    el.style.fontSize    = '13px';
-    el.style.color       = '#334155';
+    el.style.margin        = '8px 0 8px 0';
+    el.style.paddingLeft   = '24px';
+    el.style.fontFamily    = 'Arial, sans-serif';
+    el.style.fontSize      = '13px';
+    el.style.color         = '#334155';
+    el.style.listStyleType = 'disc';
+    // Outlook-specific : force mso list format
+    el.setAttribute('type', 'disc');
   });
 
   div.querySelectorAll('ol').forEach(el => {
-    el.style.margin      = '8px 0 8px 20px';
-    el.style.paddingLeft = '16px';
-    el.style.fontFamily  = 'Arial, sans-serif';
-    el.style.fontSize    = '13px';
-    el.style.color       = '#334155';
+    el.style.margin        = '8px 0 8px 0';
+    el.style.paddingLeft   = '24px';
+    el.style.fontFamily    = 'Arial, sans-serif';
+    el.style.fontSize      = '13px';
+    el.style.color         = '#334155';
+    el.style.listStyleType = 'decimal';
+    el.setAttribute('type', '1');
   });
 
   div.querySelectorAll('li').forEach(el => {
@@ -797,6 +880,9 @@ function sanitizeQuillForEmail(html) {
     el.style.fontFamily   = 'Arial, sans-serif';
     el.style.fontSize     = '13px';
     el.style.color        = '#334155';
+    el.style.lineHeight   = '1.6';
+    // Crucial pour Outlook : sans display:list-item, les puces disparaissent parfois
+    el.style.display      = 'list-item';
   });
 
   div.querySelectorAll('h1').forEach(el => {

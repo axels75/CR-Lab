@@ -76,23 +76,36 @@ async function fetchSharedProjects() {
 
 /**
  * Charge les CRs des projets partagés.
+ * IMPORTANT : rafraîchit aussi les CRs partagés DÉJÀ présents dans STATE.reports
+ * (sinon les modifs des collaborateurs ne sont jamais visibles après le premier
+ * chargement). Remplace systématiquement chaque CR partagé par la version distante.
  */
 async function fetchSharedReports() {
   try {
     if (!STATE.userId) return;
     const sharedProjects = STATE.projects.filter(p => p._shared);
-    if (sharedProjects.length === 0) return;
-
-    const allReports = await apiGet('meeting_reports');
-    for (const proj of sharedProjects) {
-      const projReports = allReports.filter(r => r.project_id === proj.id);
-      for (const r of projReports) {
-        if (!STATE.reports.find(rep => rep.id === r.id)) {
-          r._shared = true;
-          STATE.reports.push(r);
-        }
-      }
+    if (sharedProjects.length === 0) {
+      // Nettoyer les éventuels reliquats shared si plus aucun projet partagé
+      STATE.reports = STATE.reports.filter(r => !r._shared);
+      return;
     }
+
+    const sharedProjectIds = new Set(sharedProjects.map(p => p.id));
+    const allReports = await apiGet('meeting_reports');
+    const freshShared = allReports
+      .filter(r => sharedProjectIds.has(r.project_id))
+      .map(r => ({ ...r, _shared: true }));
+
+    // Retirer TOUS les anciens shared puis réinjecter la liste fraîche
+    const nonShared = STATE.reports.filter(r => !r._shared);
+    const freshIds  = new Set(freshShared.map(r => r.id));
+
+    // Fusionner : non-shared + shared frais, en évitant les doublons
+    // (un CR peut être dans les 2 si l'utilisateur a aussi un membership à son propre projet)
+    STATE.reports = [
+      ...nonShared.filter(r => !freshIds.has(r.id)),
+      ...freshShared,
+    ];
   } catch(e) {
     console.warn('[Collab] fetchSharedReports failed:', e.message);
   }

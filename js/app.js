@@ -1007,10 +1007,12 @@ function _tryLoadFirstValidLogoEl(urls, initialsEl, fallbackColor) {
 /* =====================================================
    PROJECT CRs LIST
    ===================================================== */
-function showProjectCRs(pid) {
+async function showProjectCRs(pid) {
   // Arrêter le polling en cours (on n'est plus sur un CR)
   if (typeof stopRealtimeSync === 'function') stopRealtimeSync();
   if (typeof cancelAutoSave === 'function') cancelAutoSave();
+  // Mémoriser le projet courant (nécessaire pour chatbot projet, collab, etc.)
+  STATE.currentProjectId = pid;
   // Appliquer les settings du projet
   if (typeof applyProjectSettings === 'function') applyProjectSettings(pid);
   const project = STATE.projects.find(p => p.id === pid);
@@ -1018,6 +1020,13 @@ function showProjectCRs(pid) {
 
   document.getElementById('projectCRsTitle').textContent = project.name;
   document.getElementById('btnNewCRInProject').onclick = () => openNewReport(pid);
+
+  // Rafraîchir les CRs (propres + partagés) pour voir les modifs des collaborateurs
+  // avant d'afficher la liste. Silencieux si échec réseau.
+  try {
+    await fetchReports();
+    if (typeof fetchSharedReports === 'function') await fetchSharedReports();
+  } catch (e) { /* non bloquant */ }
 
   const reports = STATE.reports.filter(r => r.project_id === pid)
     .sort((a,b) => (b.updated_at||0)-(a.updated_at||0));
@@ -1103,12 +1112,35 @@ function openNewReport(pid) {
   renderSidebar();
 }
 
-function openReport(crid, pid) {
+async function openReport(crid, pid) {
   STATE.currentReportId  = crid;
   STATE.currentProjectId = pid;
   // Appliquer les settings du projet
   if (typeof applyProjectSettings === 'function') applyProjectSettings(pid);
-  const cr = STATE.reports.find(r => r.id === crid);
+
+  // Refetch direct du CR pour avoir la version FRAÎCHE du serveur
+  // (les collaborateurs ont pu modifier depuis le dernier fetchReports)
+  let cr = STATE.reports.find(r => r.id === crid);
+  try {
+    const base = (typeof apiBase === 'function') ? apiBase() : 'api/tables';
+    const r = await fetch(`${base}/meeting_reports/${encodeURIComponent(crid)}`,
+      { headers: { 'Content-Type': 'application/json' } });
+    if (r.ok) {
+      const fresh = await r.json();
+      if (fresh && fresh.id) {
+        cr = fresh;
+        const idx = STATE.reports.findIndex(r2 => r2.id === crid);
+        if (idx !== -1) {
+          // Préserver le flag _shared s'il existait
+          const wasShared = STATE.reports[idx]._shared;
+          STATE.reports[idx] = wasShared ? { ...fresh, _shared: true } : fresh;
+        } else {
+          STATE.reports.push(fresh);
+        }
+      }
+    }
+  } catch(e) { /* non bloquant, on garde le cache */ }
+
   if (!cr) return;
   // Rafraîchir les profils participants avant de remplir le formulaire
   fetchParticipantProfiles().then(() => fillForm(cr));

@@ -799,6 +799,7 @@ window.aiAssistantApply     = aiAssistantApply;
 window.openAiModelPicker    = openAiModelPicker;
 window.renderAiModelSelect  = renderAiModelSelect;
 window.aiGenerateCRFromNotes= aiGenerateCRFromNotes;
+window._modelLabel          = _modelLabel;
 
 /* =====================================================
    INIT AU CHARGEMENT

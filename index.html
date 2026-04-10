@@ -708,7 +708,10 @@
     <div id="viewProjectCRs" class="view">
       <div class="view-header">
         <h2 id="projectCRsTitle">Projet</h2>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-ai" id="btnProjectChatbot" onclick="openProjectChatbot(STATE.currentProjectId)" title="Poser des questions sur tous les CRs du projet">
+            <i class="fa-solid fa-robot"></i> <span data-i18n="project_chatbot">Chatbot projet</span>
+          </button>
           <button class="btn-secondary" id="btnProjectDashboard" onclick="showProjectDashboardView()">
             <i class="fa-solid fa-chart-line"></i> <span data-i18n="project_dashboard">Tableau de bord projet</span>
           </button>
@@ -728,6 +731,9 @@
           <p id="pdSubtitle" style="font-size:.85rem;color:var(--gray-500);margin:0;"></p>
         </div>
         <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;">
+          <button class="btn-ai" onclick="openProjectChatbot(STATE.currentProjectId)" title="Poser des questions sur tous les CRs du projet">
+            <i class="fa-solid fa-robot"></i> <span data-i18n="project_chatbot">Chatbot projet</span>
+          </button>
           <button class="btn-secondary" onclick="showProjectCRsFromDashboard()">
             <i class="fa-solid fa-list"></i> <span data-i18n="list_crs">Liste des CRs</span>
           </button>
@@ -1122,6 +1128,9 @@
           <button type="button" class="btn-ai" id="btnOpenAiAssistant" onclick="openAiAssistant()">
             <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="ai_assistant_btn">Assistant IA</span>
           </button>
+          <button type="button" class="btn-secondary btn-ai-model" id="btnOpenAiModelPicker" onclick="openAiModelPicker()" title="Choisir le modèle IA">
+            <i class="fa-solid fa-microchip"></i> <span data-i18n="ai_model_btn">Modèle IA</span>
+          </button>
           <span id="autoSaveIndicator" class="autosave-indicator" style="display:none;">
             <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="autosave_saved">Enregistré</span>
           </span>
@@ -1415,6 +1424,39 @@
     </div>
     <div class="modal-footer">
       <button class="btn-primary" data-close="modalAiModel" data-i18n="close">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================
+     MODALE : CHATBOT PROJET (multi-CR)
+=================================================== -->
+<div class="modal-overlay" id="modalProjectChat" hidden>
+  <div class="modal modal-wide modal-project-chat">
+    <div class="modal-header">
+      <h3>
+        <i class="fa-solid fa-robot" style="color:var(--primary)"></i>
+        <span data-i18n="project_chat_title">Assistant projet</span> —
+        <span id="projectChatTitle" style="font-weight:600;"></span>
+      </h3>
+      <button class="modal-close" data-close="modalProjectChat" onclick="closeProjectChatbot()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body project-chat-body">
+      <div class="project-chat-meta">
+        <span class="project-chat-meta-item"><i class="fa-solid fa-file-lines"></i> <span id="projectChatCrCount">—</span></span>
+        <span class="project-chat-meta-item"><i class="fa-solid fa-microchip"></i> <span id="projectChatCurrentModel">—</span>
+          <button type="button" class="project-chat-change-model" onclick="openAiModelPicker()" title="Changer de modèle">
+            <i class="fa-solid fa-sliders"></i>
+          </button>
+        </span>
+      </div>
+      <div class="project-chat-messages" id="projectChatMessages"></div>
+      <div class="project-chat-input-bar">
+        <textarea id="projectChatInput" rows="2" placeholder="Posez votre question sur ce projet…"></textarea>
+        <button type="button" class="project-chat-send" id="projectChatSendBtn" title="Envoyer (Entrée)">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -2162,12 +2204,12 @@
 <!-- Scripts chargés séquentiellement avec defer pour garantir l'ordre -->
 <!-- v=20260233 — logo base64 dans exports -->
 <script src="js/i18n.js?v=20260228" defer></script>
-<script src="js/app.js?v=20260303b" defer></script>
-<script src="js/collaboration.js?v=20260303a" defer></script>
+<script src="js/app.js?v=20260410d" defer></script>
+<script src="js/collaboration.js?v=20260410d" defer></script>
 <script src="js/settings.js?v=20260303b" defer></script>
 <script src="js/auth.js?v=20260302e" defer></script>
 <script src="js/mfa.js?v=20260302d" defer></script>
-<script src="js/export.js?v=20260303a" defer></script>
+<script src="js/export.js?v=20260410d" defer></script>
 <script src="js/import.js?v=20260226b" defer></script>
 <script src="js/project-dashboard.js?v=20260226b" defer></script>
 <script src="js/dark-mode.js?v=20260226b" defer></script>
@@ -2177,5 +2219,6 @@
 <script src="js/module-layout.js?v=20260228b" defer></script>
 <script src="js/section-editor.js?v=20260228b" defer></script>
 <script src="js/ai-assistant.js?v=20260410a" defer></script>
+<script src="js/project-chatbot.js?v=20260410a" defer></script>
 </body>
 </html>
