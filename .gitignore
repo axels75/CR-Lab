@@ -1,0 +1,23 @@
+# Dépendances
+node_modules/
+
+# Cloudflare Wrangler (cache local, lié au compte)
+.wrangler/
+
+# Configuration locale IDE / outils
+.claude/
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Variables d'environnement locales
+.env
+.env.local
+.dev.vars

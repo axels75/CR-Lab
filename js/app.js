@@ -1010,6 +1010,7 @@ function _tryLoadFirstValidLogoEl(urls, initialsEl, fallbackColor) {
 function showProjectCRs(pid) {
   // Arrêter le polling en cours (on n'est plus sur un CR)
   if (typeof stopRealtimeSync === 'function') stopRealtimeSync();
+  if (typeof cancelAutoSave === 'function') cancelAutoSave();
   // Appliquer les settings du projet
   if (typeof applyProjectSettings === 'function') applyProjectSettings(pid);
   const project = STATE.projects.find(p => p.id === pid);
@@ -1080,6 +1081,7 @@ function openNewReport(pid) {
   if (typeof applyProjectSettings === 'function') applyProjectSettings(pid);
   // Arrêter tout polling en cours
   if (typeof stopRealtimeSync === 'function') stopRealtimeSync();
+  if (typeof cancelAutoSave === 'function') cancelAutoSave();
   resetForm();
   document.getElementById('exportBar').style.display = 'none';
   const project = STATE.projects.find(p => p.id === pid);
@@ -1299,44 +1301,66 @@ function collectActions() {
 /* =====================================================
    SAVE CR
    ===================================================== */
-async function saveCR(e) {
-  e.preventDefault();
+/* Construit le payload de sauvegarde depuis le formulaire courant.
+   Utilisé par saveCR (explicite) et scheduleAutoSave (implicite). */
+function _buildCRPayload() {
   const mission = document.getElementById('fieldMission').value.trim();
   const meeting = document.getElementById('fieldMeetingName').value.trim();
-  if (!mission || !meeting) { showToast(t('mission_required'),'error'); return; }
 
   const participants = collectParticipants();
   const actions      = collectActions();
   const keyPoints    = STATE.quillEditor ? STATE.quillEditor.root.innerHTML : '';
 
-  // Collecter les sections optionnelles (Quill)
   const optData = typeof getOptionalSectionsData === 'function' ? getOptionalSectionsData() : {};
-
-  // Template actif
   const activeTemplate = STATE._activeTemplate || null;
 
-  const payload = {
-    user_id:             STATE.userId,
-    project_id:          STATE.currentProjectId,
-    mission_name:        mission,
-    meeting_name:        meeting,
-    meeting_date:        document.getElementById('fieldDate').value,
-    meeting_location:    document.getElementById('fieldLocation').value.trim(),
-    meeting_facilitator: document.getElementById('fieldFacilitator').value.trim(),
-    author:              document.getElementById('fieldAuthor').value.trim(),
-    status:              document.getElementById('fieldStatus').value,
-    participants:        JSON.stringify(participants),
-    actions:             JSON.stringify(actions),
-    key_points_html:     keyPoints,
-    decisions_html:      optData.decisions  || '',
-    risks_html:          optData.risks      || '',
-    budget_html:         optData.budget     || '',
-    next_steps_html:     optData.next_steps || '',
-    template_id:         activeTemplate?.id || '',
-    template_modules:    activeTemplate ? JSON.stringify(activeTemplate.modules) : '',
-    last_modified:       new Date().toISOString(),
-    keywords:            `${mission} ${meeting} ${participants.map(p=>p.name).join(' ')}`,
+  // Identifier l'utilisateur qui modifie, pour que les autres clients
+  // le distinguent de leur propre sauvegarde dans le polling.
+  const modifierName = (() => {
+    if (STATE.userProfile) {
+      const full = `${STATE.userProfile.first_name||''} ${STATE.userProfile.last_name||''}`.trim();
+      return full || STATE.userProfile.username || 'Un collaborateur';
+    }
+    return 'Un collaborateur';
+  })();
+
+  return {
+    user_id:              STATE.userId,
+    project_id:           STATE.currentProjectId,
+    mission_name:         mission,
+    meeting_name:         meeting,
+    meeting_date:         document.getElementById('fieldDate').value,
+    meeting_location:     document.getElementById('fieldLocation').value.trim(),
+    meeting_facilitator:  document.getElementById('fieldFacilitator').value.trim(),
+    author:               document.getElementById('fieldAuthor').value.trim(),
+    status:               document.getElementById('fieldStatus').value,
+    participants:         JSON.stringify(participants),
+    actions:               JSON.stringify(actions),
+    key_points_html:      keyPoints,
+    decisions_html:       optData.decisions  || '',
+    risks_html:           optData.risks      || '',
+    budget_html:          optData.budget     || '',
+    next_steps_html:      optData.next_steps || '',
+    template_id:          activeTemplate?.id || '',
+    template_modules:     activeTemplate ? JSON.stringify(activeTemplate.modules) : '',
+    last_modified:        new Date().toISOString(),
+    last_modified_by_id:  STATE.userId,
+    last_modified_by_name: modifierName,
+    // Champ hérité (lu par collaboration.js v1) — on le garde pour rétro-compat
+    last_modified_by:     STATE.userId,
+    keywords:             `${mission} ${meeting} ${participants.map(p=>p.name).join(' ')}`,
+    _meta: { mission_required: Boolean(mission && meeting) },
   };
+}
+
+async function saveCR(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const payload = _buildCRPayload();
+  if (!payload._meta.mission_required) {
+    showToast(t('mission_required'),'error');
+    return;
+  }
+  delete payload._meta;
 
   try {
     let saved;
@@ -1357,17 +1381,160 @@ async function saveCR(e) {
     renderDashboard();
     document.getElementById('exportBar').style.display = 'flex';
     showToast(t('cr_saved'), 'success');
+    _setAutoSaveIndicator('saved');
     const project = STATE.projects.find(p => p.id === STATE.currentProjectId);
     setBreadcrumb([
       { label:t('breadcrumb_dashboard'), action:()=>goToDashboard() },
       { label:project?.name||'Projet', action:()=>showProjectCRs(STATE.currentProjectId) },
-      meeting
+      payload.meeting_name
     ]);
   } catch(err) {
     console.error(err);
     showToast(t('cr_save_error'),'error');
+    _setAutoSaveIndicator('error');
   }
 }
+
+/* =====================================================
+   AUTO-SAVE DEBOUNCED
+   =====================================================
+   Toutes les frappes dans le formulaire déclenchent une sauvegarde
+   différée de 1200 ms (debounced). On utilise PATCH pour ne pas
+   écraser les champs qu'on n'a pas touchés (merge côté serveur).
+   L'auto-save n'affiche pas de toast — juste un petit indicateur
+   "Enregistré" à côté du bouton Enregistrer.
+   ===================================================== */
+
+const AUTOSAVE = {
+  timer:       null,
+  inflight:    false,
+  queued:      false,
+  debounceMs:  1200,
+  bound:       false,
+};
+
+function cancelAutoSave() {
+  clearTimeout(AUTOSAVE.timer);
+  AUTOSAVE.timer  = null;
+  AUTOSAVE.queued = false;
+  const el = document.getElementById('autoSaveIndicator');
+  if (el) el.style.display = 'none';
+}
+window.cancelAutoSave = cancelAutoSave;
+
+function scheduleAutoSave(delayMs) {
+  // Ne pas auto-save si pas authentifié ou si pas dans l'éditeur
+  if (!STATE.userId) return;
+  // Pas d'auto-save si le CR n'a pas encore d'id (il faut saveCR manuel pour créer)
+  if (!STATE.currentReportId) return;
+  // Pas d'auto-save si le mission/meeting sont vides (invalide)
+  const mission = document.getElementById('fieldMission')?.value.trim();
+  const meeting = document.getElementById('fieldMeetingName')?.value.trim();
+  if (!mission || !meeting) return;
+
+  const d = (delayMs == null) ? AUTOSAVE.debounceMs : delayMs;
+  clearTimeout(AUTOSAVE.timer);
+  _setAutoSaveIndicator('dirty');
+  AUTOSAVE.timer = setTimeout(_runAutoSave, d);
+}
+window.scheduleAutoSave = scheduleAutoSave;
+
+async function _runAutoSave() {
+  if (AUTOSAVE.inflight) {
+    AUTOSAVE.queued = true;
+    return;
+  }
+  AUTOSAVE.inflight = true;
+  _setAutoSaveIndicator('saving');
+
+  try {
+    const payload = _buildCRPayload();
+    if (!payload._meta.mission_required || !STATE.currentReportId) {
+      _setAutoSaveIndicator('dirty');
+      return;
+    }
+    delete payload._meta;
+
+    const saved = await apiPatch('meeting_reports', STATE.currentReportId, payload);
+
+    if (typeof _REALTIME !== 'undefined') {
+      _REALTIME.lastUpdatedAt = saved.updated_at || Date.now();
+    }
+
+    // Mettre à jour le STATE local (sans refetch complet)
+    const idx = STATE.reports.findIndex(r => r.id === saved.id);
+    if (idx !== -1) STATE.reports[idx] = saved;
+
+    _setAutoSaveIndicator('saved');
+  } catch (err) {
+    console.warn('[AutoSave] erreur :', err.message);
+    _setAutoSaveIndicator('error');
+  } finally {
+    AUTOSAVE.inflight = false;
+    if (AUTOSAVE.queued) {
+      AUTOSAVE.queued = false;
+      scheduleAutoSave(300);
+    }
+  }
+}
+
+function _setAutoSaveIndicator(state) {
+  const el = document.getElementById('autoSaveIndicator');
+  if (!el) return;
+  el.classList.remove('saving','saved','error','dirty');
+  el.style.display = 'inline-flex';
+  if (state === 'dirty') {
+    el.classList.add('saving');
+    el.innerHTML = '<i class="fa-solid fa-pen"></i> <span>Modifications non enregistrées</span>';
+  } else if (state === 'saving') {
+    el.classList.add('saving');
+    el.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Enregistrement…</span>';
+  } else if (state === 'saved') {
+    el.classList.add('saved');
+    el.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> <span>Enregistré</span>';
+    setTimeout(() => { if (el) el.style.display = 'none'; }, 2500);
+  } else if (state === 'error') {
+    el.classList.add('error');
+    el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Erreur d\'enregistrement</span>';
+  }
+}
+window._setAutoSaveIndicator = _setAutoSaveIndicator;
+
+/**
+ * Attache les listeners d'auto-save à tous les champs du formulaire CR
+ * + aux éditeurs Quill. À appeler une fois après initQuill().
+ */
+function bindAutoSaveListeners() {
+  if (AUTOSAVE.bound) return;
+  const form = document.getElementById('crForm');
+  if (!form) return;
+
+  // Tous les inputs/textarea/select déclenchent un auto-save debounced
+  form.addEventListener('input',  () => scheduleAutoSave());
+  form.addEventListener('change', () => scheduleAutoSave());
+
+  // Éditeur Quill principal
+  const attachQuill = (q) => {
+    if (!q || q._autoSaveBound) return;
+    q._autoSaveBound = true;
+    q.on('text-change', (_delta, _old, source) => {
+      if (source === 'user') scheduleAutoSave();
+    });
+  };
+  attachQuill(STATE.quillEditor);
+  // Éditeurs optionnels (peuvent être créés plus tard)
+  const opt = STATE?._quillEditors || {};
+  Object.values(opt).forEach(attachQuill);
+
+  // Réessayer après un délai au cas où les Quill optionnels arrivent plus tard
+  setTimeout(() => {
+    const opt2 = STATE?._quillEditors || {};
+    Object.values(opt2).forEach(attachQuill);
+  }, 1500);
+
+  AUTOSAVE.bound = true;
+}
+window.bindAutoSaveListeners = bindAutoSaveListeners;
 
 /* =====================================================
    DELETE CR (avec modale de confirmation)
@@ -1836,6 +2003,7 @@ function showView(id) {
 function goToDashboard() {
   // Arrêter le polling de co-édition
   if (typeof stopRealtimeSync === 'function') stopRealtimeSync();
+  if (typeof cancelAutoSave === 'function') cancelAutoSave();
   // Revenir aux settings globaux
   if (typeof applyProjectSettings === 'function') applyProjectSettings(null);
   STATE.currentProjectId = null;
@@ -1887,6 +2055,9 @@ function initQuill() {
   // Initialiser les éditeurs Quill pour les sections optionnelles
   STATE._quillEditors = {};
   _initOptionalQuillEditors();
+
+  // Attacher les listeners d'auto-save (debounced) après init des Quill
+  if (typeof bindAutoSaveListeners === 'function') bindAutoSaveListeners();
 }
 
 /* Initialiser les éditeurs Quill des sections optionnelles */

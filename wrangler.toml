@@ -1,8 +1,5 @@
 name = "cr-master"
-
-[build]
-  command     = ""
-  destination = "."
+pages_build_output_dir = "."
 
 # Base de données D1 (SQLite géré par Cloudflare)
 # Le script Genspark crée automatiquement "cr-master-db" lors du premier déploiement avec --rebuild-db.
@@ -10,4 +7,4 @@ name = "cr-master"
 [[d1_databases]]
   binding       = "DB"
   database_name = "cr-master-db"
-  database_id   = "492ca7cf-c8d4-4e05-89f6-81f761232b5f"
+  database_id   = "7275fa6e-ed3f-44dc-bfe2-33a106ca0f49"

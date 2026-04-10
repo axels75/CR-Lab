@@ -1119,6 +1119,13 @@
           <button type="button" class="btn-secondary" id="btnCancelEdit">
             <i class="fa-solid fa-xmark"></i> <span data-i18n="cancel">Annuler</span>
           </button>
+          <button type="button" class="btn-ai" id="btnOpenAiAssistant" onclick="openAiAssistant()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="ai_assistant_btn">Assistant IA</span>
+          </button>
+          <span id="autoSaveIndicator" class="autosave-indicator" style="display:none;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="autosave_saved">Enregistré</span>
+          </span>
+          <span id="presenceIndicator" class="presence-indicator" style="display:none;"></span>
           <button type="submit" class="btn-primary" id="btnSaveCR">
             <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="save_cr">Enregistrer le CR</span>
           </button>
@@ -1323,6 +1330,91 @@
       <button class="btn-primary" id="btnConfirmJoinByLink" onclick="confirmJoinByLink()">
         <i class="fa-solid fa-check"></i> <span data-i18n="join_btn">Rejoindre le projet</span>
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================
+     MODALE : ASSISTANT IA — GÉNÉRATION DE CR DEPUIS NOTES
+=================================================== -->
+<div class="modal-overlay" id="modalAiAssistant" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary)"></i> <span data-i18n="ai_assistant_title">Assistant IA — Rédaction</span></h3>
+      <button class="modal-close" data-close="modalAiAssistant"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="ai-assistant-layout">
+        <div class="ai-assistant-left">
+          <label class="ai-label" data-i18n="ai_notes_label">
+            <i class="fa-solid fa-pen-nib"></i> Vos notes brutes
+          </label>
+          <p class="ai-hint" data-i18n="ai_notes_hint">
+            Collez vos notes prises pendant la réunion (verbatim, bullet points, bribes d'échanges…).
+            L'IA va structurer tout ça en un CR professionnel : participants, points clés, décisions, risques, actions.
+          </p>
+          <textarea id="aiAssistantNotes" class="ai-textarea"
+                    placeholder="ex: Réunion comité pilotage du 10/04 avec Lucie et Marc. On a décidé de repousser la mise en prod au 25/04 à cause du bug de cache. Marc doit livrer le patch lundi. Lucie s'occupe de la comm..."></textarea>
+
+          <div class="ai-assistant-model-row">
+            <span class="ai-assistant-model-label">
+              <i class="fa-solid fa-microchip"></i> Modèle :
+              <strong id="aiAssistantCurrentModel">—</strong>
+            </span>
+            <button type="button" class="btn-link" onclick="openAiModelPicker()">
+              <i class="fa-solid fa-sliders"></i> <span data-i18n="ai_change_model">Changer</span>
+            </button>
+          </div>
+
+          <div class="ai-assistant-actions">
+            <button type="button" class="btn-primary" id="aiAssistantGenerateBtn" onclick="aiAssistantGenerate()">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="ai_generate_btn">Générer le CR</span>
+            </button>
+            <button type="button" class="btn-secondary" data-close="modalAiAssistant" data-i18n="cancel">Annuler</button>
+          </div>
+        </div>
+
+        <div class="ai-assistant-right">
+          <label class="ai-label">
+            <i class="fa-solid fa-eye"></i> <span data-i18n="ai_preview_label">Prévisualisation</span>
+          </label>
+          <div id="aiAssistantOutput" class="ai-output">
+            <div class="ai-output-empty">
+              <i class="fa-solid fa-sparkles"></i>
+              <p data-i18n="ai_preview_empty">La prévisualisation du CR généré apparaîtra ici.</p>
+            </div>
+          </div>
+          <div class="ai-assistant-apply-row">
+            <button type="button" class="btn-primary" id="aiAssistantApplyBtn" onclick="aiAssistantApply()" style="display:none;">
+              <i class="fa-solid fa-check-double"></i> <span data-i18n="ai_apply_btn">Appliquer au CR</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================
+     MODALE : SÉLECTION DU MODÈLE IA
+=================================================== -->
+<div class="modal-overlay" id="modalAiModel" hidden>
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-microchip" style="color:var(--primary)"></i> <span data-i18n="ai_model_title">Choisir un modèle IA</span></h3>
+      <button class="modal-close" data-close="modalAiModel"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="ai-hint" data-i18n="ai_model_hint">
+        Sélectionnez le modèle NVIDIA NIM à utiliser pour l'assistance rédactionnelle.
+        Tous les modèles listés sont gratuits via le catalogue NVIDIA.
+      </p>
+      <div id="aiModelGrid" class="ai-model-grid">
+        <div class="ai-empty"><i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n="loading">Chargement…</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" data-close="modalAiModel" data-i18n="close">Fermer</button>
     </div>
   </div>
 </div>
@@ -2084,5 +2176,6 @@
 <script src="js/module-reorder.js?v=20260226b" defer></script>
 <script src="js/module-layout.js?v=20260228b" defer></script>
 <script src="js/section-editor.js?v=20260228b" defer></script>
+<script src="js/ai-assistant.js?v=20260410a" defer></script>
 </body>
 </html>

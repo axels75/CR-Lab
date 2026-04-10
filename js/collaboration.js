@@ -1028,31 +1028,167 @@ async function _pollForUpdates() {
 }
 
 /**
- * Applique les modifications distantes au formulaire.
+ * Applique les modifications distantes au formulaire, champ par champ,
+ * SANS toucher aux champs actuellement focalisés.
+ * Utilise l'API Quill `updateContents(delta)` pour préserver la position du curseur.
  */
 function _applyRemoteUpdate(remoteCR) {
   if (!remoteCR || remoteCR.id !== _REALTIME.reportId) return;
 
-  // Mettre à jour le STATE
+  // Mettre à jour le STATE global
   const idx = STATE.reports.findIndex(r => r.id === remoteCR.id);
   if (idx !== -1) STATE.reports[idx] = remoteCR;
 
-  // Remplir le formulaire avec les nouvelles données
-  if (typeof fillForm === 'function') {
-    fillForm(remoteCR);
-  }
-
-  // Mettre à jour le timestamp connu
+  // Mémoriser le timestamp de dernière version connue
   _REALTIME.lastUpdatedAt = remoteCR.updated_at || 0;
   _REALTIME.pendingUpdate = null;
-
-  // Masquer la bannière si présente
   _hideSyncBanner();
 
-  // Notification discrète
+  // MERGE champ-par-champ (fusion non destructive)
+  _mergeRemoteFieldsIntoForm(remoteCR);
+
+  // Notification discrète + mise à jour du badge de présence
   const updaterName = remoteCR.last_modified_by_name || t('a_collaborator');
-  showToast(`✏️ ${updaterName} ${t('sync_modified_by')}`, 'info');
+  _showPresenceBadge(updaterName);
+
+  // Toast "untouched" si c'est la première fois qu'on voit cet utilisateur taper
+  if (!_REALTIME._lastToastName || _REALTIME._lastToastName !== updaterName || (Date.now() - (_REALTIME._lastToastAt||0)) > 10000) {
+    if (typeof showToast === 'function') {
+      showToast(`✏️ ${updaterName} ${t('sync_modified_by')}`, 'info');
+    }
+    _REALTIME._lastToastName = updaterName;
+    _REALTIME._lastToastAt   = Date.now();
+  }
 }
+
+/**
+ * Fusion champ-par-champ, focus-aware, Quill-delta-safe.
+ *
+ * - Pour les <input>/<select> : on ne remplace que si PAS focalisé
+ * - Pour les éditeurs Quill : on applique un delta diff entre le contenu
+ *   actuel et le contenu distant (préserve curseur + sélection)
+ * - Pour participants/actions : on ne remplace que si aucune ligne n'est
+ *   en cours d'édition dans la table
+ */
+function _mergeRemoteFieldsIntoForm(remoteCR) {
+  if (!remoteCR) return;
+
+  const _safeSetInput = (id, remoteVal) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (document.activeElement === el) return; // skip si focalisé
+    const newVal = remoteVal == null ? '' : String(remoteVal);
+    if (el.value !== newVal) el.value = newVal;
+  };
+
+  _safeSetInput('fieldMission',      remoteCR.mission_name);
+  _safeSetInput('fieldMeetingName',  remoteCR.meeting_name);
+  _safeSetInput('fieldDate',         remoteCR.meeting_date);
+  _safeSetInput('fieldLocation',     remoteCR.meeting_location);
+  _safeSetInput('fieldFacilitator',  remoteCR.meeting_facilitator);
+  _safeSetInput('fieldAuthor',       remoteCR.author);
+  _safeSetInput('fieldStatus',       remoteCR.status);
+
+  // Éditeur principal (key_points) via Quill delta diff
+  _safeUpdateQuill(STATE.quillEditor, remoteCR.key_points_html || '');
+
+  // Sections optionnelles (decisions / risks / budget / next_steps)
+  const opt = STATE?._quillEditors || {};
+  _safeUpdateQuill(opt.decisions_quill_editor,  remoteCR.decisions_html  || '');
+  _safeUpdateQuill(opt.risks_quill_editor,      remoteCR.risks_html      || '');
+  _safeUpdateQuill(opt.budget_quill_editor,     remoteCR.budget_html     || '');
+  _safeUpdateQuill(opt.next_steps_quill_editor, remoteCR.next_steps_html || '');
+
+  // Participants : ne toucher que si aucune ligne n'est focalisée
+  try {
+    const partContainer = document.getElementById('participantsList');
+    if (partContainer && !partContainer.contains(document.activeElement)) {
+      let remoteParts = [];
+      try { remoteParts = JSON.parse(remoteCR.participants || '[]'); } catch {}
+      const localParts = (typeof collectParticipants === 'function') ? collectParticipants() : [];
+      if (!_deepEqualArray(remoteParts, localParts)) {
+        if (typeof renderParticipants === 'function') renderParticipants(remoteParts);
+      }
+    }
+  } catch (e) { console.debug('[Sync] participants merge skip:', e.message); }
+
+  // Actions : idem
+  try {
+    const actTable = document.getElementById('actionsTableBody');
+    if (actTable && !actTable.contains(document.activeElement)) {
+      let remoteActs = [];
+      try { remoteActs = JSON.parse(remoteCR.actions || '[]'); } catch {}
+      const localActs = (typeof collectActions === 'function') ? collectActions() : [];
+      if (!_deepEqualArray(remoteActs, localActs)) {
+        if (typeof renderActions === 'function') renderActions(remoteActs);
+      }
+    }
+  } catch (e) { console.debug('[Sync] actions merge skip:', e.message); }
+}
+
+/**
+ * Met à jour un éditeur Quill avec du HTML distant en préservant
+ * la position du curseur via updateContents(delta).
+ * Skip si l'éditeur est focalisé ET s'il a été modifié dans les 500ms qui viennent de passer.
+ */
+function _safeUpdateQuill(quill, remoteHtml) {
+  if (!quill) return;
+  try {
+    const root = quill.root;
+    if (!root) return;
+
+    const currentHtml = root.innerHTML;
+    if (currentHtml === remoteHtml) return;
+
+    // Skip si l'utilisateur est en train de taper dans CET éditeur
+    const isFocused = document.activeElement && root.contains(document.activeElement);
+    const recentlyTyped = (Date.now() - (quill._lastLocalEditAt || 0)) < 700;
+    if (isFocused && recentlyTyped) {
+      return; // laisser la saisie finir, on réessaiera au prochain poll
+    }
+
+    // Convertir le HTML distant en delta Quill, puis calculer le diff
+    const remoteDelta  = quill.clipboard.convert({ html: remoteHtml });
+    const currentDelta = quill.getContents();
+    const diff         = currentDelta.diff(remoteDelta);
+
+    if (diff.ops && diff.ops.length > 0) {
+      // Sauvegarder la sélection pour la restaurer après
+      const sel = quill.getSelection();
+      quill.updateContents(diff, 'silent');
+      if (sel) {
+        // Restaurer le curseur (peut être un peu décalé si le diff change l'offset)
+        try { quill.setSelection(sel.index, sel.length, 'silent'); } catch {}
+      }
+    }
+  } catch (e) {
+    console.debug('[Sync] Quill merge error:', e.message);
+  }
+}
+
+/* Comparaison de tableaux d'objets (ordre-sensible) */
+function _deepEqualArray(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch { return false; }
+}
+
+/**
+ * Affiche un petit badge "Lucie édite…" pendant 10 secondes.
+ */
+function _showPresenceBadge(name) {
+  const el = document.getElementById('presenceIndicator');
+  if (!el) return;
+  el.textContent = `${name} édite…`;
+  el.style.display = 'inline-flex';
+  clearTimeout(_REALTIME._presenceTimer);
+  _REALTIME._presenceTimer = setTimeout(() => {
+    el.style.display = 'none';
+  }, 10000);
+}
+window._showPresenceBadge = _showPresenceBadge;
 
 /**
  * Configure le suivi du focus utilisateur sur les champs du formulaire.
@@ -1158,72 +1294,111 @@ function dismissPendingSync() {
   _hideSyncBanner();
 }
 
-/* ── Corriger les typos dans _pollForUpdates ── */
-// Réécriture propre de _pollForUpdates sans les typos
-(function() {
-  const _originalPoll = _pollForUpdates;
-  window._pollForUpdates = async function() {
-    if (!_REALTIME.reportId) return;
+/* =====================================================
+   POLLING TEMPS RÉEL — IMPLÉMENTATION FINALE
+   =====================================================
+   Corrige les bugs de la v1 :
+   - Détection "own save" fiable via last_modified_by_id
+     (et plus via user_id = propriétaire du CR, qui causait
+      le propriétaire à ignorer les modifs des collaborateurs).
+   - Merge champ-par-champ focus-aware (voir _mergeRemoteFieldsIntoForm)
+   - Poll rapide (1500ms) pour co-édition quasi temps réel
+   - Auto-apply silencieux (pas de bannière qui interrompt la saisie)
+   ===================================================== */
 
-    try {
-      const base = (typeof apiBase === 'function') ? apiBase() : 'api/tables';
-      const r = await fetch(
-        `${base}/meeting_reports/${encodeURIComponent(_REALTIME.reportId)}`,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+_REALTIME.POLL_INTERVAL = 1500;
 
-      if (!r.ok) {
-        if (r.status === 404) {
-          stopRealtimeSync();
-          if (typeof showToast === 'function') showToast(t('sync_cr_deleted'), 'warning');
-          if (typeof showProjectCRs === 'function' && _REALTIME.projectId) showProjectCRs(_REALTIME.projectId);
-        }
-        return;
-      }
+window._pollForUpdates = async function() {
+  if (!_REALTIME.reportId) return;
 
-      const remoteDoc = await r.json();
-      const remoteTs  = remoteDoc.updated_at || 0;
+  try {
+    const base = (typeof apiBase === 'function') ? apiBase() : 'api/tables';
+    const r = await fetch(
+      `${base}/meeting_reports/${encodeURIComponent(_REALTIME.reportId)}`,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
 
-      if (remoteTs > _REALTIME.lastUpdatedAt) {
-        const diffMs = remoteTs - _REALTIME.lastUpdatedAt;
-        // Ignorer si c'est notre propre sauvegarde récente (< 2s)
-        if (diffMs < 2000 && remoteDoc.user_id === STATE.userId) {
-          _REALTIME.lastUpdatedAt = remoteTs;
-          return;
-        }
-
-        _REALTIME.pendingUpdate = remoteDoc;
-
-        if (_REALTIME.userIsEditing) {
-          _showSyncBanner();
-        } else {
-          _applyRemoteUpdate(remoteDoc);
+    if (!r.ok) {
+      if (r.status === 404) {
+        stopRealtimeSync();
+        if (typeof showToast === 'function') showToast(t('sync_cr_deleted'), 'warning');
+        if (typeof showProjectCRs === 'function' && _REALTIME.projectId) {
+          showProjectCRs(_REALTIME.projectId);
         }
       }
-    } catch(e) {
-      console.debug('[Sync] Erreur poll:', e.message);
+      return;
     }
+
+    const remoteDoc = await r.json();
+    const remoteTs  = remoteDoc.updated_at || 0;
+
+    // Aucun changement → skip
+    if (remoteTs <= _REALTIME.lastUpdatedAt) return;
+
+    // --- DÉTECTION "OWN SAVE" ---
+    // On ne se base PAS sur user_id (= propriétaire) mais sur
+    // last_modified_by_id qui est écrit par chaque éditeur.
+    const modifierId = remoteDoc.last_modified_by_id || remoteDoc.last_modified_by || null;
+    const isOwnSave  = modifierId && modifierId === STATE.userId;
+
+    if (isOwnSave) {
+      // C'est NOTRE propre sauvegarde → on met juste le timestamp à jour
+      _REALTIME.lastUpdatedAt = remoteTs;
+      return;
+    }
+
+    // --- MODIF D'UN AUTRE UTILISATEUR ---
+    _REALTIME.pendingUpdate = remoteDoc;
+    // Merge immédiat : le merge est focus-aware et préserve le curseur,
+    // donc on peut l'appliquer même si l'utilisateur tape dans un autre champ.
+    _applyRemoteUpdate(remoteDoc);
+  } catch (e) {
+    console.debug('[Sync] Erreur poll:', e.message);
+  }
+};
+
+window.startRealtimeSync = function(reportId, projectId) {
+  stopRealtimeSync();
+  _REALTIME.reportId      = reportId;
+  _REALTIME.projectId     = projectId;
+  _REALTIME.pendingUpdate = null;
+  _REALTIME.userIsEditing = false;
+
+  const cr = STATE.reports.find(r => r.id === reportId);
+  _REALTIME.lastUpdatedAt = cr ? (cr.updated_at || 0) : 0;
+
+  _setupEditingTracker();
+  _setupQuillEditTracking();
+  _REALTIME.intervalId = setInterval(window._pollForUpdates, _REALTIME.POLL_INTERVAL);
+  console.log(`[Sync] ▶ CR ${reportId} surveillé (${_REALTIME.POLL_INTERVAL}ms)`);
+};
+
+/**
+ * Attache un tracker "dernière frappe locale" sur tous les éditeurs Quill
+ * afin que _safeUpdateQuill sache skipper les merges trop récents.
+ */
+function _setupQuillEditTracking() {
+  const trackQuill = (q) => {
+    if (!q || q._editTrackerAttached) return;
+    q._editTrackerAttached = true;
+    q.on('text-change', (_delta, _old, source) => {
+      if (source === 'user') {
+        q._lastLocalEditAt = Date.now();
+      }
+    });
   };
+  trackQuill(STATE.quillEditor);
+  const opt = STATE?._quillEditors || {};
+  Object.values(opt).forEach(trackQuill);
+}
+window._setupQuillEditTracking = _setupQuillEditTracking;
 
-  // Remplacer dans setInterval
-  const origStart = startRealtimeSync;
-  window.startRealtimeSync = function(reportId, projectId) {
-    stopRealtimeSync();
-    _REALTIME.reportId      = reportId;
-    _REALTIME.projectId     = projectId;
-    _REALTIME.pendingUpdate = null;
-    _REALTIME.userIsEditing = false;
-
-    const cr = STATE.reports.find(r => r.id === reportId);
-    _REALTIME.lastUpdatedAt = cr ? (cr.updated_at || 0) : 0;
-
-    _setupEditingTracker();
-    _REALTIME.intervalId = setInterval(window._pollForUpdates, _REALTIME.POLL_INTERVAL);
-    console.log(`[Sync] ▶ CR ${reportId} surveillé (${_REALTIME.POLL_INTERVAL}ms)`);
-  };
-})();
+/* Expose le state realtime pour que app.js puisse synchroniser
+   son timestamp après chaque auto-save */
+window._REALTIME = _REALTIME;
 
 window.startRealtimeSync  = startRealtimeSync;
 window.stopRealtimeSync   = stopRealtimeSync;
 window.applyPendingSync   = applyPendingSync;
+window._applyRemoteUpdate = _applyRemoteUpdate;
 window.dismissPendingSync = dismissPendingSync;
