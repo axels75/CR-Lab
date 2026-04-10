@@ -1,0 +1,856 @@
+/* =====================================================
+   WAVESTONE CR MASTER — LIFTING VISUEL 2026
+   Surcouche sur style.css : modernisation des ombres,
+   bordures, typographie, micro-interactions et densité.
+   Charger APRÈS style.css dans index.html.
+   ===================================================== */
+
+/* =====================================================
+   1. DESIGN TOKENS MODERNISÉS
+   ===================================================== */
+:root {
+  /* Système d'ombres hiérarchisé */
+  --shadow-xs:  0 1px 2px rgba(15, 23, 42, .04);
+  --shadow-sm:  0 2px 4px -1px rgba(15, 23, 42, .05), 0 1px 2px rgba(15, 23, 42, .04);
+  --shadow:     0 4px 6px -1px rgba(15, 23, 42, .06), 0 2px 4px -2px rgba(15, 23, 42, .05);
+  --shadow-md:  0 10px 15px -3px rgba(15, 23, 42, .08), 0 4px 6px -4px rgba(15, 23, 42, .04);
+  --shadow-lg:  0 20px 25px -5px rgba(15, 23, 42, .10), 0 8px 10px -6px rgba(15, 23, 42, .05);
+  --shadow-xl:  0 25px 50px -12px rgba(15, 23, 42, .18);
+
+  /* Teintes surfaces (glass / frost) */
+  --surface-glass:       rgba(255, 255, 255, 0.72);
+  --surface-glass-heavy: rgba(255, 255, 255, 0.88);
+  --surface-tint-primary: linear-gradient(135deg, rgba(0,45,114,.035) 0%, rgba(99,102,241,.03) 100%);
+
+  /* Rayons harmonisés */
+  --radius-sm:  8px;
+  --radius:     12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+
+  /* Courbes d'animation */
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition:   .18s var(--ease-out);
+
+  /* Focus ring unifié */
+  --focus-ring:       0 0 0 3px rgba(0, 45, 114, .18);
+  --focus-ring-accent:0 0 0 3px rgba(232, 0, 125, .22);
+}
+
+/* =====================================================
+   2. TYPOGRAPHIE FINE
+   ===================================================== */
+html {
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  letter-spacing: -0.003em;
+}
+
+h1, h2, h3, h4 {
+  letter-spacing: -0.02em;
+  font-feature-settings: 'ss01', 'ss03';
+}
+
+/* =====================================================
+   3. SCROLLBARS MODERNISÉES
+   ===================================================== */
+.content-area::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar,
+.modal::-webkit-scrollbar,
+.project-chat-messages::-webkit-scrollbar { width: 10px; height: 10px; }
+
+.content-area::-webkit-scrollbar-track,
+.sidebar-nav::-webkit-scrollbar-track,
+.modal::-webkit-scrollbar-track,
+.project-chat-messages::-webkit-scrollbar-track { background: transparent; }
+
+.content-area::-webkit-scrollbar-thumb,
+.modal::-webkit-scrollbar-thumb,
+.project-chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, .35);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background .2s;
+}
+.content-area::-webkit-scrollbar-thumb:hover,
+.modal::-webkit-scrollbar-thumb:hover,
+.project-chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, .55);
+  background-clip: padding-box;
+}
+
+/* =====================================================
+   4. TOPBAR — glass effect + breadcrumb stylisé
+   ===================================================== */
+.topbar {
+  background: var(--surface-glass-heavy);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid rgba(15, 23, 42, .06);
+  box-shadow: var(--shadow-xs);
+  height: 64px;
+  padding: 0 28px;
+}
+
+.topbar-breadcrumb {
+  font-size: .88rem;
+  letter-spacing: -0.01em;
+}
+.topbar-breadcrumb .sep {
+  color: var(--gray-300);
+  font-size: .7rem;
+  margin: 0 2px;
+}
+.topbar-breadcrumb > * {
+  transition: color .15s;
+}
+.topbar-breadcrumb a,
+.topbar-breadcrumb [onclick] {
+  color: var(--gray-600);
+  cursor: pointer;
+}
+.topbar-breadcrumb a:hover,
+.topbar-breadcrumb [onclick]:hover {
+  color: var(--primary);
+}
+
+.btn-toggle-sidebar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  transition: all .15s var(--ease-out);
+}
+.btn-toggle-sidebar:hover {
+  background: var(--gray-100);
+  transform: scale(1.05);
+}
+
+/* =====================================================
+   5. SIDEBAR — raffinement des espacements
+   ===================================================== */
+.sidebar {
+  box-shadow: 1px 0 0 rgba(255,255,255,.04);
+}
+
+.sidebar-header {
+  padding: 18px 18px 14px;
+}
+
+.btn-new-cr {
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: .88rem;
+  box-shadow: 0 4px 14px rgba(232, 0, 125, .25);
+  transition: all .2s var(--ease-out);
+}
+.btn-new-cr:hover {
+  box-shadow: 0 8px 22px rgba(232, 0, 125, .38);
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+.btn-new-cr:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(232, 0, 125, .3);
+}
+
+.sidebar-search {
+  border-radius: 10px;
+  padding: 9px 13px;
+  transition: all .15s;
+}
+.sidebar-search:focus-within {
+  background: var(--sidebar-hover-bg);
+  border-color: rgba(255, 255, 255, .28);
+}
+
+.project-header {
+  border-radius: 8px;
+  margin: 1px 8px;
+  padding: 9px 12px;
+}
+.project-header:hover {
+  background: var(--sidebar-hover-bg);
+}
+.project-header.active {
+  background: var(--sidebar-active-bg);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.cr-item {
+  border-radius: 6px;
+  margin: 1px 8px 1px 24px;
+  padding: 7px 12px 7px 20px;
+  transition: all .12s;
+}
+.cr-item:hover {
+  background: var(--sidebar-hover-bg);
+  transform: translateX(1px);
+}
+.cr-item.active {
+  background: var(--sidebar-active-bg);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* =====================================================
+   6. CONTENT AREA
+   ===================================================== */
+.content-area {
+  padding: 32px 40px 40px;
+  background: linear-gradient(180deg, #F8F9FB 0%, #F0F2F5 100%);
+}
+
+/* =====================================================
+   7. DASHBOARD HERO — verre + grain subtil
+   ===================================================== */
+.dashboard-hero {
+  background:
+    radial-gradient(ellipse at top right, rgba(232,0,125,.22) 0%, transparent 55%),
+    radial-gradient(ellipse at bottom left, rgba(99,102,241,.18) 0%, transparent 50%),
+    linear-gradient(135deg, #001B4E 0%, #002D72 45%, #0050B3 100%);
+  border-radius: var(--radius-xl);
+  padding: 40px 46px;
+  margin-bottom: 32px;
+  box-shadow:
+    0 20px 60px -20px rgba(0, 45, 114, .45),
+    0 1px 0 rgba(255, 255, 255, .15) inset;
+  border: 1px solid rgba(255, 255, 255, .08);
+  position: relative;
+  overflow: hidden;
+}
+.dashboard-hero::before {
+  width: 320px;
+  height: 320px;
+  background:
+    radial-gradient(circle, rgba(232, 0, 125, .32) 0%, transparent 70%);
+  filter: blur(18px);
+}
+.dashboard-hero::after {
+  width: 260px;
+  height: 260px;
+  background:
+    radial-gradient(circle, rgba(99, 102, 241, .28) 0%, transparent 70%);
+  filter: blur(20px);
+}
+
+.hero-text h1 {
+  font-size: 1.95rem;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  background: linear-gradient(180deg, #FFFFFF 0%, rgba(255,255,255,.82) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero-text p {
+  font-size: .98rem;
+  color: rgba(255, 255, 255, .78);
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, .12);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 14px;
+  padding: 18px 24px;
+  transition: all .2s var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+.stat-card:hover {
+  background: rgba(255, 255, 255, .18);
+  transform: translateY(-2px);
+}
+.stat-card .stat-val {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* =====================================================
+   8. PROJECT CARDS — premium glass
+   ===================================================== */
+.dashboard-grid {
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+}
+
+.project-card.pc-new {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(15, 23, 42, .06);
+  box-shadow: var(--shadow-sm);
+  transition: all .25s var(--ease-out);
+}
+.project-card.pc-new:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(0, 45, 114, .15);
+}
+
+.pc-color-bar {
+  height: 5px;
+  background-image: linear-gradient(90deg, currentColor 0%, currentColor 100%);
+  position: relative;
+}
+.pc-color-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+  opacity: 0;
+  transition: opacity .4s;
+}
+.project-card.pc-new:hover .pc-color-bar::after { opacity: 1; }
+
+.pc-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--gray-900);
+}
+
+.pc-cr-total {
+  font-weight: 700;
+  font-size: .76rem;
+  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+  padding: 4px 11px;
+}
+
+.pc-action-btn {
+  border-radius: 9px;
+  transition: all .15s var(--ease-out);
+}
+.pc-action-btn:hover {
+  transform: scale(1.08);
+}
+
+/* =====================================================
+   9. VIEW HEADER + CR LIST CARDS
+   ===================================================== */
+.view-header {
+  margin-bottom: 26px;
+}
+.view-header h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.cr-card {
+  border-radius: var(--radius);
+  border: 1px solid rgba(15, 23, 42, .06);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 22px;
+  transition: all .2s var(--ease-out);
+  position: relative;
+}
+.cr-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--primary);
+  border-radius: 3px 0 0 3px;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.cr-card:hover {
+  transform: translateX(3px);
+  border-color: rgba(0, 45, 114, .15);
+  box-shadow: var(--shadow-md);
+}
+.cr-card:hover::before { opacity: 1; }
+
+.cr-card-icon {
+  border-radius: 11px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+  transition: transform .25s var(--ease-spring);
+}
+.cr-card:hover .cr-card-icon {
+  transform: scale(1.06) rotate(-3deg);
+}
+
+.cr-card-title {
+  letter-spacing: -0.01em;
+}
+
+/* =====================================================
+   10. FORM SECTIONS — plus respirantes
+   ===================================================== */
+.form-section {
+  border-radius: var(--radius);
+  border: 1px solid rgba(15, 23, 42, .06);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .2s;
+  margin-bottom: 22px;
+}
+.form-section:hover {
+  box-shadow: var(--shadow);
+}
+
+.section-header {
+  background: var(--surface-tint-primary);
+  border-bottom: 1px solid rgba(15, 23, 42, .05);
+  padding: 16px 22px;
+}
+
+.section-icon {
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  box-shadow: 0 4px 10px rgba(0, 45, 114, .25);
+}
+
+.section-header h3 {
+  letter-spacing: -0.015em;
+}
+
+.section-body {
+  padding: 24px;
+}
+
+/* =====================================================
+   11. FORM INPUTS — focus plus net
+   ===================================================== */
+.form-group label {
+  font-size: .72rem;
+  letter-spacing: .8px;
+  color: var(--gray-600);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+.participant-row input,
+.actions-table td input,
+.actions-table td select,
+.settings-group input[type="text"],
+.settings-group select {
+  border: 1.5px solid rgba(15, 23, 42, .08);
+  border-radius: 9px;
+  padding: 10px 13px;
+  font-size: .9rem;
+  transition: all .15s var(--ease-out);
+  background: var(--white);
+}
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+  border-color: rgba(15, 23, 42, .14);
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.participant-row input:focus,
+.actions-table td input:focus,
+.actions-table td select:focus {
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
+}
+
+/* =====================================================
+   12. BOUTONS — relief subtil
+   ===================================================== */
+.btn-primary {
+  background: linear-gradient(180deg, #003A8E 0%, #002D72 100%);
+  border-radius: 9px;
+  padding: 10px 20px;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 2px 6px rgba(0, 45, 114, .18);
+  transition: all .18s var(--ease-out);
+}
+.btn-primary:hover {
+  background: linear-gradient(180deg, #0050B3 0%, #003A8E 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.2) inset, 0 6px 16px rgba(0, 45, 114, .32);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 0 rgba(255,255,255,.1) inset, 0 1px 3px rgba(0, 45, 114, .2);
+}
+
+.btn-secondary {
+  border-radius: 9px;
+  background: var(--white);
+  border: 1.5px solid rgba(15, 23, 42, .1);
+  padding: 10px 18px;
+  font-weight: 600;
+  transition: all .18s var(--ease-out);
+}
+.btn-secondary:hover {
+  background: var(--gray-50);
+  border-color: rgba(15, 23, 42, .2);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs);
+}
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  border-radius: 9px;
+  padding: 9px 16px;
+  transition: all .18s var(--ease-out);
+}
+.btn-outline:hover {
+  background: rgba(0, 45, 114, .07);
+  transform: translateY(-1px);
+}
+
+.btn-icon {
+  border-radius: 9px;
+  transition: all .15s var(--ease-out);
+}
+.btn-icon:hover {
+  transform: scale(1.08);
+}
+
+.btn-ai {
+  background: linear-gradient(135deg, #7C3AED 0%, #E8007D 100%);
+  border-radius: 9px;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, .32);
+  position: relative;
+  overflow: hidden;
+}
+.btn-ai::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.25) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform .6s var(--ease-out);
+}
+.btn-ai:hover::before {
+  transform: translateX(100%);
+}
+.btn-ai:hover {
+  box-shadow: 0 8px 22px rgba(124, 58, 237, .45);
+  transform: translateY(-1px);
+}
+
+/* =====================================================
+   13. EXPORT BAR
+   ===================================================== */
+.export-bar {
+  border-radius: var(--radius);
+  border: 1px solid rgba(15, 23, 42, .06);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 24px;
+  background: var(--surface-glass-heavy);
+  backdrop-filter: blur(10px);
+}
+
+.btn-export {
+  border-radius: 9px;
+  font-weight: 600;
+  padding: 10px 18px;
+  transition: all .18s var(--ease-out);
+}
+.btn-export:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* =====================================================
+   14. QUILL EDITOR — finition
+   ===================================================== */
+.ql-toolbar {
+  border-radius: 9px 9px 0 0 !important;
+  border-color: rgba(15, 23, 42, .1) !important;
+  background: linear-gradient(180deg, #FAFBFC 0%, #F3F5F8 100%) !important;
+  padding: 10px !important;
+}
+.ql-container {
+  border-radius: 0 0 9px 9px !important;
+  border-color: rgba(15, 23, 42, .1) !important;
+  transition: border-color .15s;
+}
+.ql-container:hover {
+  border-color: rgba(15, 23, 42, .16) !important;
+}
+.ql-container.ql-snow:focus-within {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(0, 45, 114, .12);
+}
+.ql-editor {
+  padding: 16px 18px !important;
+  line-height: 1.65 !important;
+}
+
+/* =====================================================
+   15. MODALES — glass backdrop + spring
+   ===================================================== */
+.modal-overlay {
+  background: rgba(15, 23, 42, .5);
+  backdrop-filter: blur(6px) saturate(140%);
+  -webkit-backdrop-filter: blur(6px) saturate(140%);
+}
+
+.modal {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(255, 255, 255, .6);
+  animation: modalIn .32s var(--ease-spring);
+}
+
+@keyframes modalIn {
+  0%   { opacity: 0; transform: translateY(12px) scale(.96); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.modal-header {
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid rgba(15, 23, 42, .06);
+}
+.modal-header h3 {
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+}
+.modal-close {
+  border-radius: 9px;
+  transition: all .15s var(--ease-out);
+}
+.modal-close:hover {
+  transform: rotate(90deg) scale(1.05);
+}
+
+.modal-body { padding: 24px 26px; }
+.modal-footer { padding: 18px 26px; }
+
+/* =====================================================
+   16. TOAST — rise with spring
+   ===================================================== */
+.toast {
+  border-radius: 11px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+}
+.toast.show {
+  animation: toastIn .4s var(--ease-spring);
+}
+@keyframes toastIn {
+  0%   { opacity: 0; transform: translateY(12px) scale(.95); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* =====================================================
+   17. STATUS BADGES — finition
+   ===================================================== */
+.status-badge,
+.action-status-badge {
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+}
+
+/* =====================================================
+   18. ACTIONS TABLE — élégance
+   ===================================================== */
+.actions-table-wrap {
+  border-radius: var(--radius);
+  border: 1px solid rgba(15, 23, 42, .08);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+
+.actions-table thead tr {
+  background: linear-gradient(180deg, #003A8E 0%, #002D72 100%);
+}
+
+.actions-table tbody tr {
+  transition: background .12s;
+}
+
+/* =====================================================
+   19. AI MENU & ASSISTANT — polish
+   ===================================================== */
+.ai-model-card {
+  border-radius: var(--radius);
+  border: 1.5px solid rgba(15, 23, 42, .08);
+  transition: all .2s var(--ease-out);
+}
+.ai-model-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: rgba(124, 58, 237, .4);
+}
+.ai-model-card.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 45, 114, .15), var(--shadow);
+}
+
+/* =====================================================
+   20. PROJECT CHAT — raffinement
+   ===================================================== */
+.modal-project-chat {
+  border-radius: var(--radius-lg);
+}
+.project-chat-messages {
+  background:
+    linear-gradient(180deg, #F8F9FB 0%, #F0F2F5 100%);
+  border-radius: var(--radius);
+  border: 1px solid rgba(15, 23, 42, .06);
+}
+.project-chat-msg-user .project-chat-bubble {
+  background: linear-gradient(135deg, #003A8E 0%, #6366F1 100%);
+  box-shadow: 0 4px 14px rgba(0, 45, 114, .28);
+  border-radius: 16px 16px 3px 16px;
+}
+.project-chat-msg-assistant .project-chat-bubble {
+  border-radius: 16px 16px 16px 3px;
+  box-shadow: var(--shadow-xs);
+}
+.project-chat-suggestion {
+  border-radius: 22px;
+  transition: all .18s var(--ease-out);
+}
+.project-chat-suggestion:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+.project-chat-send {
+  background: linear-gradient(135deg, #7C3AED 0%, #E8007D 100%);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, .35);
+  transition: all .18s var(--ease-out);
+}
+.project-chat-send:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 8px 22px rgba(124, 58, 237, .48);
+}
+
+#projectChatInput {
+  border-radius: 14px;
+  border: 1.5px solid rgba(15, 23, 42, .08);
+  padding: 12px 16px;
+}
+#projectChatInput:focus {
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
+}
+
+/* =====================================================
+   21. EMPTY STATES
+   ===================================================== */
+.empty-state {
+  padding: 60px 24px;
+  text-align: center;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(15, 23, 42, .12);
+}
+.empty-state i {
+  font-size: 2.8rem;
+  background: linear-gradient(135deg, var(--primary) 0%, #6366F1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 14px;
+  display: block;
+}
+.empty-state h3 {
+  font-size: 1.15rem;
+  letter-spacing: -0.015em;
+  margin-bottom: 6px;
+}
+.empty-state p {
+  color: var(--gray-500);
+  margin-bottom: 18px;
+}
+
+/* =====================================================
+   22. FOCUS VISIBLE — accessibilité
+   ===================================================== */
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 6px;
+}
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-outline:focus-visible,
+.btn-ai:focus-visible,
+.btn-export:focus-visible {
+  box-shadow: var(--focus-ring), 0 4px 12px rgba(0, 45, 114, .22);
+}
+
+/* =====================================================
+   23. ANIMATIONS GLOBALES (respect prefers-reduced-motion)
+   ===================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* View transitions (appearance des vues) */
+.view.active {
+  animation: viewFadeIn .35s var(--ease-out);
+}
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =====================================================
+   24. DARK MODE — ajustements des tokens
+   ===================================================== */
+.dark-mode {
+  --surface-glass:       rgba(30, 41, 59, .72);
+  --surface-glass-heavy: rgba(30, 41, 59, .88);
+  --surface-tint-primary: linear-gradient(135deg, rgba(99,102,241,.08) 0%, rgba(232,0,125,.05) 100%);
+}
+.dark-mode .topbar {
+  background: var(--surface-glass-heavy);
+  border-bottom-color: rgba(255, 255, 255, .06);
+}
+.dark-mode .content-area {
+  background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+}
+.dark-mode .form-section,
+.dark-mode .cr-card,
+.dark-mode .export-bar {
+  background: rgba(30, 41, 59, .6);
+  border-color: rgba(255, 255, 255, .06);
+}
+.dark-mode .empty-state {
+  background: rgba(30, 41, 59, .5);
+  border-color: rgba(255, 255, 255, .12);
+}
+.dark-mode .btn-secondary {
+  background: rgba(30, 41, 59, .7);
+  border-color: rgba(255, 255, 255, .1);
+  color: #E2E8F0;
+}
+.dark-mode .btn-secondary:hover {
+  background: rgba(30, 41, 59, .9);
+}
+.dark-mode .form-group input,
+.dark-mode .form-group select,
+.dark-mode .form-group textarea {
+  background: rgba(15, 23, 42, .6);
+  border-color: rgba(255, 255, 255, .1);
+  color: #E2E8F0;
+}

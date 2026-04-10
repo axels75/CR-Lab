@@ -533,22 +533,49 @@ function aiAssistantApply() {
   const cr = STATE._aiLastResult;
   if (!cr) return;
 
-  // Remplir le formulaire
-  if (cr.meeting_name && !document.getElementById('fieldMeetingName').value) {
-    document.getElementById('fieldMeetingName').value = cr.meeting_name;
+  const isEmpty = (html) => (typeof window._isQuillContentEmpty === 'function')
+    ? window._isQuillContentEmpty(html)
+    : !String(html || '').replace(/<p><br\s*\/?><\/p>/gi, '').replace(/<[^>]+>/g, '').trim();
+
+  // Injection robuste Quill 2 : remplace si vide, ajoute en fin sinon
+  const _quillSet = (q, html, { appendIfNotEmpty = true } = {}) => {
+    if (!q || !html) return;
+    try {
+      const currentEmpty = isEmpty(q.root.innerHTML);
+      if (currentEmpty || !appendIfNotEmpty) {
+        // Reset puis injection complète via delta → delta synchronisé
+        q.setContents([], 'silent');
+        q.clipboard.dangerouslyPasteHTML(0, html, 'user');
+      } else {
+        q.clipboard.dangerouslyPasteHTML(q.getLength(), html, 'user');
+      }
+    } catch (e) {
+      console.warn('[AI] _quillSet fallback:', e);
+      try { q.root.innerHTML = html; } catch {}
+    }
+  };
+
+  // En-tête réunion : ne réécrit pas ce que l'utilisateur a déjà saisi
+  const nameEl = document.getElementById('fieldMeetingName');
+  const dateEl = document.getElementById('fieldDate');
+  const locEl  = document.getElementById('fieldLocation');
+  if (cr.meeting_name && nameEl && !nameEl.value.trim()) {
+    nameEl.value = cr.meeting_name;
+    nameEl.dispatchEvent(new Event('input', { bubbles: true }));
   }
-  if (cr.meeting_date && !document.getElementById('fieldDate').value) {
-    document.getElementById('fieldDate').value = cr.meeting_date;
+  if (cr.meeting_date && dateEl && !dateEl.value.trim()) {
+    dateEl.value = cr.meeting_date;
+    dateEl.dispatchEvent(new Event('input', { bubbles: true }));
   }
-  if (cr.meeting_location && !document.getElementById('fieldLocation').value) {
-    document.getElementById('fieldLocation').value = cr.meeting_location;
+  if (cr.meeting_location && locEl && !locEl.value.trim()) {
+    locEl.value = cr.meeting_location;
+    locEl.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   // Participants : ajouter aux existants
   if (Array.isArray(cr.participants) && cr.participants.length) {
     const container = document.getElementById('participantsList');
     if (container && typeof addParticipantRow === 'function') {
-      // Retirer les lignes vides
       const emptyRows = Array.from(container.querySelectorAll('.participant-row'))
         .filter(row => !row.querySelector('[data-field="name"]').value.trim());
       emptyRows.forEach(r => r.remove());
@@ -559,32 +586,39 @@ function aiAssistantApply() {
     }
   }
 
-  // Points clés
+  // Points clés (éditeur Quill principal) — vraie détection d'empty + delta
   if (cr.key_points_html && STATE.quillEditor) {
-    const existing = STATE.quillEditor.root.innerHTML.replace(/<p><br><\/p>/g, '').trim();
-    if (!existing) {
-      STATE.quillEditor.root.innerHTML = cr.key_points_html;
-    } else {
-      STATE.quillEditor.clipboard.dangerouslyPasteHTML(STATE.quillEditor.getLength(), cr.key_points_html);
-    }
+    _quillSet(STATE.quillEditor, cr.key_points_html, { appendIfNotEmpty: true });
   }
 
-  // Sections optionnelles
-  if (typeof getOptionalSectionsData === 'function' && typeof setOptionalSectionsData === 'function') {
-    const current = getOptionalSectionsData();
-    setOptionalSectionsData({
-      decisions:  current.decisions  || cr.decisions_html  || '',
-      risks:      current.risks      || cr.risks_html      || '',
-      budget:     current.budget,
-      next_steps: current.next_steps || cr.next_steps_html || '',
-    });
+  // Sections optionnelles (décisions, risques, next steps) : on injecte si l'éditeur est vide
+  // sinon on concatène. On utilise _quillSet directement pour chaque éditeur.
+  const optMap = {
+    decisions_quill_editor:  cr.decisions_html,
+    risks_quill_editor:      cr.risks_html,
+    next_steps_quill_editor: cr.next_steps_html,
+  };
+  for (const [qId, html] of Object.entries(optMap)) {
+    if (!html) continue;
+    const q = STATE?._quillEditors?.[qId];
+    if (q) {
+      _quillSet(q, html, { appendIfNotEmpty: true });
+    } else {
+      // Éditeur optionnel pas encore monté → stocker via setOptionalSectionsData
+      if (typeof getOptionalSectionsData === 'function' && typeof setOptionalSectionsData === 'function') {
+        const cur = getOptionalSectionsData();
+        const key = qId.replace('_quill_editor', '');
+        if (isEmpty(cur[key])) {
+          setOptionalSectionsData({ ...cur, [key]: html });
+        }
+      }
+    }
   }
 
   // Actions
   if (Array.isArray(cr.actions) && cr.actions.length) {
     const tbody = document.getElementById('actionsTableBody');
     if (tbody && typeof addActionRow === 'function') {
-      // Retirer les lignes vides
       const emptyRows = Array.from(tbody.querySelectorAll('tr'))
         .filter(tr => !tr.querySelector('input').value.trim());
       emptyRows.forEach(r => r.remove());

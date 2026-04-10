@@ -855,7 +855,16 @@ function setOptionalSectionsData(data) {
   const _setContent = (quillId, textareaId, val) => {
     const q = STATE?._quillEditors?.[quillId];
     if (q) {
-      q.root.innerHTML = val || '';
+      // Quill 2 : passer par clipboard.convert + setContents pour synchroniser le delta
+      try {
+        const html = val || '';
+        const delta = q.clipboard.convert({ html });
+        q.setContents(delta, 'user');
+      } catch {
+        // Fallback : reset puis paste
+        q.setContents([], 'silent');
+        if (val) q.clipboard.dangerouslyPasteHTML(0, val, 'user');
+      }
       return;
     }
     const el = document.getElementById(quillId) || document.getElementById(textareaId);
@@ -868,6 +877,19 @@ function setOptionalSectionsData(data) {
   _setContent('budget_quill_editor',     'budget_content',     data?.budget     || '');
   _setContent('next_steps_quill_editor', 'next_steps_content', data?.next_steps || '');
 }
+
+/* Vrai test de vacuité d'un contenu Quill (un Quill vide = "<p><br></p>") */
+function _isQuillContentEmpty(html) {
+  if (!html) return true;
+  const stripped = String(html)
+    .replace(/<p><br\s*\/?><\/p>/gi, '')
+    .replace(/<p>\s*<\/p>/gi, '')
+    .replace(/&nbsp;/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+  return stripped.length === 0;
+}
+window._isQuillContentEmpty = _isQuillContentEmpty;
 
 /* ─────────────────────────────────────────────────────
    HELPERS PRIVÉS
