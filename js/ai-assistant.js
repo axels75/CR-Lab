@@ -21,7 +21,7 @@
 const AI = {
   endpoint:       'api/ai/nim',
   models:         [],               // catalogue chargé depuis GET /api/ai/nim
-  defaultModel:   'nvidia/llama-3.1-nemotron-70b-instruct',
+  defaultModel:   'meta/llama-3.3-70b-instruct',
   currentModel:   null,             // surchargé depuis localStorage
   configured:     false,            // true si clé API présente côté serveur
   _activeQuill:   null,             // éditeur ciblé par la dernière action
@@ -45,6 +45,19 @@ async function aiInit() {
       const data = await r.json();
       AI.models     = Array.isArray(data.models) ? data.models : [];
       AI.configured = Boolean(data.configured);
+
+      // Si le modèle mémorisé n'existe PLUS dans le catalogue (modèle
+      // déprécié côté NVIDIA), on bascule sur le modèle par défaut pour
+      // éviter les erreurs 404 lors des appels.
+      if (AI.currentModel && AI.models.length) {
+        const stillExists = AI.models.some(m => m.id === AI.currentModel);
+        if (!stillExists) {
+          console.warn('[AI] Modèle mémorisé obsolète :', AI.currentModel, '→ fallback');
+          AI.currentModel = null;
+          try { localStorage.removeItem('wv_ai_model'); } catch {}
+        }
+      }
+
       if (!AI.currentModel) {
         const def = AI.models.find(m => m.default) || AI.models[0];
         AI.currentModel = def ? def.id : AI.defaultModel;
