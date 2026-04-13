@@ -984,10 +984,10 @@
           <i class="fa-solid fa-file-import"></i>
           <div class="import-drop-text">
             <span>Importez un document pour pré-remplir le CR</span>
-            <small>Glissez un <strong>.txt</strong>, <strong>.eml</strong> ou <strong>.docx</strong> ici, ou collez du texte brut</small>
+            <small>Glissez un <strong>.txt</strong>, <strong>.eml</strong>, <strong>.docx</strong> ou <strong>.pptx</strong> ici, ou collez du texte brut — <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary)"></i> analyse IA automatique</small>
           </div>
           <div class="import-drop-btns">
-            <input type="file" id="fileImportInput" accept=".txt,.eml,.doc,.docx" hidden />
+            <input type="file" id="fileImportInput" accept=".txt,.eml,.doc,.docx,.ppt,.pptx" hidden />
             <button class="btn-outline" type="button" onclick="document.getElementById('fileImportInput').click()">
               <i class="fa-solid fa-file-arrow-up"></i> Choisir un fichier
             </button>
@@ -2056,7 +2056,7 @@
     <div class="modal-body">
       <p class="helper-text">
         <i class="fa-solid fa-circle-info"></i>
-        <span>Collez ici le contenu de votre email, compte-rendu Word, ou tout texte. L'application analysera le texte et pré-remplira les champs automatiquement.</span>
+        <span>Collez ici le contenu de votre email, Word, PowerPoint, transcription ou tout texte. L'application le parse et <strong>enrichit via IA</strong> pour pré-remplir les champs automatiquement.</span>
       </p>
       <div class="form-group" style="margin-top:12px;">
         <label>Texte à analyser</label>

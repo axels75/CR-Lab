@@ -18,20 +18,36 @@ document.addEventListener('DOMContentLoaded', () => {
   // Bouton "Analyser" dans la modale paste
   const btnAnalyse = document.getElementById('btnAnalysePaste');
   if (btnAnalyse) {
-    btnAnalyse.addEventListener('click', () => {
+    btnAnalyse.addEventListener('click', async () => {
       const text = document.getElementById('pasteImportText').value.trim();
       if (!text || text.length < 5) {
         showToast('Veuillez coller du texte avant d\'analyser.', 'error');
         return;
       }
-      const parsed = parseContent(text, 'txt');
-      prefillForm(parsed);
-      closeModal('modalPasteImport');
-      document.getElementById('pasteImportText').value = '';
-      const msg = parsed._fieldsFound > 0
-        ? `✓ ${parsed._fieldsFound} champ(s) pré-rempli(s) avec succès.`
-        : 'Texte analysé — aucun champ détecté automatiquement, vous pouvez saisir manuellement.';
-      showToast(msg, parsed._fieldsFound > 0 ? 'success' : 'info');
+
+      const origHTML = btnAnalyse.innerHTML;
+      btnAnalyse.disabled = true;
+      btnAnalyse.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyse en cours…';
+
+      try {
+        let parsed = parseContent(text, 'txt');
+        const aiUsed = await aiEnhanceParse(text, parsed, (msg) => {
+          btnAnalyse.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${msg}`;
+        });
+        if (aiUsed) parsed = aiUsed;
+
+        prefillForm(parsed);
+        closeModal('modalPasteImport');
+        document.getElementById('pasteImportText').value = '';
+        const via = aiUsed ? ' (IA)' : '';
+        const msg = parsed._fieldsFound > 0
+          ? `✓ ${parsed._fieldsFound} champ(s) pré-rempli(s)${via}.`
+          : 'Texte analysé — aucun champ détecté automatiquement, vous pouvez saisir manuellement.';
+        showToast(msg, parsed._fieldsFound > 0 ? 'success' : 'info');
+      } finally {
+        btnAnalyse.disabled = false;
+        btnAnalyse.innerHTML = origHTML;
+      }
     });
   }
 
@@ -78,23 +94,42 @@ async function handleFileImport(file) {
       const result = await readDocx(file);
       text         = result.text;
       method       = result.method;
+    } else if (ext === 'pptx' || ext === 'ppt') {
+      const result = await readPptx(file);
+      text         = result.text;
+      method       = result.method;
     } else {
-      showToast('Format non supporté. Utilisez .txt, .eml ou .docx', 'error');
+      showToast('Format non supporté. Utilisez .txt, .eml, .docx ou .pptx', 'error');
       dropArea.innerHTML = origHTML;
       bindFileInput();
       return;
     }
 
-    dropArea.innerHTML = origHTML;
-    bindFileInput();
-
     if (!text || text.trim().length < 10) {
+      dropArea.innerHTML = origHTML;
+      bindFileInput();
       showImportFallbackModal(file.name,
         `Le fichier "${file.name}" n'a pas pu être lu automatiquement (fichier binaire ou protégé).\n\nSolution : ouvrez le fichier dans Word ou votre messagerie, sélectionnez tout (Ctrl+A), copiez (Ctrl+C), puis cliquez sur "Coller du texte" et collez (Ctrl+V).`);
       return;
     }
 
-    const parsed = parseContent(text, method);
+    let parsed = parseContent(text, method);
+
+    // Feedback visuel : IA en cours
+    dropArea.innerHTML = `
+      <div class="import-progress">
+        <div class="spinner"></div>
+        <span><i class="fa-solid fa-wand-magic-sparkles"></i> Analyse IA du contenu extrait…</span>
+      </div>`;
+    const aiEnhanced = await aiEnhanceParse(text, parsed);
+    if (aiEnhanced) {
+      parsed = aiEnhanced;
+      method = method + '+ai';
+    }
+
+    dropArea.innerHTML = origHTML;
+    bindFileInput();
+
     prefillForm(parsed);
 
     if (parsed._fieldsFound === 0) {
@@ -283,6 +318,46 @@ function extractEmailBody(raw) {
   }
 
   return body.join('\n').trim();
+}
+
+/* =====================================================
+   READER PPTX
+   ===================================================== */
+async function readPptx(file) {
+  const jsz = window.JSZip || (typeof JSZip !== 'undefined' ? JSZip : null);
+  if (!jsz) {
+    console.warn('[import] JSZip absent — pptx non lisible');
+    return { text: '', method: 'pptx/none' };
+  }
+  try {
+    const buf = await file.arrayBuffer();
+    const zip = await jsz.loadAsync(buf);
+    const slideNames = Object.keys(zip.files)
+      .filter(n => /^ppt\/slides\/slide\d+\.xml$/i.test(n))
+      .sort((a, b) => {
+        const na = parseInt((a.match(/slide(\d+)/i) || [])[1] || 0, 10);
+        const nb = parseInt((b.match(/slide(\d+)/i) || [])[1] || 0, 10);
+        return na - nb;
+      });
+
+    const chunks = [];
+    for (let i = 0; i < slideNames.length; i++) {
+      const xml = await zip.file(slideNames[i]).async('string');
+      const matches = xml.match(/<a:t[^>]*>([^<]*)<\/a:t>/g) || [];
+      const parts = matches
+        .map(m => m.replace(/<a:t[^>]*>/, '').replace(/<\/a:t>/, ''))
+        .filter(Boolean);
+      if (parts.length) {
+        chunks.push(`--- Slide ${i + 1} ---\n${parts.join(' ')}`);
+      }
+    }
+    const txt = chunks.join('\n\n').trim();
+    console.log('[import] PPTX OK, slides:', slideNames.length, 'chars:', txt.length);
+    return { text: txt, method: 'pptx/jszip' };
+  } catch (e) {
+    console.warn('[import] PPTX failed:', e.message);
+    return { text: '', method: 'pptx/error' };
+  }
 }
 
 function xmlToText(xml) {
@@ -542,16 +617,21 @@ function prefillForm(parsed) {
   if (parsed.actions?.length > 0)      renderActions(parsed.actions);
 
   if (parsed.key_points && parsed.key_points.trim() && STATE.quillEditor) {
-    const html = parsed.key_points.split('\n')
-      .filter(l => l.trim())
-      .map(l => {
-        // Conserver les listes à puce
-        if (/^[-•·*►▸▶]/.test(l)) return `<li>${escHtmlImport(l.replace(/^[-•·*►▸▶]\s*/,''))}</li>`;
-        return `<p>${escHtmlImport(l)}</p>`;
-      })
-      .join('');
-    STATE.quillEditor.root.innerHTML = html
-      .replace(/(<li>.*<\/li>)+/g, match => `<ul>${match}</ul>`);
+    if (parsed._keyPointsHtml) {
+      // HTML déjà rendu par l'IA (sanitize minimal)
+      STATE.quillEditor.root.innerHTML = sanitizeQuillHtml(parsed.key_points);
+    } else {
+      const html = parsed.key_points.split('\n')
+        .filter(l => l.trim())
+        .map(l => {
+          // Conserver les listes à puce
+          if (/^[-•·*►▸▶]/.test(l)) return `<li>${escHtmlImport(l.replace(/^[-•·*►▸▶]\s*/,''))}</li>`;
+          return `<p>${escHtmlImport(l)}</p>`;
+        })
+        .join('');
+      STATE.quillEditor.root.innerHTML = html
+        .replace(/(<li>.*<\/li>)+/g, match => `<ul>${match}</ul>`);
+    }
   }
 }
 
@@ -597,11 +677,168 @@ function extractNameFromEmailStr(str) {
   return emailM ? emailM[0] : '';
 }
 
+function sanitizeQuillHtml(html) {
+  // Retire script/style/on*= attributs et balises non autorisées.
+  // On ne garde que les tags Quill classiques.
+  let s = String(html || '');
+  s = s.replace(/<script[\s\S]*?<\/script>/gi, '');
+  s = s.replace(/<style[\s\S]*?<\/style>/gi, '');
+  s = s.replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '');
+  s = s.replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '');
+  s = s.replace(/<(\/?)(h[1-6])>/gi, '<$1p>'); // headings → paragraphes
+  // Supprimer tags non whitelist
+  const allowed = /^(?:p|br|ul|ol|li|strong|em|b|i|u|s|a|span|blockquote|pre|code)$/i;
+  s = s.replace(/<\/?([a-z0-9]+)(\s[^>]*)?>/gi, (m, tag) => (allowed.test(tag) ? m : ''));
+  return s;
+}
+
 function escHtmlImport(str) {
   return String(str || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+/* =====================================================
+   ENRICHISSEMENT IA (NVIDIA NIM)
+   - Relance le parsing quand le regex est faible
+   - Ne complète que les champs vides (regex reste prioritaire
+     sur les marqueurs explicites du document)
+   - No-op silencieux si l'IA n'est pas configurée
+   ===================================================== */
+async function aiEnhanceParse(text, regexResult, onProgress) {
+  if (typeof window.aiCall !== 'function') return null;
+  if (!window.AI || !window.AI.configured)  return null;
+  if (window.AI._running)                   return null;
+  if (!text || text.length < 40)            return null;
+
+  const systemPrompt =
+    `Tu extrais les métadonnées d'un compte-rendu de réunion depuis un texte brut ` +
+    `(email, notes, Word, PowerPoint, transcription, etc.).\n\n` +
+    `Tu réponds UNIQUEMENT avec un objet JSON valide, sans préambule, sans backticks, ` +
+    `sans commentaire, de la forme EXACTE :\n` +
+    `{\n` +
+    `  "meeting_name": "",\n` +
+    `  "mission_name": "",\n` +
+    `  "date": "YYYY-MM-DD",\n` +
+    `  "location": "",\n` +
+    `  "facilitator": "",\n` +
+    `  "author": "",\n` +
+    `  "participants": [{"name":"","company":"","role":""}],\n` +
+    `  "actions": [{"action":"","owner":"","due":"YYYY-MM-DD","status":"todo"}],\n` +
+    `  "key_points": "<p>…</p><ul><li>…</li></ul>"\n` +
+    `}\n\n` +
+    `Règles strictes :\n` +
+    `- Si un champ n'est pas déterminable, mets-le à "" (chaîne vide).\n` +
+    `- Les dates DOIVENT être au format ISO YYYY-MM-DD ou "".\n` +
+    `- "participants" : pas de doublons, omets les adresses email seules.\n` +
+    `- "actions" : chaque action est une tâche concrète. status toujours "todo".\n` +
+    `- "key_points" : synthèse structurée en HTML Quill (<p>...</p>, <ul><li>...</li></ul>). ` +
+    `Pas d'entête, pas de <h1>/<h2>, pas de markdown.\n` +
+    `- Rédige en français professionnel.`;
+
+  const userMsg = `Texte source :\n\n${text.substring(0, 14000)}`;
+
+  try {
+    if (typeof onProgress === 'function') onProgress('IA en cours…');
+    const raw = await window.aiCall({
+      system:      systemPrompt,
+      user:        userMsg,
+      temperature: 0.1,
+      max_tokens:  2500,
+    });
+
+    const json = tryParseAiJson(raw);
+    if (!json || typeof json !== 'object') return null;
+
+    return mergeAiResult(regexResult, json);
+  } catch (e) {
+    console.warn('[import] AI enhance failed:', e.message);
+    return null;
+  }
+}
+
+function tryParseAiJson(raw) {
+  if (!raw) return null;
+  let s = String(raw).trim();
+  // Retirer fences markdown si le modèle en a glissé
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+  // Premier tentative directe
+  try { return JSON.parse(s); } catch {}
+  // Extraction du premier objet JSON
+  const m = s.match(/\{[\s\S]*\}/);
+  if (m) {
+    try { return JSON.parse(m[0]); } catch {}
+  }
+  return null;
+}
+
+function mergeAiResult(regex, ai) {
+  const out = Object.assign({}, regex);
+  const scalarFields = ['meeting_name','mission_name','date','location','facilitator','author'];
+  for (const k of scalarFields) {
+    const aiVal = String(ai[k] || '').trim();
+    if (aiVal && !String(out[k] || '').trim()) {
+      out[k] = aiVal;
+      out._fieldsFound++;
+    }
+  }
+  // Participants : union (regex prioritaire sur la clé nom normalisé)
+  const existing = new Set((out.participants || []).map(p =>
+    String(p.name || '').toLowerCase().trim().substring(0, 30)
+  ));
+  const aiParts = Array.isArray(ai.participants) ? ai.participants : [];
+  const addedParts = [];
+  for (const p of aiParts) {
+    const name = cleanName(p && p.name);
+    if (!name || name.length < 2) continue;
+    const key = name.toLowerCase().substring(0, 30);
+    if (existing.has(key)) continue;
+    existing.add(key);
+    addedParts.push({
+      name,
+      company: String((p && p.company) || '').trim().substring(0, 80),
+      role:    String((p && p.role)    || '').trim().substring(0, 80),
+    });
+  }
+  if (addedParts.length) {
+    const hadBefore = (out.participants || []).length > 0;
+    out.participants = (out.participants || []).concat(addedParts);
+    if (!hadBefore) out._fieldsFound++;
+  }
+
+  // Actions : privilégier la liste IA si regex n'en a trouvé aucune
+  const aiActs = Array.isArray(ai.actions) ? ai.actions : [];
+  if (aiActs.length && (!out.actions || out.actions.length === 0)) {
+    out.actions = aiActs
+      .filter(a => a && String(a.action || '').trim().length >= 3)
+      .slice(0, 40)
+      .map(a => ({
+        action: String(a.action).trim().substring(0, 300),
+        owner:  String(a.owner  || '').trim().substring(0, 80),
+        due:    normalizeIsoDate(a.due) || '',
+        status: 'todo',
+      }));
+    if (out.actions.length) out._fieldsFound++;
+  }
+
+  // Key points : remplacer si regex vide / trivial
+  const aiKp = String(ai.key_points || '').trim();
+  if (aiKp.length > 30 && (!out.key_points || out.key_points.trim().length < 30)) {
+    out.key_points = aiKp;
+    // Marquer comme HTML déjà rendu pour éviter un double-échappement au prefill
+    out._keyPointsHtml = true;
+    out._fieldsFound++;
+  }
+
+  return out;
+}
+
+function normalizeIsoDate(v) {
+  if (!v) return '';
+  const s = String(v).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  return parseDate(s) || '';
 }
 
 window.handleFileImport = handleFileImport;
