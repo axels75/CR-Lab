@@ -198,7 +198,8 @@ async function _finishLogin() {
 
   await Promise.all([fetchProjects(), fetchReports(), fetchUserProfile()]);
   if (typeof fetchSharedProjects === 'function') {
-    await Promise.allSettled([fetchSharedProjects(), fetchSharedReports(), fetchProjectMembers()]);
+    await fetchSharedProjects();
+    await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
   }
   renderSidebar();
   renderDashboard();
@@ -333,7 +334,8 @@ async function handleRegisterSubmit() {
         }
         await Promise.all([fetchProjects(), fetchReports()]);
         if (typeof fetchSharedProjects === 'function') {
-          await Promise.allSettled([fetchSharedProjects(), fetchSharedReports(), fetchProjectMembers()]);
+          await fetchSharedProjects();
+          await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
         }
         renderSidebar();
         renderDashboard();

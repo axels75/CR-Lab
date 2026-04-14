@@ -94,7 +94,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Charger les projets/CRs partagés via co-édition AVANT les profils de participants
     // (pour que fetchParticipantProfiles puisse inclure les profils des projets partagés)
     if (typeof fetchSharedProjects === 'function') {
-      await Promise.allSettled([fetchSharedProjects(), fetchSharedReports(), fetchProjectMembers()]);
+      // fetchSharedProjects DOIT finir avant fetchSharedReports
+      // (fetchSharedReports lit STATE.projects pour trouver les projets _shared)
+      await fetchSharedProjects();
+      await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
     }
     // Les profils sont chargés après, afin d'inclure ceux des projets partagés
     await fetchParticipantProfiles();
