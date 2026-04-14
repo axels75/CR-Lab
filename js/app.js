@@ -89,8 +89,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       clearTimeout(failsafeTimer);
     }
 
-    // Fetch parallèle avec timeout de sécurité
-    await Promise.allSettled([fetchProjects(), fetchReports(), fetchUserProfile()]);
+    // fetchProjects doit finir avant fetchReports (fetchReports filtre sur STATE.projects)
+    await Promise.allSettled([fetchProjects(), fetchUserProfile()]);
+    await fetchReports();
     // Charger les projets/CRs partagés via co-édition AVANT les profils de participants
     // (pour que fetchParticipantProfiles puisse inclure les profils des projets partagés)
     if (typeof fetchSharedProjects === 'function') {
@@ -258,7 +259,13 @@ async function fetchReports() {
   try {
     if (!STATE.userId) { STATE.reports = []; return; }
     const all = await apiGet('meeting_reports');
-    const myReports = all.filter(r => r.user_id === STATE.userId);
+    // Inclure les CRs que j'ai créés ET les CRs de collaborateurs dans mes propres projets
+    const myProjectIds = new Set(
+      STATE.projects.filter(p => !p._shared).map(p => p.id)
+    );
+    const myReports = all.filter(r =>
+      r.user_id === STATE.userId || myProjectIds.has(r.project_id)
+    );
     // Garder les CRs partagés déjà chargés
     const shared = STATE.reports.filter(r => r._shared);
     STATE.reports = [...myReports, ...shared];

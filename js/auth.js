@@ -196,7 +196,8 @@ async function _finishLogin() {
     document.getElementById('sidebar')?.classList.add('collapsed');
   }
 
-  await Promise.all([fetchProjects(), fetchReports(), fetchUserProfile()]);
+  await Promise.all([fetchProjects(), fetchUserProfile()]);
+  await fetchReports();
   if (typeof fetchSharedProjects === 'function') {
     await fetchSharedProjects();
     await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
@@ -332,7 +333,8 @@ async function handleRegisterSubmit() {
         if (window.innerWidth <= 900) {
           document.getElementById('sidebar')?.classList.add('collapsed');
         }
-        await Promise.all([fetchProjects(), fetchReports()]);
+        await fetchProjects();
+        await fetchReports();
         if (typeof fetchSharedProjects === 'function') {
           await fetchSharedProjects();
           await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
