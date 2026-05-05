@@ -1,4 +1,4 @@
-import { animate, spring, stagger, inView } from "https://cdn.jsdelivr.net/npm/motion@11.11.11/+esm";
+const { animate, spring, stagger, inView } = window.Motion;
 
 /**
  * Initialisation des animations via Framer Motion (Motion One vanilla)
