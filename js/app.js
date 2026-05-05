@@ -1148,6 +1148,13 @@ async function openReport(crid, pid) {
   // Appliquer les settings du projet
   if (typeof applyProjectSettings === 'function') applyProjectSettings(pid);
 
+  // Arrêter tout polling en cours
+  if (typeof stopRealtimeSync === 'function') stopRealtimeSync();
+  if (typeof cancelAutoSave === 'function') cancelAutoSave();
+
+  // Nettoyer l'état précédent avant de charger le nouveau CR
+  resetForm();
+
   // Refetch direct du CR pour avoir la version FRAÎCHE du serveur
   // (les collaborateurs ont pu modifier depuis le dernier fetchReports)
   let cr = STATE.reports.find(r => r.id === crid);
@@ -2495,6 +2502,7 @@ function humanDate(ts) {
 }
 
 /* Expose globals */
+window.showView            = showView;
 window.openReport          = openReport;
 window.openNewReport       = openNewReport;
 window.deleteReport        = deleteReport;
