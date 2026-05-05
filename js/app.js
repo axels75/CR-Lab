@@ -1235,6 +1235,7 @@ function resetForm() {
   if (typeof setOptionalSectionsData === 'function') {
     setOptionalSectionsData({ decisions:'', risks:'', budget:'', next_steps:'' });
   }
+  if (typeof resetModuleLayouts === 'function') resetModuleLayouts();
   STATE._activeTemplate = null;
 }
 
@@ -1282,9 +1283,6 @@ function _refreshParticipantAvatar(row) {
   const name = row.querySelector('[data-field="name"]').value.trim();
   const wrap  = row.querySelector('.participant-row-avatar-wrap');
   if (!wrap) return;
-
-  // Ne mettre à jour que si pas de photo fixe
-  if (wrap.dataset.photo) return;
 
   const profile  = findParticipantProfile(name);
   const photo    = profile && profile.photo ? profile.photo : '';
@@ -1371,7 +1369,14 @@ function _buildCRPayload() {
 
   const participants = collectParticipants();
   const actions      = collectActions();
-  const keyPoints    = STATE.quillEditor ? STATE.quillEditor.root.innerHTML : '';
+  
+  let keyPoints = STATE.quillEditor ? STATE.quillEditor.root.innerHTML : '';
+  if (typeof getModuleLayoutContent === 'function') {
+    const kpData = getModuleLayoutContent('sectionKeyPoints');
+    if (kpData && kpData.layout !== 'text' && kpData.html) {
+      keyPoints = kpData.html;
+    }
+  }
 
   const optData = typeof getOptionalSectionsData === 'function' ? getOptionalSectionsData() : {};
   const activeTemplate = STATE._activeTemplate || null;

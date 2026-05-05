@@ -880,6 +880,48 @@ function getModuleLayoutContent(sectionId) {
   return { layout, html: '' };
 }
 window.getModuleLayoutContent         = getModuleLayoutContent;
+
+/* ─────────────────────────────────────────────────────
+   RESET DES LAYOUTS
+   ───────────────────────────────────────────────────── */
+function resetModuleLayouts() {
+  _layouts = {};
+  document.querySelectorAll('.module-layout-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.layout === 'text');
+  });
+  document.querySelectorAll('.form-section, .section-custom').forEach(sec => {
+    const body = sec.querySelector('.section-body');
+    if (body) {
+      _hideAllLayoutZones(body, sec.id);
+      _showTextZone(sec, body, sec.id);
+    }
+  });
+  
+  // Vider les previews d'images
+  document.querySelectorAll('.mlt-image-preview-zone').forEach(el => {
+    el.style.display = 'none';
+    el.dataset.src = '';
+  });
+  document.querySelectorAll('.mlt-image-dropzone').forEach(el => {
+    el.style.display = '';
+  });
+  document.querySelectorAll('.mlt-image-caption-input').forEach(el => { el.value = ''; });
+  document.querySelectorAll('.mlt-image-preview-img').forEach(el => { el.src = ''; });
+  
+  // Vider les tableaux
+  document.querySelectorAll('.mlt-table-zone').forEach(el => {
+    const sid = el.dataset.sid;
+    if (sid && typeof mltTableReset === 'function') mltTableReset(sid);
+  });
+  
+  // Vider le planning
+  document.querySelectorAll('.mlt-planning-zone').forEach(el => {
+    const sid = el.dataset.sid;
+    if (sid && typeof mltPlanReset === 'function') mltPlanReset(sid);
+  });
+}
+window.resetModuleLayouts = resetModuleLayouts;
+
 window.initModuleLayoutSelectors      = initModuleLayoutSelectors;
 window._attachLayoutToOptionalSections = _attachLayoutToOptionalSections;
 window._attachExcelPasteToQuill       = _attachExcelPasteToQuill;

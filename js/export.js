@@ -241,11 +241,11 @@ function generateEmailHTML(d) {
 
   /* Helper : en-tête de tableau Outlook-safe — bgcolor sur th + td imbriqué pour forcer couleur */
   const th = (text, width, pc) =>
-    `<th width="${width}" bgcolor="${pc}" style="background-color:${pc} !important;padding:0;text-align:left;border:1px solid ${pc};">
+    `<th width="${width}" bgcolor="${pc}" style="background-color:${pc};padding:0;text-align:left;border:1px solid ${pc};">
       <!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:100%;height:36pt;"><v:fill type="solid" color="${pc}"/><v:textbox inset="6pt,6pt,6pt,6pt"><![endif]-->
       <table border="0" cellpadding="0" cellspacing="0" width="100%"><tr>
-        <td bgcolor="${pc}" style="background-color:${pc} !important;padding:10px 14px;">
-          <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:.8px;display:block;">${text}</span></font>
+        <td bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;">
+          <span style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:.8px;display:block;">${text}</span>
         </td>
       </tr></table>
       <!--[if mso]></v:textbox></v:rect><![endif]-->
@@ -405,9 +405,9 @@ function generateEmailHTML(d) {
 
     <!-- ═══ TITRE ═══ -->
     <tr>
-      <td bgcolor="${d.accentColor}" style="background-color:${d.accentColor} !important;padding:16px 32px 18px;">
-        <font color="#FFFFFF"><div class="force-white" style="font-family:Arial,sans-serif;font-size:20px;font-weight:800;color:#FFFFFF !important;line-height:1.3;margin:0 0 4px 0;">${escHtml(d.meeting || 'Réunion sans titre')}</div></font>
-        <font color="#FFD6EE"><div class="force-white-pink" style="font-family:Arial,sans-serif;font-size:13px;color:#FFD6EE !important;margin:0;">${escHtml(d.mission || '')}</div></font>
+      <td bgcolor="${d.accentColor}" style="background-color:${d.accentColor};padding:16px 32px 18px;">
+        <div style="font-family:Arial,sans-serif;font-size:20px;font-weight:800;line-height:1.3;margin:0 0 4px 0;"><span style="color:#FFFFFF;">${escHtml(d.meeting || 'Réunion sans titre')}</span></div>
+        <div style="font-family:Arial,sans-serif;font-size:13px;margin:0;"><span style="color:#FFD6EE;">${escHtml(d.mission || '')}</span></div>
       </td>
     </tr>
 
@@ -634,22 +634,22 @@ function _renderPlanningForEmail(html, primaryColor, planningRows) {
          style="border-collapse:collapse;border:1px solid ${BD};">
     <tr bgcolor="${pc}" style="background-color:${pc};">
       <td width="28%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;">
-        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Tâche / Étape</span></font>
+        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Tâche / Étape</span>
       </td>
       <td width="17%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Responsable</span></font>
+        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Responsable</span>
       </td>
       <td width="11%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Début</span></font>
+        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Début</span>
       </td>
       <td width="11%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Fin</span></font>
+        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Fin</span>
       </td>
       <td width="18%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Avancement</span></font>
+        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Avancement</span>
       </td>
       <td width="15%" bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;border-left:1px solid rgba(255,255,255,0.2);">
-        <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;text-transform:uppercase;letter-spacing:0.8px;">Statut</span></font>
+        <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:0.8px;">Statut</span>
       </td>
     </tr>`;
 
@@ -883,6 +883,17 @@ function sanitizeQuillForEmail(html) {
     el.style.lineHeight   = '1.6';
     // Crucial pour Outlook : sans display:list-item, les puces disparaissent parfois
     el.style.display      = 'list-item';
+    
+    // Gérer l'indentation de Quill (ql-indent-1, ql-indent-2, etc.)
+    let indent = 0;
+    el.classList.forEach(cls => {
+      if (cls.startsWith('ql-indent-')) {
+        indent = parseInt(cls.split('-')[2]) || 0;
+      }
+    });
+    if (indent > 0) {
+      el.style.marginLeft = (indent * 24) + 'px';
+    }
   });
 
   div.querySelectorAll('h1').forEach(el => {

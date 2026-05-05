@@ -836,7 +836,13 @@ function _createOptionalSection(id, icon, color, titleBilingual, contentId, plac
 
 /* Lire le contenu des sections optionnelles (Quill ou textarea fallback) */
 function getOptionalSectionsData() {
-  const _getContent = (quillId, textareaId) => {
+  const _getContent = (quillId, textareaId, sectionId) => {
+    if (typeof getModuleLayoutContent === 'function') {
+      const res = getModuleLayoutContent(sectionId);
+      if (res && res.layout !== 'text' && res.html) {
+        return res.html;
+      }
+    }
     const q = STATE?._quillEditors?.[quillId];
     if (q) return q.root.innerHTML;
     const el = document.getElementById(quillId) || document.getElementById(textareaId);
@@ -844,10 +850,10 @@ function getOptionalSectionsData() {
     return el.classList.contains('ql-editor') ? el.innerHTML : el.value || '';
   };
   return {
-    decisions:  _getContent('decisions_quill_editor',  'decisions_content'),
-    risks:      _getContent('risks_quill_editor',       'risks_content'),
-    budget:     _getContent('budget_quill_editor',      'budget_content'),
-    next_steps: _getContent('next_steps_quill_editor',  'next_steps_content'),
+    decisions:  _getContent('decisions_quill_editor',  'decisions_content',  'sectionDecisions'),
+    risks:      _getContent('risks_quill_editor',       'risks_content',      'sectionRisks'),
+    budget:     _getContent('budget_quill_editor',      'budget_content',     'sectionBudget'),
+    next_steps: _getContent('next_steps_quill_editor',  'next_steps_content', 'sectionNextSteps'),
   };
 }
 

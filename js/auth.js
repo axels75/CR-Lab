@@ -18,19 +18,32 @@ let _forgotProfile = null;
    ===================================================== */
 function loadSession() {
   try {
-    const raw = sessionStorage.getItem(AUTH_KEY);
+    let raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) raw = sessionStorage.getItem(AUTH_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw);
+    if (s && s.expiresAt && Date.now() > s.expiresAt) {
+      clearSession();
+      return null;
+    }
     return (s && s.userId && s.username) ? s : null;
   } catch { return null; }
 }
 
-function saveSession(session) {
-  sessionStorage.setItem(AUTH_KEY, JSON.stringify(session));
+function saveSession(session, rememberMe = false) {
+  if (rememberMe) {
+    session.expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+    sessionStorage.removeItem(AUTH_KEY);
+  } else {
+    sessionStorage.setItem(AUTH_KEY, JSON.stringify(session));
+    localStorage.removeItem(AUTH_KEY);
+  }
 }
 
 function clearSession() {
   sessionStorage.removeItem(AUTH_KEY);
+  localStorage.removeItem(AUTH_KEY);
 }
 
 /* =====================================================
@@ -156,8 +169,9 @@ async function handleLoginSubmit(e) {
       profile = _mfaLocal.mergeWithProfile(userId, profile);
     }
 
-    const session = { userId, username: username.toLowerCase().trim(), profileId: profile.id };
-    saveSession(session);
+    const rememberMe = document.getElementById('loginRememberMe')?.checked || false;
+    const session = { userId, username: username.toLowerCase().trim(), profileId: profile.id, rememberMe };
+    saveSession(session, rememberMe);
     STATE.userId      = userId;
     STATE.authSession = session;
     STATE.userProfile = profile;
@@ -317,7 +331,7 @@ async function handleRegisterSubmit() {
     }
 
     const session = { userId, username: username.toLowerCase().trim(), profileId: newProfile.id };
-    saveSession(session);
+    saveSession(session, true); // Mémoriser par défaut à l'inscription
     STATE.userId      = userId;
     STATE.authSession = session;
     STATE.userProfile = newProfile;

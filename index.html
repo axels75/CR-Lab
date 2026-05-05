@@ -155,10 +155,16 @@
               </div>
             </div>
             <div class="auth-error" id="loginError"></div>
-            <span class="auth-forgot-link" id="btnForgotPassword" onclick="showForgotPanel()">
-              <i class="fa-solid fa-key" style="font-size:.7rem"></i>
-              <span data-i18n="forgot_password">Mot de passe oublié ?</span>
-            </span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; color: var(--gray-600);">
+                <input type="checkbox" id="loginRememberMe" checked />
+                <span data-i18n="remember_me">Mémoriser cet appareil (30 jours)</span>
+              </label>
+              <span class="auth-forgot-link" id="btnForgotPassword" onclick="showForgotPanel()">
+                <i class="fa-solid fa-key" style="font-size:.7rem"></i>
+                <span data-i18n="forgot_password">Mot de passe oublié ?</span>
+              </span>
+            </div>
             <button type="submit" class="auth-btn-primary" id="btnLogin">
               <i class="fa-solid fa-right-to-bracket"></i>
               <span data-i18n="login_btn">Se connecter</span>
@@ -2222,5 +2228,7 @@
 <script src="js/section-editor.js?v=20260228b" defer></script>
 <script src="js/ai-assistant.js?v=20260410g" defer></script>
 <script src="js/project-chatbot.js?v=20260410e" defer></script>
+<!-- Animations Framer Motion Vanilla -->
+<script type="module" src="js/animations.js"></script>
 </body>
 </html>
