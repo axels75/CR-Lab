@@ -740,6 +740,11 @@
           </button>
         </div>
       </div>
+      <!-- Barre de filtres / dossiers -->
+      <div class="folder-filter-bar" id="folderFilterBar" style="display:none;">
+        <div class="folder-filter-label"><i class="fa-solid fa-folder-tree"></i> <span data-i18n="folders">Dossiers</span> :</div>
+        <div class="folder-filter-pills" id="folderFilterPills"></div>
+      </div>
       <div id="crListContainer"></div>
     </div>
 
@@ -1074,6 +1079,12 @@
                   <option value="final" data-i18n="final">Final</option>
                   <option value="archived" data-i18n="archived">Archivé</option>
                 </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label data-i18n="folder">Dossier <span style="font-size:.75rem;color:var(--gray-400)">(atelier, équipe, comité…)</span></label>
+                <input type="text" id="fieldFolder" placeholder="ex : Ateliers, COPIL, Équipe Alpha" autocomplete="off" />
               </div>
             </div>
           </div>

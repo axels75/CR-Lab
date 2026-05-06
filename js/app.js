@@ -1159,6 +1159,7 @@ async function showProjectCRs(pid) {
 
   // Rendu immédiat depuis cache local pour fluidité perçue
   _renderProjectCRList();
+  renderFolderFilterBar(pid);
   setUiLoading(false);
 
   // Refresh asynchrone des données puis rerender
@@ -1297,6 +1298,7 @@ function fillForm(cr) {
   document.getElementById('fieldFacilitator').value  = cr.meeting_facilitator || '';
   document.getElementById('fieldAuthor').value       = cr.author || '';
   document.getElementById('fieldStatus').value       = cr.status || 'draft';
+  document.getElementById('fieldFolder').value       = cr.folder || '';
 
   restoreReportTemplate(cr);
 
@@ -1548,6 +1550,7 @@ function _buildCRPayload() {
     last_modified_by_name: modifierName,
     // Champ hérité (lu par collaboration.js v1) — on le garde pour rétro-compat
     last_modified_by:     STATE.userId,
+    folder:               document.getElementById('fieldFolder').value.trim(),
     keywords:             `${mission} ${meeting} ${participants.map(p=>p.name).join(' ')}`,
     _meta: { mission_required: Boolean(mission && meeting) },
   };
@@ -2634,6 +2637,102 @@ function humanDate(ts) {
     return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
   } catch { return ''; }
 }
+
+/* ─── Fonction : Barre de filtres par dossiers ─── */
+function renderFolderFilterBar(projectId) {
+  const bar   = document.getElementById('folderFilterBar');
+  const pills = document.getElementById('folderFilterPills');
+  if (!bar || !pills) return;
+
+  const reports = STATE.reports.filter(r => r.project_id === projectId);
+  // Collecter les dossiers uniques (non vides)
+  const folders = [...new Set(
+    reports.map(r => (r.folder || '').trim()).filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+  if (folders.length === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+
+  // Lire le filtre actif depuis sessionStorage (par projet) ou 'all'
+  const storageKey = `cr_folder_filter_${projectId}`;
+  let activeFolder = sessionStorage.getItem(storageKey) || 'all';
+  // Si le dossier actif n'existe plus, revenir à 'all'
+  if (activeFolder !== 'all' && !folders.includes(activeFolder)) {
+    activeFolder = 'all';
+    sessionStorage.removeItem(storageKey);
+  }
+
+  bar.style.display = 'flex';
+
+  const renderPills = () => {
+    const total = reports.length;
+    pills.innerHTML = '';
+
+    // Pill "Tous"
+    const allPill = document.createElement('button');
+    allPill.className = 'folder-pill' + (activeFolder === 'all' ? ' active' : '');
+    allPill.innerHTML = `<i class="fa-solid fa-layer-group"></i> ${(typeof t === 'function' ? t('all') : 'Tous')} <span class="folder-pill-count">${total}</span>`;
+    allPill.addEventListener('click', () => {
+      activeFolder = 'all';
+      sessionStorage.removeItem(storageKey);
+      renderPills();
+      _applyFolderFilter(projectId, null);
+    });
+    pills.appendChild(allPill);
+
+    // Pills par dossier
+    folders.forEach(f => {
+      const count = reports.filter(r => (r.folder || '').trim() === f).length;
+      const pill = document.createElement('button');
+      pill.className = 'folder-pill' + (activeFolder === f ? ' active' : '');
+      pill.innerHTML = `<i class="fa-solid fa-folder"></i> ${esc(f)} <span class="folder-pill-count">${count}</span>`;
+      pill.addEventListener('click', () => {
+        if (activeFolder === f) {
+          // Déjà actif → désélectionner
+          activeFolder = 'all';
+          sessionStorage.removeItem(storageKey);
+          _applyFolderFilter(projectId, null);
+        } else {
+          activeFolder = f;
+          sessionStorage.setItem(storageKey, f);
+          _applyFolderFilter(projectId, f);
+        }
+        renderPills();
+      });
+      pills.appendChild(pill);
+    });
+  };
+
+  renderPills();
+
+  // Appliquer le filtre au rendu initial
+  if (activeFolder !== 'all') {
+    _applyFolderFilter(projectId, activeFolder);
+  }
+}
+
+/* Appliquer le filtre dossier sur la liste CRs affichée */
+function _applyFolderFilter(projectId, folder) {
+  const container = document.getElementById('crListContainer');
+  if (!container) return;
+
+  const cards = container.querySelectorAll('.cr-card');
+  cards.forEach(card => {
+    if (!folder) {
+      card.style.display = '';
+      return;
+    }
+    const crid = (card.querySelector('[onclick*="openReport"]')?.getAttribute('onclick')?.match(/openReport\('([^']+)'/) || [])[1];
+    if (!crid) { card.style.display = ''; return; }
+    const cr = STATE.reports.find(r => r.id === crid);
+    const cardFolder = (cr?.folder || '').trim();
+    card.style.display = (cardFolder === folder) ? '' : 'none';
+  });
+}
+
+window.renderFolderFilterBar = renderFolderFilterBar;
 
 /* Expose globals */
 window.showView            = showView;

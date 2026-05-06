@@ -6741,3 +6741,109 @@ body.ui-loading {
 }
 .dark-mode .project-chat-welcome h4 { color: var(--gray-800); }
 .dark-mode .project-chat-welcome p  { color: var(--gray-600); }
+
+/* =====================================================
+   FOLDER FILTER BAR / PILLS
+   ===================================================== */
+.folder-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.folder-filter-label {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.folder-filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.folder-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 99px;
+  font-size: .78rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: all .2s ease;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-50);
+  color: var(--gray-600);
+}
+
+.folder-pill i {
+  font-size: .7rem;
+  opacity: .7;
+}
+
+.folder-pill:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+  color: var(--gray-800);
+}
+
+.folder-pill.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(0,45,114,.25);
+}
+
+.folder-pill.active i { opacity: 1; }
+
+.folder-pill.active:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-light);
+}
+
+.folder-pill .pill-count {
+  font-size: .68rem;
+  opacity: .8;
+  margin-left: 2px;
+}
+
+/* Dark mode */
+.dark-mode .folder-pill {
+  background: rgba(30,41,59,.6);
+  border-color: var(--gray-200);
+  color: var(--gray-300);
+}
+
+.dark-mode .folder-pill:hover {
+  background: rgba(30,41,59,.8);
+  color: var(--gray-200);
+}
+
+.dark-mode .folder-pill.active {
+  background: var(--primary-light);
+  color: #fff;
+}
+
+.dark-mode .folder-filter-label {
+  color: var(--gray-400);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .folder-filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

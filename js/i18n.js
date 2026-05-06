@@ -114,6 +114,8 @@ const TRANSLATIONS = {
     list_crs:           'Liste des CRs',
     collaborators:      'Collaborateurs',
     leave_project:      'Quitter',
+    all:                'Tous',
+    folders:            'Dossiers',
 
     // ── CR Form ──────────────────────────────────────
     cr_context:         'Contexte de la réunion',
@@ -594,6 +596,8 @@ const TRANSLATIONS = {
     list_crs:           'List notes',
     collaborators:      'Collaborators',
     leave_project:      'Leave',
+    all:                'All',
+    folders:            'Folders',
 
     // ── CR Form ──────────────────────────────────────
     cr_context:         'Meeting context',
