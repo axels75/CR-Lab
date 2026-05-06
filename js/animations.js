@@ -28,10 +28,13 @@ function animateDashboard() {
   if (!_motionReady) return;
   const cards = document.querySelectorAll('.stat-card, .project-card.pc-new, .pd-kpi-card, .pd-card');
   if (!cards.length) return;
-  cards.forEach(c => { c.style.opacity = '0'; c.style.transform = 'translateY(20px)'; });
+  cards.forEach(c => {
+    c.style.opacity = '1';
+    c.style.transform = 'none';
+  });
   _animate(
     cards,
-    { opacity: [0, 1], y: [20, 0], scale: [0.95, 1] },
+    { opacity: [0.6, 1], y: [12, 0], scale: [0.98, 1] },
     { delay: _stagger(0.08, { startDelay: 0.1 }), duration: 0.5,
       easing: _spring({ stiffness: 300, damping: 20 }) }
   );
@@ -48,7 +51,7 @@ function animateTableRows() {
   if (!_motionReady) return;
   const rows = document.querySelectorAll('.cr-card, .project-item');
   if (!rows.length) return;
-  rows.forEach(r => { r.style.opacity = '0'; });
+  rows.forEach(r => { r.style.opacity = '1'; r.style.transform = 'none'; });
   _animate(rows, { opacity: [0, 1], x: [-10, 0] },
     { delay: _stagger(0.05), duration: 0.3, easing: 'ease-out' });
 }
@@ -57,7 +60,7 @@ function animateEditor() {
   if (!_motionReady) return;
   const secs = document.querySelectorAll('.form-section');
   if (!secs.length) return;
-  secs.forEach(s => { s.style.opacity = '0'; });
+  secs.forEach(s => { s.style.opacity = '1'; s.style.transform = 'none'; });
   _animate(secs, { opacity: [0, 1], y: [15, 0] },
     { delay: _stagger(0.05), duration: 0.4, easing: 'ease-out' });
 }
@@ -66,7 +69,7 @@ function animateCollabModal() {
   if (!_motionReady) return;
   const rows = document.querySelectorAll('.collab-member-row, .collab-invitation-card');
   if (!rows.length) return;
-  rows.forEach((r) => { r.style.opacity = '0'; });
+  rows.forEach((r) => { r.style.opacity = '1'; r.style.transform = 'none'; });
   _animate(rows, { opacity: [0, 1], y: [10, 0] }, {
     delay: _stagger(0.03),
     duration: 0.28,
