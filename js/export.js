@@ -836,6 +836,34 @@ function sanitizeQuillForEmail(html) {
   // Supprimer les <span class="ql-ui"> qui contiennent les pseudo-puces Quill
   div.querySelectorAll('.ql-ui, span.ql-ui').forEach(el => el.remove());
 
+  // Convertir les paragraphes contenant des puces inline "• texte • texte"
+  // (contenu généré par IA ou collé en texte brut) en vraies listes <ul><li>
+  div.querySelectorAll('p').forEach(p => {
+    const raw = p.innerHTML;
+    if (!raw.includes('•')) return;
+    if (p.closest('li') || p.closest('ul') || p.closest('ol')) return;
+    // Séparer sur " • " ou en début de chaîne
+    const parts = raw.split(/\s*•\s+/);
+    if (parts.length < 2) return;
+    const frag = document.createDocumentFragment();
+    const intro = parts[0].trim();
+    if (intro) {
+      const newP = document.createElement('p');
+      newP.innerHTML = intro;
+      frag.appendChild(newP);
+    }
+    const ul = document.createElement('ul');
+    parts.slice(1).forEach(part => {
+      const cleaned = part.trim();
+      if (!cleaned) return;
+      const li = document.createElement('li');
+      li.innerHTML = cleaned;
+      ul.appendChild(li);
+    });
+    if (ul.children.length > 0) frag.appendChild(ul);
+    p.replaceWith(frag);
+  });
+
   // Appliquer styles inline sur les éléments courants
   div.querySelectorAll('p').forEach(el => {
     el.style.margin = '0 0 8px 0';

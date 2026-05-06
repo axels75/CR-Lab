@@ -432,6 +432,12 @@ function _applyModulesToForm(modules, config, tpl) {
     }
   });
 
+  // Garantir que toutes les sections custom sont avant la barre de sauvegarde
+  const finalSaveBar = form.querySelector('.form-save-bar');
+  if (finalSaveBar) {
+    form.querySelectorAll('.section-custom').forEach(s => finalSaveBar.before(s));
+  }
+
   // Re-init les éditeurs Quill des sections standards si nécessaire
   if (typeof reinitOptionalQuillEditors === 'function') {
     setTimeout(reinitOptionalQuillEditors, 100);
