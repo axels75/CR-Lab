@@ -1211,9 +1211,32 @@ async function openReport(crid, pid) {
   // Nettoyer l'état précédent avant de charger le nouveau CR
   resetForm();
 
+  let cr = STATE.reports.find(r => r.id === crid);
+  // Navigation immédiate pour réduire la latence perçue
+  const project = STATE.projects.find(p => p.id === pid);
+  setBreadcrumb([
+    { label:'Tableau de bord', action:()=>goToDashboard() },
+    { label:project?.name||'Projet', action:()=>showProjectCRs(pid) },
+    cr?.meeting_name||'Chargement…'
+  ]);
+  showView('viewEditor');
+  setTopbarActions('');
+  renderSidebar();
+  document.getElementById('exportBar').style.display = 'flex';
+
+  // Rendu immédiat depuis cache local si disponible
+  if (cr) {
+    fillForm(cr);
+    setBreadcrumb([
+      { label:'Tableau de bord', action:()=>goToDashboard() },
+      { label:project?.name||'Projet', action:()=>showProjectCRs(pid) },
+      cr.meeting_name||'CR sans titre'
+    ]);
+  }
+  setUiLoading(false);
+
   // Refetch direct du CR pour avoir la version FRAÎCHE du serveur
   // (les collaborateurs ont pu modifier depuis le dernier fetchReports)
-  let cr = STATE.reports.find(r => r.id === crid);
   try {
     const base = (typeof apiBase === 'function') ? apiBase() : 'api/tables';
     const r = await fetch(`${base}/meeting_reports/${encodeURIComponent(crid)}`,
@@ -1230,29 +1253,19 @@ async function openReport(crid, pid) {
         } else {
           STATE.reports.push(fresh);
         }
+        await fetchParticipantProfiles();
+        fillForm(fresh);
+        setBreadcrumb([
+          { label:'Tableau de bord', action:()=>goToDashboard() },
+          { label:project?.name||'Projet', action:()=>showProjectCRs(pid) },
+          fresh.meeting_name||'CR sans titre'
+        ]);
       }
     }
   } catch(e) { /* non bloquant, on garde le cache */ }
 
-  if (!cr) {
-    setUiLoading(false);
-    return;
-  }
-  // Rafraîchir les profils participants avant de remplir le formulaire
-  fetchParticipantProfiles().then(() => fillForm(cr));
-  document.getElementById('exportBar').style.display = 'flex';
-  const project = STATE.projects.find(p => p.id === pid);
-  setBreadcrumb([
-    { label:'Tableau de bord', action:()=>goToDashboard() },
-    { label:project?.name||'Projet', action:()=>showProjectCRs(pid) },
-    cr.meeting_name||'CR sans titre'
-  ]);
-  showView('viewEditor');
-  setTopbarActions('');
-  renderSidebar();
   // Démarrer le polling de co-édition
   if (typeof startRealtimeSync === 'function') startRealtimeSync(crid, pid);
-  setUiLoading(false);
 }
 
 function fillForm(cr) {
