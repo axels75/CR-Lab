@@ -104,6 +104,20 @@
 
   /* ── Formulaire CR ─────────────────────────── */
   .form-save-bar { flex-direction: column; }
+  #viewEditor .form-save-bar {
+    align-items: stretch;
+    bottom: 8px;
+    padding: 12px;
+  }
+  #viewEditor .form-save-bar button {
+    width: 100%;
+    justify-content: center;
+  }
+  #viewEditor .form-save-bar #autoSaveIndicator,
+  #viewEditor .form-save-bar #presenceIndicator {
+    margin-left: 0;
+    justify-content: center;
+  }
   .export-bar { flex-direction: column; align-items: stretch; }
   .btn-export { justify-content: center; }
 
@@ -126,6 +140,67 @@
   .participant-row { grid-template-columns: 36px 1fr 32px; gap: 6px; }
   .participant-row-avatar-wrap { width: 30px; height: 30px; }
   .participant-row-avatar      { width: 30px; height: 30px; }
+
+  #viewEditor .actions-table-wrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+  #viewEditor .actions-table,
+  #viewEditor .actions-table tbody,
+  #viewEditor .actions-table tr,
+  #viewEditor .actions-table td {
+    display: block;
+    width: 100%;
+  }
+  #viewEditor .actions-table thead {
+    display: none;
+  }
+  #viewEditor .actions-table tr {
+    margin-bottom: 10px;
+    padding: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-xs);
+  }
+  #viewEditor .actions-table tbody tr:nth-child(even),
+  #viewEditor .actions-table tbody tr:hover {
+    background: var(--white);
+  }
+  #viewEditor .actions-table td {
+    padding: 0;
+    border-bottom: 0;
+  }
+  #viewEditor .actions-table td + td {
+    margin-top: 8px;
+  }
+  #viewEditor .actions-table td::before {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--gray-500);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  #viewEditor .actions-table td:nth-child(1)::before { content: "Action"; }
+  #viewEditor .actions-table td:nth-child(2)::before { content: "Porteur"; }
+  #viewEditor .actions-table td:nth-child(3)::before { content: "Echeance"; }
+  #viewEditor .actions-table td:nth-child(4)::before { content: "Statut"; }
+  #viewEditor .actions-table td:last-child {
+    display: flex;
+    justify-content: flex-end;
+  }
+  #viewEditor .actions-table td:last-child::before {
+    content: none;
+  }
+  #viewEditor .actions-table td input,
+  #viewEditor .actions-table td select {
+    min-width: 0;
+    background: var(--gray-50);
+    border-color: var(--gray-200);
+  }
 
   /* ── Mon Espace ────────────────────────────── */
   .myspace-stats { grid-template-columns: 1fr 1fr; }

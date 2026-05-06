@@ -460,6 +460,7 @@ function _updateTemplateBadge(tpl) {
 ───────────────────────────────────────────────────── */
 function openTemplateEditor(templateId) {
   const lang = (typeof getCurrentLang === 'function') ? getCurrentLang() : 'fr';
+  closeModal('modalTemplateLibrary');
 
   if (templateId) {
     // Édition d'un template existant

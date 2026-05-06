@@ -1094,6 +1094,27 @@ body {
   padding: 20px 0 4px;
 }
 
+#viewEditor .form-save-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 80;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,.94);
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: var(--radius);
+  box-shadow: 0 -14px 34px rgba(15,23,42,.08);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+}
+
+#viewEditor .form-save-bar #autoSaveIndicator,
+#viewEditor .form-save-bar #presenceIndicator {
+  margin-left: auto;
+}
+
 /* Quill overrides */
 .ql-container { border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important; border-color: var(--gray-200) !important; font-family: var(--font) !important; font-size: .9rem !important; }
 .ql-toolbar { border-radius: var(--radius-sm) var(--radius-sm) 0 0 !important; border-color: var(--gray-200) !important; background: var(--gray-50); }
@@ -1112,6 +1133,7 @@ body {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 10px;
+  margin-bottom: 24px;
 }
 
 .export-label {

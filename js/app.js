@@ -1276,6 +1276,9 @@ function fillForm(cr) {
   document.getElementById('fieldFacilitator').value  = cr.meeting_facilitator || '';
   document.getElementById('fieldAuthor').value       = cr.author || '';
   document.getElementById('fieldStatus').value       = cr.status || 'draft';
+
+  restoreReportTemplate(cr);
+
   let participants = []; try { participants = JSON.parse(cr.participants||'[]'); } catch(e){}
   renderParticipants(participants);
   let actions = []; try { actions = JSON.parse(cr.actions||'[]'); } catch(e){}
@@ -1292,16 +1295,42 @@ function fillForm(cr) {
     });
   }
 
-  // Restaurer le template actif
+}
+
+function restoreReportTemplate(cr) {
+  STATE._activeTemplate = null;
+
   if (cr.template_id && cr.template_modules) {
     try {
       const modules = JSON.parse(cr.template_modules);
+      let config = {};
+      try { config = JSON.parse(cr.template_config || '{}'); } catch(e) { config = {}; }
+      const isCustom = !['tpl_standard','tpl_copil','tpl_workshop','tpl_quick','tpl_project'].includes(cr.template_id);
       STATE._activeTemplate = {
         id: cr.template_id,
         modules,
-        isCustom: !['tpl_standard','tpl_copil','tpl_workshop','tpl_quick','tpl_project'].includes(cr.template_id),
+        config,
+        isCustom,
       };
+
+      if (typeof _applyModulesToForm === 'function') {
+        let tpl = null;
+        try {
+          if (typeof DEFAULT_TEMPLATES !== 'undefined') {
+            tpl = DEFAULT_TEMPLATES.find(t => t.id === cr.template_id) || null;
+          }
+        } catch(e) {}
+
+        _applyModulesToForm(modules, config, tpl || {
+          id: cr.template_id,
+          name: cr.template_id,
+          modules,
+          modules_config: config,
+        });
+      }
     } catch {}
+  } else if (typeof _updateTemplateBadge === 'function') {
+    _updateTemplateBadge(null);
   }
 }
 
@@ -1317,6 +1346,7 @@ function resetForm() {
   }
   if (typeof resetModuleLayouts === 'function') resetModuleLayouts();
   STATE._activeTemplate = null;
+  if (typeof _updateTemplateBadge === 'function') _updateTemplateBadge(null);
 }
 
 /* =====================================================
@@ -1491,6 +1521,7 @@ function _buildCRPayload() {
     next_steps_html:      optData.next_steps || '',
     template_id:          activeTemplate?.id || '',
     template_modules:     activeTemplate ? JSON.stringify(activeTemplate.modules) : '',
+    template_config:      activeTemplate ? JSON.stringify(activeTemplate.config || {}) : '',
     last_modified:        new Date().toISOString(),
     last_modified_by_id:  STATE.userId,
     last_modified_by_name: modifierName,

@@ -88,7 +88,18 @@ async function checkAuthAndInit() {
   if (!session) { showLoginScreen(); return false; }
   STATE.userId      = session.userId;
   STATE.authSession = session;
+  showAppScreen();
   return true;
+}
+
+function showAppScreen() {
+  const login = document.getElementById('loginScreen');
+  const app   = document.getElementById('appRoot');
+  if (login) login.style.display = 'none';
+  if (app) app.style.display = 'flex';
+  if (window.innerWidth <= 900) {
+    document.getElementById('sidebar')?.classList.add('collapsed');
+  }
 }
 
 function showLoginScreen() {
@@ -204,12 +215,7 @@ async function handleLoginSubmit(e) {
 
 /* Finalise la connexion */
 async function _finishLogin() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appRoot').style.display     = 'flex';
-
-  if (window.innerWidth <= 900) {
-    document.getElementById('sidebar')?.classList.add('collapsed');
-  }
+  showAppScreen();
 
   renderSidebar();
   renderDashboard();

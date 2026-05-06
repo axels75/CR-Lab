@@ -891,10 +891,21 @@ function resetModuleLayouts() {
   });
   document.querySelectorAll('.form-section, .section-custom').forEach(sec => {
     const body = sec.querySelector('.section-body');
-    if (body) {
-      _hideAllLayoutZones(body, sec.id);
-      _showTextZone(sec, body, sec.id);
+    if (!body) return;
+
+    const supportsLayout =
+      sec.querySelector('.module-layout-bar') ||
+      sec.id === 'sectionKeyPoints' ||
+      sec.classList.contains('optional-section') ||
+      sec.classList.contains('section-custom');
+
+    if (!supportsLayout) {
+      body.querySelectorAll('.mlt-text-zone, .mlt-table-zone, .mlt-image-zone, .mlt-planning-zone').forEach(el => el.remove());
+      return;
     }
+
+    _hideAllLayoutZones(body, sec.id);
+    _showTextZone(sec, body, sec.id);
   });
   
   // Vider les previews d'images
