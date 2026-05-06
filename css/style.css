@@ -6812,7 +6812,8 @@ body.ui-loading {
   border-color: var(--primary-light);
 }
 
-.folder-pill .pill-count {
+.folder-pill .pill-count,
+.folder-pill-count {
   font-size: .68rem;
   opacity: .8;
   margin-left: 2px;

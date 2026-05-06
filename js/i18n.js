@@ -292,6 +292,9 @@ const TRANSLATIONS = {
 
     // ── Clés supplémentaires ─────────────────────────
     login_info:         'Vos données sont protégées par votre mot de passe. Chaque compte accède uniquement à ses propres CRs.',
+    folders:            'Dossiers',
+    all:                'Tous',
+    folder:             'Dossier',
     dashboard_welcome:  'Bienvenue sur <span>Wavestone CR Master</span>',
     dashboard_sub:      'Rédigez, archivez et exportez vos comptes-rendus de réunion en quelques clics.',
     agenda_sub:         'Toutes vos to-do de tous les projets',
@@ -774,6 +777,9 @@ const TRANSLATIONS = {
 
     // ── Extra keys ───────────────────────────────────
     login_info:         'Your data is protected by your password. Each account only accesses its own notes.',
+    folders:            'Folders',
+    all:                'All',
+    folder:             'Folder',
     dashboard_welcome:  'Welcome to <span>Wavestone CR Master</span>',
     dashboard_sub:      'Write, archive and export your meeting notes in just a few clicks.',
     agenda_sub:         'All your to-dos from all projects',
