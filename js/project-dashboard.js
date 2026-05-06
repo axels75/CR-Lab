@@ -69,26 +69,34 @@ function renderProjectDashboard(projectId) {
   };
 
   renderPdKPIs(reports);
-  renderPdCollabMembers(projectId);
+  _renderPdCollabBlock(projectId);
   renderPdParticipants(projectId, reports);
   renderPdActions(reports);
   renderPdDeadlines(reports);
+}
 
-  // Mettre à jour le compteur collaborateurs dans le bouton
-  _updateCollabMembersCount(projectId);
+async function _renderPdCollabBlock(projectId) {
+  try {
+    const allMembers = await apiGet('project_members');
+    renderPdCollabMembers(projectId, allMembers);
+    _updateCollabMembersCount(projectId, allMembers);
+  } catch {
+    renderPdCollabMembers(projectId, []);
+    _updateCollabMembersCount(projectId, []);
+  }
 }
 
 /* =====================================================
    COLLABORATEURS DU PROJET (grille mini-cartes)
    ===================================================== */
-async function renderPdCollabMembers(projectId) {
+async function renderPdCollabMembers(projectId, prefetchedMembers = null) {
   const grid = document.getElementById('pdCollabMembersGrid');
   if (!grid) return;
 
   grid.innerHTML = '<span style="font-size:.8rem;color:var(--gray-400)"><i class="fa-solid fa-spinner fa-spin"></i></span>';
 
   try {
-    const all     = await apiGet('project_members');
+    const all     = Array.isArray(prefetchedMembers) ? prefetchedMembers : await apiGet('project_members');
     const members = all.filter(m => m.project_id === projectId && m.status !== 'declined');
 
     if (members.length === 0) {
@@ -147,9 +155,9 @@ async function renderPdCollabMembers(projectId) {
   }
 }
 
-async function _updateCollabMembersCount(projectId) {
+async function _updateCollabMembersCount(projectId, prefetchedMembers = null) {
   try {
-    const all     = await apiGet('project_members');
+    const all     = Array.isArray(prefetchedMembers) ? prefetchedMembers : await apiGet('project_members');
     const accepted = all.filter(m => m.project_id === projectId && m.status === 'accepted');
     const count    = accepted.length + 1; // +1 pour le propriétaire
     const badge    = document.getElementById('collabMembersCount');
@@ -304,15 +312,17 @@ async function renderPdParticipants(projectId, reports) {
     });
   });
 
-  // Essayer de charger les profils participants depuis la table.
-  // Les profils visibles : ceux que je possède OU ceux du projet courant
-  // (afin que les collaborateurs voient les photos partagées par le propriétaire).
+  // Utiliser d'abord le cache global déjà chargé pour éviter un aller-retour API.
+  // Fallback API uniquement si le cache est vide.
   try {
-    const storedProfiles = await apiGet('participant_profiles');
-    const visibleProfiles = storedProfiles.filter(p =>
-      p.user_id === STATE.userId ||
-      (p.project_id && p.project_id === STATE.currentProjectId)
-    );
+    let visibleProfiles = Array.isArray(STATE.participantProfiles) ? [...STATE.participantProfiles] : [];
+    if (visibleProfiles.length === 0) {
+      const storedProfiles = await apiGet('participant_profiles');
+      visibleProfiles = storedProfiles.filter(p =>
+        p.user_id === STATE.userId ||
+        (p.project_id && p.project_id === STATE.currentProjectId)
+      );
+    }
     // Trier : profils scope-projet en dernier (ils écrasent les user-scope
     // pour rendre la vue "projet" cohérente entre tous les collaborateurs).
     visibleProfiles.sort((a, b) => {
@@ -324,10 +334,10 @@ async function renderPdParticipants(projectId, reports) {
       const key = normalizeParticipantName(prof.name);
       if (participantMap.has(key)) {
         const entry = participantMap.get(key);
-        if (prof.photo)        entry.photo = prof.photo;
+        if (prof.photo) entry.photo = prof.photo;
         if (prof.avatar_color) entry.color = prof.avatar_color;
-        if (prof.role)         entry.roles.add(prof.role);
-        if (prof.company)      entry.companies.add(prof.company);
+        if (prof.role) entry.roles.add(prof.role);
+        if (prof.company) entry.companies.add(prof.company);
       }
     });
   } catch(e) { /* table optionnelle */ }

@@ -9,6 +9,49 @@
 
 'use strict';
 
+const _COLLAB_CACHE = {
+  ttlMs: 10000,
+  projectMembers: null,
+  projectMembersTs: 0,
+  userProfiles: null,
+  userProfilesTs: 0,
+};
+
+function _invalidateCollabCache() {
+  _COLLAB_CACHE.projectMembers = null;
+  _COLLAB_CACHE.projectMembersTs = 0;
+}
+
+async function _getProjectMembersCached(force = false) {
+  const now = Date.now();
+  if (!force && _COLLAB_CACHE.projectMembers && (now - _COLLAB_CACHE.projectMembersTs) < _COLLAB_CACHE.ttlMs) {
+    return _COLLAB_CACHE.projectMembers;
+  }
+  const all = await apiGet('project_members');
+  _COLLAB_CACHE.projectMembers = all;
+  _COLLAB_CACHE.projectMembersTs = now;
+  return all;
+}
+
+async function _getUserProfilesCached(force = false) {
+  const now = Date.now();
+  if (!force && _COLLAB_CACHE.userProfiles && (now - _COLLAB_CACHE.userProfilesTs) < _COLLAB_CACHE.ttlMs) {
+    return _COLLAB_CACHE.userProfiles;
+  }
+  const all = await apiGet('user_profiles');
+  _COLLAB_CACHE.userProfiles = all;
+  _COLLAB_CACHE.userProfilesTs = now;
+  return all;
+}
+
+function _normCollab(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 /* =====================================================
    STATE COLLAB (ajouté dans STATE global)
    ===================================================== */
@@ -27,7 +70,7 @@
 async function fetchProjectMembers() {
   try {
     if (!STATE.userId) { STATE.projectMembers = []; STATE.pendingInvitations = []; return; }
-    const all = await apiGet('project_members');
+    const all = await _getProjectMembersCached();
     // Membres des projets que je possède (pour afficher mon équipe)
     STATE.projectMembers = all.filter(m =>
       m.owner_user_id === STATE.userId || m.member_user_id === STATE.userId
@@ -50,7 +93,7 @@ async function fetchProjectMembers() {
 async function fetchSharedProjects() {
   try {
     if (!STATE.userId) return;
-    const all = await apiGet('project_members');
+    const all = await _getProjectMembersCached();
     // Memberships acceptés où je suis membre (pas propriétaire)
     const accepted = all.filter(m =>
       m.member_user_id === STATE.userId &&
@@ -158,7 +201,8 @@ async function inviteMember() {
   const errEl  = document.getElementById('collabInviteError');
   const btn    = document.getElementById('btnCollabInvite');
 
-  const query  = (input?.value || '').trim().toLowerCase();
+  const queryRaw = (input?.value || '').trim();
+  const query  = _normCollab(queryRaw);
   const role   = roleEl?.value || 'editor';
 
   if (errEl) errEl.textContent = '';
@@ -186,10 +230,13 @@ async function inviteMember() {
 
   try {
     // Chercher l'utilisateur dans les profils
-    const allProfiles = await apiGet('user_profiles');
+    const allProfiles = await _getUserProfilesCached();
     const target = allProfiles.find(p =>
-      (p.username && p.username.toLowerCase() === query) ||
-      (p.email    && p.email.toLowerCase()    === query)
+      _normCollab(p.username) === query ||
+      _normCollab(p.email) === query
+    ) || allProfiles.find(p =>
+      _normCollab(p.username).startsWith(query) ||
+      _normCollab(`${p.first_name || ''} ${p.last_name || ''}`).includes(query)
     );
 
     if (!target) {
@@ -199,7 +246,7 @@ async function inviteMember() {
     }
 
     // Vérifier si déjà membre ou invité
-    const existingMemberships = await apiGet('project_members');
+    const existingMemberships = await _getProjectMembersCached();
     const alreadyMember = existingMemberships.find(m =>
       m.project_id === projectId &&
       m.member_user_id === target.user_id &&
@@ -231,13 +278,14 @@ async function inviteMember() {
 
     if (input) input.value = '';
     showToast(`Invitation envoyée à ${displayName} !`, 'success');
+    _invalidateCollabCache();
     renderCollabMembersList(projectId);
 
   } catch(e) {
     console.error('[Collab] inviteMember error:', e);
     if (errEl) errEl.textContent = 'Erreur lors de l\'invitation. Réessayez.';
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Inviter'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> ${t('invite_btn')}`; }
   }
 }
 
@@ -251,7 +299,7 @@ async function renderCollabMembersList(projectId) {
   container.innerHTML = '<div class="collab-loading"><i class="fa-solid fa-spinner fa-spin"></i> Chargement…</div>';
 
   try {
-    const all = await apiGet('project_members');
+    const all = await _getProjectMembersCached();
     const members = all.filter(m => m.project_id === projectId);
 
     // Propriétaire (soi-même ou autre)
@@ -329,6 +377,7 @@ async function renderCollabMembersList(projectId) {
 async function updateMemberRole(membershipId, newRole) {
   try {
     await apiPatch('project_members', membershipId, { role: newRole });
+    _invalidateCollabCache();
     showToast(t('role_updated_ok'), 'success');
   } catch(e) {
     showToast(t('role_update_err'), 'error');
@@ -350,6 +399,7 @@ async function removeMember(membershipId, memberName) {
 
   try {
     await apiDelete('project_members', membershipId);
+    _invalidateCollabCache();
     const row = document.getElementById(`collabRow_${membershipId}`);
     if (row) row.remove();
     showToast(`${memberName} ${t('member_removed')}`, 'success');
@@ -383,7 +433,7 @@ async function leaveProject(projectId) {
 
   try {
     // Trouver le membership
-    const all = await apiGet('project_members');
+    const all = await _getProjectMembersCached(true);
     const membership = all.find(m =>
       m.project_id    === projectId &&
       m.member_user_id === STATE.userId &&
@@ -394,6 +444,7 @@ async function leaveProject(projectId) {
       return;
     }
     await apiDelete('project_members', membership.id);
+    _invalidateCollabCache();
 
     // Retirer le projet et ses CRs du STATE local
     STATE.projects = STATE.projects.filter(p => p.id !== projectId);
@@ -431,6 +482,7 @@ async function acceptInvitation(membershipId) {
       status:      'accepted',
       accepted_at: new Date().toISOString(),
     });
+    _invalidateCollabCache();
     showToast(t('invitation_accepted_ok'), 'success');
     // Recharger projets + CRs partagés
     await fetchProjectMembers();
@@ -450,6 +502,7 @@ async function acceptInvitation(membershipId) {
 async function declineInvitation(membershipId) {
   try {
     await apiPatch('project_members', membershipId, { status: 'declined' });
+    _invalidateCollabCache();
     showToast(t('invitation_declined_ok'), 'info');
     await fetchProjectMembers();
     renderPendingInvitationsPanel();
@@ -544,7 +597,7 @@ async function renderPendingInvitationsPanel() {
 async function updateInvitationsBadge() {
   try {
     if (!STATE.userId) return;
-    const all = await apiGet('project_members');
+    const all = await _getProjectMembersCached(true);
     const pending = all.filter(m =>
       m.member_user_id === STATE.userId && m.status === 'pending'
     );
@@ -679,7 +732,7 @@ async function confirmAction(title, message, confirmLabel, variant) {
  */
 async function generateOrGetInviteLink(projectId) {
   try {
-    const all = await apiGet('project_members');
+    const all = await _getProjectMembersCached(true);
     // Chercher un lien existant valide
     let existing = all.find(m =>
       m.project_id === projectId &&
@@ -702,6 +755,7 @@ async function generateOrGetInviteLink(projectId) {
       invited_by:       STATE.userId,
       invited_at:       new Date().toISOString(),
     });
+    _invalidateCollabCache();
     return token;
   } catch(e) {
     console.error('[Collab] generateOrGetInviteLink:', e);
@@ -716,7 +770,7 @@ async function revokeInviteLink() {
   const projectId = STATE._collabProjectId;
   if (!projectId) return;
   try {
-    const all = await apiGet('project_members');
+    const all = await _getProjectMembersCached(true);
     const existing = all.find(m =>
       m.project_id === projectId &&
       m.member_user_id === 'invite_link' &&
@@ -724,6 +778,7 @@ async function revokeInviteLink() {
     );
     if (existing) {
       await apiDelete('project_members', existing.id);
+      _invalidateCollabCache();
     }
     // Régénérer
     await _renderInviteLink(projectId);
@@ -788,7 +843,7 @@ async function checkInviteLinkOnLoad() {
 
   // Chercher le membership correspondant
   try {
-    const all = await apiGet('project_members');
+    const all = await _getProjectMembersCached(true);
     const invite = all.find(m =>
       m.member_user_id === 'invite_link' &&
       m.member_username === token &&

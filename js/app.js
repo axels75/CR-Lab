@@ -1055,54 +1055,59 @@ async function showProjectCRs(pid) {
   document.getElementById('projectCRsTitle').textContent = project.name;
   document.getElementById('btnNewCRInProject').onclick = () => openNewReport(pid);
 
-  // Rafraîchir les CRs (propres + partagés) pour voir les modifs des collaborateurs
-  // avant d'afficher la liste. Silencieux si échec réseau.
+  const _renderProjectCRList = () => {
+    const reports = STATE.reports.filter(r => r.project_id === pid)
+      .sort((a,b) => (b.updated_at||0)-(a.updated_at||0));
+
+    const container = document.getElementById('crListContainer');
+    if (reports.length === 0) {
+      container.innerHTML = `<div class="empty-state">
+        <i class="fa-solid fa-file-circle-plus"></i>
+        <h3>Aucun compte-rendu</h3>
+        <p>Créez le premier CR de ce projet.</p>
+        <button class="btn-primary" onclick="openNewReport('${pid}')">
+          <i class="fa-solid fa-plus"></i> Nouveau CR
+        </button></div>`;
+    } else {
+      container.innerHTML = reports.map(cr => `
+        <div class="cr-card">
+          <div class="cr-card-icon" style="background:${project.color||'#002D72'}" onclick="openReport('${cr.id}','${pid}')">
+            <i class="fa-solid fa-file-lines"></i>
+          </div>
+          <div class="cr-card-info" onclick="openReport('${cr.id}','${pid}')" style="cursor:pointer">
+            <div class="cr-card-title">${esc(cr.meeting_name||'Sans titre')}</div>
+            <div class="cr-card-meta">
+              ${cr.meeting_date?`<span><i class="fa-regular fa-calendar"></i>${formatDate(cr.meeting_date)}</span>`:''}
+              ${cr.author?`<span><i class="fa-solid fa-pen-to-square"></i>${esc(cr.author)}</span>`:''}
+              ${cr.meeting_location?`<span><i class="fa-solid fa-location-dot"></i>${esc(cr.meeting_location)}</span>`:''}
+              <span><i class="fa-solid fa-clock"></i>${humanDate(cr.updated_at)}</span>
+            </div>
+          </div>
+          <div class="cr-card-actions">
+            <span class="status-badge ${cr.status||'draft'}">${labelStatus(cr.status)}</span>
+            <button class="btn-icon edit" title="Modifier" onclick="openReport('${cr.id}','${pid}')">
+              <i class="fa-solid fa-pencil"></i>
+            </button>
+            <button class="btn-icon" title="Dupliquer" onclick="duplicateReport('${cr.id}','${pid}')" style="color:var(--primary-light)">
+              <i class="fa-solid fa-copy"></i>
+            </button>
+            <button class="btn-icon" title="Supprimer" onclick="confirmDeleteReport('${cr.id}','${pid}')">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>`).join('');
+    }
+  };
+
+  // Rendu immédiat depuis cache local pour fluidité perçue
+  _renderProjectCRList();
+
+  // Refresh asynchrone des données puis rerender
   try {
     await fetchReports();
     if (typeof fetchSharedReports === 'function') await fetchSharedReports();
+    _renderProjectCRList();
   } catch (e) { /* non bloquant */ }
-
-  const reports = STATE.reports.filter(r => r.project_id === pid)
-    .sort((a,b) => (b.updated_at||0)-(a.updated_at||0));
-
-  const container = document.getElementById('crListContainer');
-  if (reports.length === 0) {
-    container.innerHTML = `<div class="empty-state">
-      <i class="fa-solid fa-file-circle-plus"></i>
-      <h3>Aucun compte-rendu</h3>
-      <p>Créez le premier CR de ce projet.</p>
-      <button class="btn-primary" onclick="openNewReport('${pid}')">
-        <i class="fa-solid fa-plus"></i> Nouveau CR
-      </button></div>`;
-  } else {
-    container.innerHTML = reports.map(cr => `
-      <div class="cr-card">
-        <div class="cr-card-icon" style="background:${project.color||'#002D72'}" onclick="openReport('${cr.id}','${pid}')">
-          <i class="fa-solid fa-file-lines"></i>
-        </div>
-        <div class="cr-card-info" onclick="openReport('${cr.id}','${pid}')" style="cursor:pointer">
-          <div class="cr-card-title">${esc(cr.meeting_name||'Sans titre')}</div>
-          <div class="cr-card-meta">
-            ${cr.meeting_date?`<span><i class="fa-regular fa-calendar"></i>${formatDate(cr.meeting_date)}</span>`:''}
-            ${cr.author?`<span><i class="fa-solid fa-pen-to-square"></i>${esc(cr.author)}</span>`:''}
-            ${cr.meeting_location?`<span><i class="fa-solid fa-location-dot"></i>${esc(cr.meeting_location)}</span>`:''}
-            <span><i class="fa-solid fa-clock"></i>${humanDate(cr.updated_at)}</span>
-          </div>
-        </div>
-        <div class="cr-card-actions">
-          <span class="status-badge ${cr.status||'draft'}">${labelStatus(cr.status)}</span>
-          <button class="btn-icon edit" title="Modifier" onclick="openReport('${cr.id}','${pid}')">
-            <i class="fa-solid fa-pencil"></i>
-          </button>
-          <button class="btn-icon" title="Dupliquer" onclick="duplicateReport('${cr.id}','${pid}')" style="color:var(--primary-light)">
-            <i class="fa-solid fa-copy"></i>
-          </button>
-          <button class="btn-icon" title="Supprimer" onclick="confirmDeleteReport('${cr.id}','${pid}')">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
-        </div>
-      </div>`).join('');
-  }
 
   setBreadcrumb([
     { label:'Tableau de bord', action:()=>{ STATE.currentProjectId=null; showView('viewDashboard'); renderDashboard(); setBreadcrumb(['Tableau de bord']); } },
@@ -1302,7 +1307,8 @@ function _refreshParticipantAvatar(row) {
   if (!wrap) return;
 
   const profile  = findParticipantProfile(name);
-  const photo    = profile && profile.photo ? profile.photo : '';
+  const existingPhoto = wrap.dataset.photo || '';
+  const photo    = (profile && profile.photo) ? profile.photo : existingPhoto;
   const color    = (profile && profile.avatar_color) || _participantColor(name);
   const initials = _participantInitials(name);
 
@@ -1310,7 +1316,7 @@ function _refreshParticipantAvatar(row) {
     wrap.innerHTML = `<img src="${esc(photo)}" class="participant-row-avatar" alt="${esc(name)}" />`;
     wrap.dataset.photo = photo;
   } else {
-    wrap.dataset.photo = '';
+    wrap.dataset.photo = existingPhoto || '';
     wrap.innerHTML = `<div class="participant-row-avatar participant-row-avatar-initials" style="background:${esc(color)}">${esc(initials)}</div>`;
   }
 }

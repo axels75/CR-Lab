@@ -62,6 +62,18 @@ function animateEditor() {
     { delay: _stagger(0.05), duration: 0.4, easing: 'ease-out' });
 }
 
+function animateCollabModal() {
+  if (!_motionReady) return;
+  const rows = document.querySelectorAll('.collab-member-row, .collab-invitation-card');
+  if (!rows.length) return;
+  rows.forEach((r) => { r.style.opacity = '0'; });
+  _animate(rows, { opacity: [0, 1], y: [10, 0] }, {
+    delay: _stagger(0.03),
+    duration: 0.28,
+    easing: 'ease-out',
+  });
+}
+
 /* ─── Hook into showView ─── */
 function _hookShowView() {
   const orig = window.showView;
@@ -108,6 +120,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (fnName === 'renderDashboard') animateDashboard();
       if (fnName === 'showProjectCRs') animateTableRows();
     }, 80);
+    return out;
+  };
+});
+
+// Anime les listes collab quand la modale s'ouvre / se rafraîchit
+['openCollabModal', 'renderCollabMembersList', 'renderPendingInvitationsPanel'].forEach((fnName) => {
+  const orig = window[fnName];
+  if (typeof orig !== 'function') return;
+  window[fnName] = async function(...args) {
+    const out = await orig.apply(this, args);
+    setTimeout(animateCollabModal, 60);
     return out;
   };
 });
