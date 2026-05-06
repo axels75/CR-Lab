@@ -14,6 +14,18 @@
   <link rel="apple-touch-icon" href="images/favicon-source.png" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#002D72" />
+  <script>
+    (function() {
+      try {
+        var raw = localStorage.getItem('wv_auth') || sessionStorage.getItem('wv_auth');
+        if (!raw) return;
+        var session = JSON.parse(raw);
+        var valid = session && session.userId && session.username &&
+          (!session.expiresAt || Date.now() <= session.expiresAt);
+        if (valid) document.documentElement.classList.add('auth-restoring');
+      } catch(e) {}
+    })();
+  </script>
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />

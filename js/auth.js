@@ -83,16 +83,18 @@ document.addEventListener('DOMContentLoaded', () => {
 /* =====================================================
    VÉRIFICATION SESSION
    ===================================================== */
-async function checkAuthAndInit() {
+async function checkAuthAndInit(options = {}) {
+  const { reveal = true } = options || {};
   const session = loadSession();
   if (!session) { showLoginScreen(); return false; }
   STATE.userId      = session.userId;
   STATE.authSession = session;
-  showAppScreen();
+  if (reveal) showAppScreen();
   return true;
 }
 
 function showAppScreen() {
+  document.documentElement.classList.remove('auth-restoring');
   const login = document.getElementById('loginScreen');
   const app   = document.getElementById('appRoot');
   if (login) login.style.display = 'none';
@@ -103,6 +105,7 @@ function showAppScreen() {
 }
 
 function showLoginScreen() {
+  document.documentElement.classList.remove('auth-restoring');
   document.getElementById('loginScreen')?.removeAttribute('style');
   const app = document.getElementById('appRoot');
   if (app) app.style.display = 'none';
@@ -215,25 +218,32 @@ async function handleLoginSubmit(e) {
 
 /* Finalise la connexion */
 async function _finishLogin() {
-  showAppScreen();
-
-  renderSidebar();
-  renderDashboard();
-  updateUserWidget();
-  showView('viewDashboard');
-  setBreadcrumb(['Tableau de bord']);
-  await Promise.all([fetchProjects(), fetchUserProfile()]);
-  await fetchReports();
-  if (typeof fetchSharedProjects === 'function') {
-    await fetchSharedProjects();
-    await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
+  try {
+    await Promise.allSettled([fetchProjects(), fetchUserProfile()]);
+    await fetchReports();
+    if (typeof fetchSharedProjects === 'function') {
+      await fetchSharedProjects();
+      await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
+    }
+    if (typeof fetchParticipantProfiles === 'function') {
+      await fetchParticipantProfiles();
+    }
+    renderSidebar();
+    renderDashboard();
+    updateUserWidget();
+    showView('viewDashboard');
+    setBreadcrumb(['Tableau de bord']);
+    if (typeof updateInvitationsBadge === 'function') updateInvitationsBadge();
+    /* Initialiser la modale settings (si pas encore fait) */
+    if (typeof initSettingsModal === 'function') initSettingsModal();
+  } catch(err) {
+    console.error('[Auth] Finish login error:', err);
+    if (typeof showToast === 'function') {
+      showToast("Connexion ouverte, mais certaines donnees n'ont pas pu etre chargees.", 'warning');
+    }
+  } finally {
+    showAppScreen();
   }
-  renderSidebar();
-  renderDashboard();
-  updateUserWidget();
-  if (typeof updateInvitationsBadge === 'function') updateInvitationsBadge();
-  /* Initialiser la modale settings (si pas encore fait) */
-  if (typeof initSettingsModal === 'function') initSettingsModal();
 
   /* Sync MFA silencieuse */
   const uid = STATE.userId;
@@ -352,34 +362,13 @@ async function handleRegisterSubmit() {
     /* MFA obligatoire après inscription */
     if (typeof requireMFASetupScreen === 'function') {
       requireMFASetupScreen(newProfile, 'register', async () => {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('appRoot').style.display     = 'flex';
-        if (window.innerWidth <= 900) {
-          document.getElementById('sidebar')?.classList.add('collapsed');
-        }
-        await fetchProjects();
-        await fetchReports();
-        if (typeof fetchSharedProjects === 'function') {
-          await fetchSharedProjects();
-          await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
-        }
-        renderSidebar();
-        renderDashboard();
-        updateUserWidget();
-        if (typeof updateInvitationsBadge === 'function') updateInvitationsBadge();
-        showView('viewDashboard');
-        setBreadcrumb(['Tableau de bord']);
+        await _finishLogin();
         setTimeout(() => showToast(`Bienvenue ${firstName} ! Votre compte est sécurisé avec la 2FA.`, 'success'), 600);
       });
       return;
     }
 
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appRoot').style.display     = 'flex';
-    await Promise.all([fetchProjects(), fetchReports()]);
-    renderSidebar(); renderDashboard(); updateUserWidget();
-    showView('viewDashboard');
-    setBreadcrumb(['Tableau de bord']);
+    await _finishLogin();
     setTimeout(() => showToast(`Bienvenue ${firstName} !`, 'success'), 600);
 
   } catch(err) {
@@ -553,6 +542,7 @@ function logout() {
    EXPORTS GLOBAUX
    ===================================================== */
 window.checkAuthAndInit     = checkAuthAndInit;
+window.showAppScreen        = showAppScreen;
 window.logout               = logout;
 window.handleRegisterSubmit = handleRegisterSubmit;
 window.deriveUserId         = deriveUserId;

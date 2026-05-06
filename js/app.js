@@ -65,6 +65,7 @@ const _PROJECT_PREFETCH = {
 document.addEventListener('DOMContentLoaded', async () => {
   // Failsafe : si rien ne s'affiche au bout de 3s, forcer l'écran de login
   const failsafeTimer = setTimeout(() => {
+    document.documentElement.classList.remove('auth-restoring');
     const login = document.getElementById('loginScreen');
     const app   = document.getElementById('appRoot');
     if (login && login.style.display === 'none' && app && app.style.display === 'none') {
@@ -81,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Vérification d'authentification — auth.js doit être chargé avant app.js
     if (typeof checkAuthAndInit === 'function') {
-      const authenticated = await checkAuthAndInit();
+      const authenticated = await checkAuthAndInit({ reveal: false });
       clearTimeout(failsafeTimer);
       if (!authenticated) {
         // Initialiser quill en arrière-plan pour le formulaire après connexion
@@ -110,6 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSidebar();
     renderDashboard();
     showView('viewDashboard');
+    if (typeof showAppScreen === 'function') showAppScreen();
     bindEvents();
     initQuill();
     updateUserWidget();
@@ -122,6 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(err) {
     console.error('[CR Master] Erreur init:', err);
     clearTimeout(failsafeTimer);
+    document.documentElement.classList.remove('auth-restoring');
     // Afficher l'écran de login en cas d'erreur critique
     const login = document.getElementById('loginScreen');
     const app   = document.getElementById('appRoot');
@@ -1071,6 +1074,7 @@ function _tryLoadFirstValidLogoEl(urls, initialsEl, fallbackColor) {
    ===================================================== */
 async function showProjectCRs(pid) {
   setUiLoading(true);
+  try {
   // Arrêter le polling en cours (on n'est plus sur un CR)
   if (typeof stopRealtimeSync === 'function') stopRealtimeSync();
   if (typeof cancelAutoSave === 'function') cancelAutoSave();
@@ -1163,6 +1167,14 @@ async function showProjectCRs(pid) {
     if (typeof fetchSharedReports === 'function') await fetchSharedReports();
     _renderProjectCRList();
   } catch (e) { /* non bloquant */ }
+  } catch(e) {
+    console.error('[CR Master] showProjectCRs failed:', e);
+    if (typeof showToast === 'function') {
+      showToast('Impossible de charger les CR de ce projet.', 'error');
+    }
+  } finally {
+    setUiLoading(false);
+  }
 }
 
 /* =====================================================
@@ -1199,6 +1211,7 @@ function openNewReport(pid) {
 
 async function openReport(crid, pid) {
   setUiLoading(true);
+  try {
   STATE.currentReportId  = crid;
   STATE.currentProjectId = pid;
   // Appliquer les settings du projet
@@ -1266,6 +1279,14 @@ async function openReport(crid, pid) {
 
   // Démarrer le polling de co-édition
   if (typeof startRealtimeSync === 'function') startRealtimeSync(crid, pid);
+  } catch(e) {
+    console.error('[CR Master] openReport failed:', e);
+    if (typeof showToast === 'function') {
+      showToast('Impossible d ouvrir ce CR pour le moment.', 'error');
+    }
+  } finally {
+    setUiLoading(false);
+  }
 }
 
 function fillForm(cr) {

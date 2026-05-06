@@ -408,7 +408,12 @@ function _applyModulesToForm(modules, config, tpl) {
         <div class="section-body">
           <div id="${quillId}" class="optional-quill-editor" style="min-height:120px;"></div>
         </div>`;
-      form.querySelector('.form-save-bar')?.before(sect) || form.appendChild(sect);
+      const saveBar = form.querySelector('.form-save-bar');
+      if (saveBar) {
+        saveBar.before(sect);
+      } else {
+        form.appendChild(sect);
+      }
 
       // Initialiser Quill sur ce conteneur
       if (window.Quill) {

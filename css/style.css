@@ -2106,6 +2106,11 @@ body {
   overflow: auto;
 }
 
+html.auth-restoring #loginScreen {
+  opacity: 0;
+  pointer-events: none;
+}
+
 body.ui-loading {
   cursor: progress;
 }
