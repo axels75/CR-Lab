@@ -26,6 +26,13 @@ async function _loadMotion() {
 
 function animateDashboard() {
   if (!_motionReady) return;
+  const heroTitle = document.querySelector('.hero-text h1');
+  const heroSub = document.querySelector('.hero-text p');
+  const heroStats = document.querySelectorAll('.hero-stats .stat-card');
+  if (heroTitle) _animate(heroTitle, { opacity: [0, 1], y: [10, 0] }, { duration: 0.35, easing: 'ease-out' });
+  if (heroSub) _animate(heroSub, { opacity: [0, 1], y: [10, 0] }, { duration: 0.42, delay: 0.05, easing: 'ease-out' });
+  if (heroStats.length) _animate(heroStats, { opacity: [0.7, 1], y: [10, 0] }, { duration: 0.36, delay: _stagger(0.05, { startDelay: 0.08 }), easing: 'ease-out' });
+
   const cards = document.querySelectorAll('.stat-card, .project-card.pc-new, .pd-kpi-card, .pd-card');
   if (!cards.length) return;
   cards.forEach(c => {

@@ -54,6 +54,11 @@ const STATE = {
   _allProfilesCache:   null,          // cache user_profiles pour collab
 };
 
+const _PROJECT_PREFETCH = {
+  byProject: new Map(),
+  inflight: null,
+};
+
 /* =====================================================
    INIT
    ===================================================== */
@@ -942,6 +947,33 @@ function renderDashboard() {
 
   // Chargement dynamique des logos manquants (via data-company)
   setTimeout(_loadDynamicLogos, 100);
+
+  // Prefetch des CR au survol pour accélérer le clic.
+  document.querySelectorAll('.project-card.pc-new[data-pid]').forEach((card) => {
+    const pid = card.getAttribute('data-pid');
+    if (!pid) return;
+    card.addEventListener('mouseenter', () => _prefetchProjectReports(pid), { passive: true, once: true });
+    card.addEventListener('touchstart', () => _prefetchProjectReports(pid), { passive: true, once: true });
+  });
+}
+
+async function _prefetchProjectReports(projectId) {
+  const now = Date.now();
+  const lastTs = _PROJECT_PREFETCH.byProject.get(projectId) || 0;
+  if ((now - lastTs) < 60000) return;
+  _PROJECT_PREFETCH.byProject.set(projectId, now);
+
+  if (_PROJECT_PREFETCH.inflight) return;
+  _PROJECT_PREFETCH.inflight = (async () => {
+    try {
+      await fetchReports();
+      if (typeof fetchSharedReports === 'function') await fetchSharedReports();
+    } catch {
+      // préfetch best-effort
+    } finally {
+      _PROJECT_PREFETCH.inflight = null;
+    }
+  })();
 }
 
 /* =====================================================
@@ -1099,16 +1131,15 @@ async function showProjectCRs(pid) {
     }
   };
 
-  // Rendu immédiat depuis cache local pour fluidité perçue
-  _renderProjectCRList();
+  const _renderProjectCRSkeleton = () => {
+    const container = document.getElementById('crListContainer');
+    container.innerHTML = `
+      <div class="cr-skeleton-card shimmer"></div>
+      <div class="cr-skeleton-card shimmer"></div>
+      <div class="cr-skeleton-card shimmer"></div>`;
+  };
 
-  // Refresh asynchrone des données puis rerender
-  try {
-    await fetchReports();
-    if (typeof fetchSharedReports === 'function') await fetchSharedReports();
-    _renderProjectCRList();
-  } catch (e) { /* non bloquant */ }
-
+  // Navigation immédiate pour réduire la latence perçue
   setBreadcrumb([
     { label:'Tableau de bord', action:()=>{ STATE.currentProjectId=null; showView('viewDashboard'); renderDashboard(); setBreadcrumb(['Tableau de bord']); } },
     project.name
@@ -1117,7 +1148,21 @@ async function showProjectCRs(pid) {
   setTopbarActions(`
     <button class="btn-primary" onclick="openNewReport('${pid}')"><i class="fa-solid fa-plus"></i> Nouveau CR</button>
     <button class="btn-secondary" onclick="confirmDeleteProject('${pid}','${esc(project.name)}')"><i class="fa-solid fa-trash-can"></i> Supprimer le projet</button>`);
+
+  // Si aucun CR local pour ce projet, afficher un skeleton pendant le fetch.
+  const hasLocalReports = STATE.reports.some(r => r.project_id === pid);
+  if (!hasLocalReports) _renderProjectCRSkeleton();
+
+  // Rendu immédiat depuis cache local pour fluidité perçue
+  _renderProjectCRList();
   setUiLoading(false);
+
+  // Refresh asynchrone des données puis rerender
+  try {
+    await fetchReports();
+    if (typeof fetchSharedReports === 'function') await fetchSharedReports();
+    _renderProjectCRList();
+  } catch (e) { /* non bloquant */ }
 }
 
 /* =====================================================
@@ -2086,8 +2131,12 @@ function showConfirmModal({ title, message, icon='fa-exclamation-triangle', dang
    NAVIGATION HELPERS
    ===================================================== */
 function showView(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const views = document.querySelectorAll('.view');
+  views.forEach(v => v.classList.remove('active', 'view-enter'));
+  const next = document.getElementById(id);
+  if (!next) return;
+  next.classList.add('active', 'view-enter');
+  setTimeout(() => next.classList.remove('view-enter'), 260);
 }
 
 function goToDashboard() {

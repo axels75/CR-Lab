@@ -380,6 +380,13 @@ body {
 /* Views */
 .view { display: none; }
 .view.active { display: block; }
+.view.view-enter {
+  animation: viewSlideIn .24s cubic-bezier(.16,1,.3,1);
+}
+@keyframes viewSlideIn {
+  from { opacity: 0; transform: translateY(8px) scale(.998); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 /* =====================================================
    DASHBOARD VIEW
@@ -760,10 +767,11 @@ body {
   align-items: center;
   gap: 16px;
   cursor: pointer;
-  transition: box-shadow var(--transition), border-color var(--transition);
+  transition: box-shadow var(--transition), border-color var(--transition), transform .18s ease;
 }
 
-.cr-card:hover { box-shadow: var(--shadow); border-color: var(--gray-300); }
+.cr-card:hover { box-shadow: var(--shadow); border-color: var(--gray-300); transform: translateY(-1px); }
+.cr-card:active { transform: scale(.995); }
 
 .cr-card-icon {
   width: 44px; height: 44px;
@@ -802,6 +810,13 @@ body {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+  opacity: .88;
+  transform: translateX(4px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.cr-card:hover .cr-card-actions {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* =====================================================
@@ -1505,6 +1520,24 @@ body {
 .empty-state i { font-size: 3rem; margin-bottom: 16px; display: block; }
 .empty-state h3 { font-size: 1.1rem; color: var(--gray-500); margin-bottom: 8px; }
 .empty-state p  { font-size: .875rem; margin-bottom: 20px; }
+
+/* Skeleton loading pour la liste des CR */
+.cr-skeleton-card {
+  height: 96px;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  background: linear-gradient(90deg, #f2f4f7 25%, #e9edf3 50%, #f2f4f7 75%);
+  background-size: 240% 100%;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.shimmer {
+  animation: crShimmer 1.15s linear infinite;
+}
+@keyframes crShimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
 
 /* =====================================================
    LOADING / SPINNER
