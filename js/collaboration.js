@@ -1077,12 +1077,12 @@ async function _pollForUpdates() {
 
         if (_REALTIME.userIsEditing) {
           // L'utilisateur est en train d'éditer → afficher une bannière non intrusive
-          _showSyncBanner(remoteTS => {
+          _showSyncBanner(() => {
             _applyRemoteUpdate(_REALTIME.pendingUpdate);
           });
         } else {
           // L'utilisateur n'édite pas → appliquer directement avec notification
-          _applyRemoteUpdate(remoteRC);
+          _applyRemoteUpdate(remoteCR);
         }
       } else {
         // C'est notre propre sauvegarde → mettre à jour silencieusement le timestamp

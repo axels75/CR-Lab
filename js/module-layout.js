@@ -885,7 +885,7 @@ window.getModuleLayoutContent         = getModuleLayoutContent;
    RESET DES LAYOUTS
    ───────────────────────────────────────────────────── */
 function resetModuleLayouts() {
-  _layouts = {};
+  Object.keys(_layouts).forEach(key => delete _layouts[key]);
   document.querySelectorAll('.module-layout-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.layout === 'text');
   });

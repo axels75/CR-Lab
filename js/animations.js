@@ -26,62 +26,82 @@ async function _loadMotion() {
 
 function animateDashboard() {
   if (!_motionReady) return;
-  const heroTitle = document.querySelector('.hero-text h1');
-  const heroSub = document.querySelector('.hero-text p');
-  const heroStats = document.querySelectorAll('.hero-stats .stat-card');
-  if (heroTitle) _animate(heroTitle, { opacity: [0, 1], y: [10, 0] }, { duration: 0.35, easing: 'ease-out' });
-  if (heroSub) _animate(heroSub, { opacity: [0, 1], y: [10, 0] }, { duration: 0.42, delay: 0.05, easing: 'ease-out' });
-  if (heroStats.length) _animate(heroStats, { opacity: [0.7, 1], y: [10, 0] }, { duration: 0.36, delay: _stagger(0.05, { startDelay: 0.08 }), easing: 'ease-out' });
+  try {
+    const heroTitle = document.querySelector('.hero-text h1');
+    const heroSub = document.querySelector('.hero-text p');
+    const heroStats = document.querySelectorAll('.hero-stats .stat-card');
+    if (heroTitle) _animate(heroTitle, { opacity: [0, 1], y: [10, 0] }, { duration: 0.35, easing: 'ease-out' });
+    if (heroSub) _animate(heroSub, { opacity: [0, 1], y: [10, 0] }, { duration: 0.42, delay: 0.05, easing: 'ease-out' });
+    if (heroStats.length) _animate(heroStats, { opacity: [0.7, 1], y: [10, 0] }, { duration: 0.36, delay: _stagger(0.05, { startDelay: 0.08 }), easing: 'ease-out' });
 
-  const cards = document.querySelectorAll('.stat-card, .project-card.pc-new, .pd-kpi-card, .pd-card');
-  if (!cards.length) return;
-  cards.forEach(c => {
-    c.style.opacity = '1';
-    c.style.transform = 'none';
-  });
-  _animate(
-    cards,
-    { opacity: [0.6, 1], y: [12, 0], scale: [0.98, 1] },
-    { delay: _stagger(0.08, { startDelay: 0.1 }), duration: 0.5,
-      easing: _spring({ stiffness: 300, damping: 20 }) }
-  );
+    const cards = document.querySelectorAll('.stat-card, .project-card.pc-new, .pd-kpi-card, .pd-card');
+    if (!cards.length) return;
+    cards.forEach(c => {
+      c.style.opacity = '1';
+      c.style.transform = 'none';
+    });
+    _animate(
+      cards,
+      { opacity: [0.6, 1], y: [12, 0], scale: [0.98, 1] },
+      { delay: _stagger(0.08, { startDelay: 0.1 }), duration: 0.5,
+        easing: _spring({ stiffness: 300, damping: 20 }) }
+    );
+  } catch (e) {
+    console.debug('[Animations] dashboard skipped:', e.message);
+  }
 }
 
 function animateSidebar() {
   if (!_motionReady) return;
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
-  _animate(sidebar, { x: [-20, 0], opacity: [0, 1] }, { duration: 0.4, easing: 'ease-out' });
+  try {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    _animate(sidebar, { x: [-20, 0], opacity: [0, 1] }, { duration: 0.4, easing: 'ease-out' });
+  } catch (e) {
+    console.debug('[Animations] sidebar skipped:', e.message);
+  }
 }
 
 function animateTableRows() {
   if (!_motionReady) return;
-  const rows = document.querySelectorAll('.cr-card, .project-item');
-  if (!rows.length) return;
-  rows.forEach(r => { r.style.opacity = '1'; r.style.transform = 'none'; });
-  _animate(rows, { opacity: [0, 1], x: [-10, 0] },
-    { delay: _stagger(0.05), duration: 0.3, easing: 'ease-out' });
+  try {
+    const rows = document.querySelectorAll('.cr-card, .project-item');
+    if (!rows.length) return;
+    rows.forEach(r => { r.style.opacity = '1'; r.style.transform = 'none'; });
+    _animate(rows, { opacity: [0, 1], x: [-10, 0] },
+      { delay: _stagger(0.05), duration: 0.3, easing: 'ease-out' });
+  } catch (e) {
+    console.debug('[Animations] rows skipped:', e.message);
+  }
 }
 
 function animateEditor() {
   if (!_motionReady) return;
-  const secs = document.querySelectorAll('.form-section');
-  if (!secs.length) return;
-  secs.forEach(s => { s.style.opacity = '1'; s.style.transform = 'none'; });
-  _animate(secs, { opacity: [0, 1], y: [15, 0] },
-    { delay: _stagger(0.05), duration: 0.4, easing: 'ease-out' });
+  try {
+    const secs = document.querySelectorAll('.form-section');
+    if (!secs.length) return;
+    secs.forEach(s => { s.style.opacity = '1'; s.style.transform = 'none'; });
+    _animate(secs, { opacity: [0, 1], y: [15, 0] },
+      { delay: _stagger(0.05), duration: 0.4, easing: 'ease-out' });
+  } catch (e) {
+    console.debug('[Animations] editor skipped:', e.message);
+  }
 }
 
 function animateCollabModal() {
   if (!_motionReady) return;
-  const rows = document.querySelectorAll('.collab-member-row, .collab-invitation-card');
-  if (!rows.length) return;
-  rows.forEach((r) => { r.style.opacity = '1'; r.style.transform = 'none'; });
-  _animate(rows, { opacity: [0, 1], y: [10, 0] }, {
-    delay: _stagger(0.03),
-    duration: 0.28,
-    easing: 'ease-out',
-  });
+  try {
+    const rows = document.querySelectorAll('.collab-member-row, .collab-invitation-card');
+    if (!rows.length) return;
+    rows.forEach((r) => { r.style.opacity = '1'; r.style.transform = 'none'; });
+    _animate(rows, { opacity: [0, 1], y: [10, 0] }, {
+      delay: _stagger(0.03),
+      duration: 0.28,
+      easing: 'ease-out',
+    });
+  } catch (e) {
+    console.debug('[Animations] collab skipped:', e.message);
+  }
 }
 
 /* ─── Hook into showView ─── */
