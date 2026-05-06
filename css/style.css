@@ -44,8 +44,8 @@ body {
   font-family: var(--font);
   background: var(--gray-50);
   color: var(--gray-900);
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow: auto;
 }
 
 /* =====================================================
@@ -2033,8 +2033,9 @@ body {
 #appRoot {
   display: none; /* caché jusqu'à connexion */
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow: clip;
 }
 
 /* =====================================================
@@ -2047,7 +2048,16 @@ body {
   display: flex;
   /* align-items et justify-content définis dans login.css */
   z-index: 9999;
-  overflow: hidden;
+  overflow: auto;
+}
+
+body.ui-loading {
+  cursor: progress;
+}
+
+.ql-editor,
+.optional-quill-editor .ql-editor {
+  font-family: var(--font) !important;
 }
 
 /* Fond animé avec bulles de lumière */

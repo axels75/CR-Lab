@@ -1038,6 +1038,7 @@ function _tryLoadFirstValidLogoEl(urls, initialsEl, fallbackColor) {
    PROJECT CRs LIST
    ===================================================== */
 async function showProjectCRs(pid) {
+  setUiLoading(true);
   // Arrêter le polling en cours (on n'est plus sur un CR)
   if (typeof stopRealtimeSync === 'function') stopRealtimeSync();
   if (typeof cancelAutoSave === 'function') cancelAutoSave();
@@ -1046,7 +1047,10 @@ async function showProjectCRs(pid) {
   // Appliquer les settings du projet
   if (typeof applyProjectSettings === 'function') applyProjectSettings(pid);
   const project = STATE.projects.find(p => p.id === pid);
-  if (!project) return;
+  if (!project) {
+    setUiLoading(false);
+    return;
+  }
 
   document.getElementById('projectCRsTitle').textContent = project.name;
   document.getElementById('btnNewCRInProject').onclick = () => openNewReport(pid);
@@ -1108,6 +1112,7 @@ async function showProjectCRs(pid) {
   setTopbarActions(`
     <button class="btn-primary" onclick="openNewReport('${pid}')"><i class="fa-solid fa-plus"></i> Nouveau CR</button>
     <button class="btn-secondary" onclick="confirmDeleteProject('${pid}','${esc(project.name)}')"><i class="fa-solid fa-trash-can"></i> Supprimer le projet</button>`);
+  setUiLoading(false);
 }
 
 /* =====================================================
@@ -1143,6 +1148,7 @@ function openNewReport(pid) {
 }
 
 async function openReport(crid, pid) {
+  setUiLoading(true);
   STATE.currentReportId  = crid;
   STATE.currentProjectId = pid;
   // Appliquer les settings du projet
@@ -1178,7 +1184,10 @@ async function openReport(crid, pid) {
     }
   } catch(e) { /* non bloquant, on garde le cache */ }
 
-  if (!cr) return;
+  if (!cr) {
+    setUiLoading(false);
+    return;
+  }
   // Rafraîchir les profils participants avant de remplir le formulaire
   fetchParticipantProfiles().then(() => fillForm(cr));
   document.getElementById('exportBar').style.display = 'flex';
@@ -1193,6 +1202,7 @@ async function openReport(crid, pid) {
   renderSidebar();
   // Démarrer le polling de co-édition
   if (typeof startRealtimeSync === 'function') startRealtimeSync(crid, pid);
+  setUiLoading(false);
 }
 
 function fillForm(cr) {
@@ -2472,6 +2482,10 @@ function showToast(msg, type='info') {
   toast.className = `toast ${type} show`;
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+function setUiLoading(isLoading) {
+  document.body.classList.toggle('ui-loading', !!isLoading);
 }
 
 /* =====================================================

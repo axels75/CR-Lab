@@ -842,7 +842,7 @@ function getModuleLayoutContent(sectionId) {
       return {
         layout,
         html: `<figure style="text-align:center;margin:8px 0">
-          <img src="${src}" alt="${caption}" style="max-width:100%;border-radius:8px" />
+          <img src="${src}" alt="${caption}" loading="lazy" decoding="async" style="max-width:100%;height:auto;border-radius:8px;object-fit:contain" />
           ${caption ? `<figcaption style="font-size:.8rem;color:#666;margin-top:4px">${caption}</figcaption>` : ''}
         </figure>`,
       };

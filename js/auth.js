@@ -14,7 +14,7 @@ const AUTH_KEY = 'wv_auth';
 let _forgotProfile = null;
 
 /* =====================================================
-   SESSION (sessionStorage — onglet uniquement)
+   SESSION (persistante + onglet)
    ===================================================== */
 function loadSession() {
   try {
@@ -31,14 +31,15 @@ function loadSession() {
 }
 
 function saveSession(session, rememberMe = false) {
+  const payload = { ...session };
   if (rememberMe) {
-    session.expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
-    localStorage.setItem(AUTH_KEY, JSON.stringify(session));
-    sessionStorage.removeItem(AUTH_KEY);
+    payload.expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
   } else {
-    sessionStorage.setItem(AUTH_KEY, JSON.stringify(session));
-    localStorage.removeItem(AUTH_KEY);
+    // Persistance courte mais stable au refresh navigateur.
+    payload.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
   }
+  localStorage.setItem(AUTH_KEY, JSON.stringify(payload));
+  sessionStorage.setItem(AUTH_KEY, JSON.stringify(payload));
 }
 
 function clearSession() {
@@ -210,6 +211,11 @@ async function _finishLogin() {
     document.getElementById('sidebar')?.classList.add('collapsed');
   }
 
+  renderSidebar();
+  renderDashboard();
+  updateUserWidget();
+  showView('viewDashboard');
+  setBreadcrumb(['Tableau de bord']);
   await Promise.all([fetchProjects(), fetchUserProfile()]);
   await fetchReports();
   if (typeof fetchSharedProjects === 'function') {
@@ -222,8 +228,6 @@ async function _finishLogin() {
   if (typeof updateInvitationsBadge === 'function') updateInvitationsBadge();
   /* Initialiser la modale settings (si pas encore fait) */
   if (typeof initSettingsModal === 'function') initSettingsModal();
-  showView('viewDashboard');
-  setBreadcrumb(['Tableau de bord']);
 
   /* Sync MFA silencieuse */
   const uid = STATE.userId;

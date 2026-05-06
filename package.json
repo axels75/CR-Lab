@@ -1,0 +1,24 @@
+{
+  "name": "cr-master",
+  "version": "1.0.0",
+  "description": "Application web de gestion de comptes-rendus de réunion (Single Page App statique).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axels75/CR-Lab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/axels75/CR-Lab/issues"
+  },
+  "homepage": "https://github.com/axels75/CR-Lab#readme",
+  "dependencies": {
+    "motion": "^12.38.0"
+  }
+}

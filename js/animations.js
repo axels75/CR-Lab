@@ -26,7 +26,7 @@ async function _loadMotion() {
 
 function animateDashboard() {
   if (!_motionReady) return;
-  const cards = document.querySelectorAll('.dashboard-stat-card, .dashboard-widget');
+  const cards = document.querySelectorAll('.stat-card, .project-card.pc-new, .pd-kpi-card, .pd-card');
   if (!cards.length) return;
   cards.forEach(c => { c.style.opacity = '0'; c.style.transform = 'translateY(20px)'; });
   _animate(
@@ -46,7 +46,7 @@ function animateSidebar() {
 
 function animateTableRows() {
   if (!_motionReady) return;
-  const rows = document.querySelectorAll('.cr-list-table tbody tr');
+  const rows = document.querySelectorAll('.cr-card, .project-item');
   if (!rows.length) return;
   rows.forEach(r => { r.style.opacity = '0'; });
   _animate(rows, { opacity: [0, 1], x: [-10, 0] },
@@ -96,4 +96,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       animateDashboard();
     }, 200);
   }
+});
+
+/* Relance les animations après rerender des vues */
+['renderDashboard', 'showProjectCRs'].forEach((fnName) => {
+  const orig = window[fnName];
+  if (typeof orig !== 'function') return;
+  window[fnName] = async function(...args) {
+    const out = await orig.apply(this, args);
+    setTimeout(() => {
+      if (fnName === 'renderDashboard') animateDashboard();
+      if (fnName === 'showProjectCRs') animateTableRows();
+    }, 80);
+    return out;
+  };
 });
