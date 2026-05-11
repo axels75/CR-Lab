@@ -211,10 +211,49 @@ function buildCRData() {
    GÉNÉRATEUR HTML EMAIL (full inline styles — Outlook-safe)
    ===================================================== */
 function generateEmailHTML(d) {
+  const _hex = (value, fallback) => /^#[0-9A-Fa-f]{6}$/.test(String(value || '').trim())
+    ? String(value).trim()
+    : fallback;
+  const _rgb = (hex) => ({
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  });
+  const _mix = (a, b, weight) => {
+    const c1 = _rgb(a), c2 = _rgb(b);
+    const w = Math.max(0, Math.min(1, weight));
+    const toHex = (n) => Math.round(n).toString(16).padStart(2, '0');
+    return `#${toHex(c1.r * (1 - w) + c2.r * w)}${toHex(c1.g * (1 - w) + c2.g * w)}${toHex(c1.b * (1 - w) + c2.b * w)}`;
+  };
+  const _lumLocal = (hex) => {
+    const c = _rgb(hex);
+    const lin = (v) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+  };
+  const primary = _hex(d.primaryColor, '#002D72');
+  const accent  = _hex(d.accentColor, '#E8007D');
+  const primaryText = _lumLocal(primary) > 0.52 ? '#111827' : '#FFFFFF';
+  const accentText  = _lumLocal(accent)  > 0.52 ? '#111827' : '#FFFFFF';
+  const theme = {
+    primary,
+    primaryText,
+    primaryAlt: _mix(primary, primaryText === '#FFFFFF' ? '#000000' : '#FFFFFF', 0.20),
+    canvas: _mix(primary, '#FFFFFF', 0.94),
+    soft: _mix(primary, '#FFFFFF', 0.97),
+    line: _mix(primary, '#FFFFFF', 0.82),
+    text: '#252B42',
+    muted: '#737373',
+    accent,
+    accentText,
+    success: '#23856D',
+  };
   // Logo : data: URI directement (custom ou base64 pré-chargé), sinon texte fallback
   const logoEl = (d.logoSrc && d.logoSrc.startsWith('data:'))
-    ? `<img src="${d.logoSrc}" alt="${escAttr(d.orgName)}" style="height:34px;width:auto;display:inline-block;" />`
-    : `<span class="force-white" style="font-size:20px;font-weight:800;color:#FFFFFF;letter-spacing:1px;font-family:Arial,sans-serif;display:inline-block;">${escHtml(d.orgName)}</span>`;
+    ? `<img src="${d.logoSrc}" alt="${escAttr(d.orgName)}" style="height:30px;width:auto;display:inline-block;" />`
+    : `<span style="font-size:18px;font-weight:800;color:${theme.primaryText};letter-spacing:1px;font-family:Arial,sans-serif;display:inline-block;">${escHtml(d.orgName)}</span>`;
 
   const dateStr = d.date ? formatDate(d.date) : '–';
 
@@ -233,8 +272,8 @@ function generateEmailHTML(d) {
   const badge = (text, bg, textColor, border) =>
     `<table border="0" cellpadding="0" cellspacing="0" style="display:inline-table;">
       <tr>
-        <td style="background-color:${bg};border:1px solid ${border};border-radius:20px;padding:3px 10px;white-space:nowrap;">
-          <span style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:${textColor};line-height:1.4;display:inline;">${text}</span>
+        <td style="background-color:${bg};border:1px solid ${border};border-radius:8px;padding:4px 10px;white-space:nowrap;">
+          <span style="font-family:Arial,sans-serif;font-size:11px;font-weight:800;color:${textColor};line-height:1.4;display:inline;letter-spacing:.2px;">${text}</span>
         </td>
       </tr>
     </table>`;
@@ -245,7 +284,7 @@ function generateEmailHTML(d) {
       <!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:100%;height:36pt;"><v:fill type="solid" color="${pc}"/><v:textbox inset="6pt,6pt,6pt,6pt"><![endif]-->
       <table border="0" cellpadding="0" cellspacing="0" width="100%"><tr>
         <td bgcolor="${pc}" style="background-color:${pc};padding:10px 14px;">
-          <span style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#FFFFFF;text-transform:uppercase;letter-spacing:.8px;display:block;">${text}</span>
+          <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:800;color:${theme.primaryText};text-transform:uppercase;letter-spacing:.8px;display:block;">${text}</span>
         </td>
       </tr></table>
       <!--[if mso]></v:textbox></v:rect><![endif]-->
@@ -273,31 +312,31 @@ function generateEmailHTML(d) {
   };
   const partRows = d.participants.length > 0
     ? d.participants.map((p, i) => {
-        const bg = i % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+        const bg = i % 2 === 0 ? '#FFFFFF' : theme.soft;
         return `<tr>
-          <td width="44" style="padding:7px 10px;border-bottom:1px solid #E2E8F0;background-color:${bg};vertical-align:middle;text-align:center;">${_pAvatar(p)}</td>
-          <td style="padding:9px 14px;font-family:Arial,sans-serif;font-size:13px;color:#1E293B;border-bottom:1px solid #E2E8F0;background-color:${bg};">${escHtml(p.name)}</td>
-          <td style="padding:9px 14px;font-family:Arial,sans-serif;font-size:13px;color:#475569;border-bottom:1px solid #E2E8F0;background-color:${bg};">${escHtml(p.company||'')}</td>
-          <td style="padding:9px 14px;font-family:Arial,sans-serif;font-size:13px;color:#475569;border-bottom:1px solid #E2E8F0;background-color:${bg};">${escHtml(p.role||'')}</td>
+          <td width="44" style="padding:7px 10px;border-bottom:1px solid ${theme.line};background-color:${bg};vertical-align:middle;text-align:center;">${_pAvatar(p)}</td>
+          <td style="padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:${theme.text};border-bottom:1px solid ${theme.line};background-color:${bg};font-weight:700;">${escHtml(p.name)}</td>
+          <td style="padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:${theme.muted};border-bottom:1px solid ${theme.line};background-color:${bg};">${escHtml(p.company||'')}</td>
+          <td style="padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:${theme.muted};border-bottom:1px solid ${theme.line};background-color:${bg};">${escHtml(p.role||'')}</td>
         </tr>`;
       }).join('')
-    : `<tr><td colspan="4" style="padding:12px 14px;font-family:Arial,sans-serif;font-size:13px;color:#94A3B8;font-style:italic;">Aucun participant renseigné</td></tr>`;
+    : `<tr><td colspan="4" style="padding:14px;font-family:Arial,sans-serif;font-size:13px;color:${theme.muted};font-style:italic;">Aucun participant renseigné</td></tr>`;
 
   /* ---- Actions rows ---- */
   const actionRows = d.actions.length > 0
     ? d.actions.map((a, i) => {
-        const bg = i % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+        const bg = i % 2 === 0 ? '#FFFFFF' : theme.soft;
         const st  = a.status || 'todo';
         return `<tr>
-          <td style="padding:9px 14px;font-family:Arial,sans-serif;font-size:13px;color:#1E293B;border-bottom:1px solid #E2E8F0;background-color:${bg};">${escHtml(a.action)}</td>
-          <td style="padding:9px 14px;font-family:Arial,sans-serif;font-size:13px;color:#475569;border-bottom:1px solid #E2E8F0;background-color:${bg};">${escHtml(a.owner||'')}</td>
-          <td style="padding:9px 14px;font-family:Arial,sans-serif;font-size:13px;color:#475569;border-bottom:1px solid #E2E8F0;background-color:${bg};white-space:nowrap;">${a.due ? formatDate(a.due) : '–'}</td>
-          <td style="padding:9px 10px;text-align:center;border-bottom:1px solid #E2E8F0;background-color:${bg};">
+          <td style="padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:${theme.text};border-bottom:1px solid ${theme.line};background-color:${bg};font-weight:700;">${escHtml(a.action)}</td>
+          <td style="padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:${theme.muted};border-bottom:1px solid ${theme.line};background-color:${bg};">${escHtml(a.owner||'')}</td>
+          <td style="padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:${theme.muted};border-bottom:1px solid ${theme.line};background-color:${bg};white-space:nowrap;">${a.due ? formatDate(a.due) : '–'}</td>
+          <td style="padding:10px;text-align:center;border-bottom:1px solid ${theme.line};background-color:${bg};">
             ${badge(actionStatusLabels[st]||'À faire', actionStatusBg[st]||'#FEF3C7', actionStatusColors[st]||'#7C4700', actionStatusBorder[st]||'#F59E0B')}
           </td>
         </tr>`;
       }).join('')
-    : `<tr><td colspan="4" style="padding:12px 14px;font-family:Arial,sans-serif;font-size:13px;color:#94A3B8;font-style:italic;">Aucune action renseignée</td></tr>`;
+    : `<tr><td colspan="4" style="padding:14px;font-family:Arial,sans-serif;font-size:13px;color:${theme.muted};font-style:italic;">Aucune action renseignée</td></tr>`;
 
   /* ---- Key points ---- */
   const cleanKeyPoints = sanitizeQuillForEmail(d.keyPointsHTML);
@@ -306,7 +345,7 @@ function generateEmailHTML(d) {
     const kpLayout = d.keyPointsLayout || 'text';
     if (kpLayout === 'table' && d.keyPointsHTML) {
       // Tableau éditable inline
-      const kpSect = { layout: 'table', html: d.keyPointsHTML, bgColor: '#F8FAFC', borderColor: '#E2E8F0' };
+      const kpSect = { layout: 'table', html: d.keyPointsHTML, bgColor: theme.soft, borderColor: theme.line };
       return _renderSectionForEmail(kpSect, d.primaryColor);
     }
     if (kpLayout === 'image' && d.keyPointsHTML) {
@@ -315,28 +354,47 @@ function generateEmailHTML(d) {
     // Texte par défaut
     return cleanKeyPoints
       ? `<table border="0" cellpadding="0" cellspacing="0" width="100%"><tr>
-           <td bgcolor="#F8FAFC" style="background-color:#F8FAFC;padding:16px 18px;border:1px solid #E2E8F0;font-family:Arial,sans-serif;font-size:13px;color:#334155;line-height:1.75;">
+           <td bgcolor="${theme.soft}" style="background-color:${theme.soft};padding:18px 20px;border:1px solid ${theme.line};border-left:5px solid ${theme.accent};font-family:Arial,sans-serif;font-size:13px;color:${theme.text};line-height:1.75;">
              ${cleanKeyPoints}
            </td>
          </tr></table>`
       : `<table border="0" cellpadding="0" cellspacing="0" width="100%"><tr>
-           <td bgcolor="#F8FAFC" style="background-color:#F8FAFC;padding:16px 18px;border:1px solid #E2E8F0;">
-             <em style="color:#94A3B8;font-style:italic;font-family:Arial,sans-serif;font-size:13px;">Aucun contenu renseigné.</em>
+           <td bgcolor="${theme.soft}" style="background-color:${theme.soft};padding:18px 20px;border:1px solid ${theme.line};border-left:5px solid ${theme.accent};">
+             <em style="color:${theme.muted};font-style:italic;font-family:Arial,sans-serif;font-size:13px;">Aucun contenu renseigné.</em>
            </td>
          </tr></table>`;
   })();
 
   /* ---- Titre de section Outlook-safe ---- */
   const sectionTitle = (label) =>
-    `<table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:10px;">
+    `<table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:12px;">
       <tr>
-        <td width="6" bgcolor="${d.primaryColor}" style="background-color:${d.primaryColor};border-radius:3px;">&nbsp;</td>
-        <td width="10">&nbsp;</td>
-        <td>
-          <span style="font-family:${d.fontFamily},Arial,sans-serif;font-size:15px;font-weight:800;color:#0F172A;text-transform:uppercase;letter-spacing:.5px;">${label}</span>
+        <td width="38" valign="middle">
+          <table border="0" cellpadding="0" cellspacing="0" width="30" height="30">
+            <tr>
+              <td bgcolor="${theme.accent}" style="background-color:${theme.accent};border-radius:8px;width:30px;height:30px;text-align:center;vertical-align:middle;">
+                <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:800;color:#FFFFFF;line-height:30px;">•</span>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td valign="middle">
+          <span style="font-family:${d.fontFamily},Arial,sans-serif;font-size:16px;font-weight:800;color:${theme.text};text-transform:uppercase;letter-spacing:.2px;">${label}</span>
         </td>
       </tr>
     </table>`;
+
+  const metaCard = (label, value, color) =>
+    `<td width="25%" style="vertical-align:top;padding:0 6px 0 0;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border:1px solid ${theme.line};border-radius:8px;background-color:#FFFFFF;">
+        <tr>
+          <td style="padding:12px 12px 11px;border-top:4px solid ${color};">
+            <div style="font-family:Arial,sans-serif;font-size:9px;font-weight:800;color:${theme.muted};text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">${label}</div>
+            <div style="font-family:Arial,sans-serif;font-size:13px;color:${theme.text};font-weight:800;line-height:1.35;">${value}</div>
+          </td>
+        </tr>
+      </table>
+    </td>`;
 
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
@@ -375,25 +433,25 @@ function generateEmailHTML(d) {
   </style>
   <title>CR – ${escHtml(d.meeting)}</title>
 </head>
-<body style="margin:0;padding:0;background-color:#F1F5F9;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;font-family:${d.fontFamily},Arial,sans-serif;">
+<body style="margin:0;padding:0;background-color:${theme.canvas};-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;font-family:${d.fontFamily},Arial,sans-serif;">
 
-<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F1F5F9;padding:20px 0;">
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:${theme.canvas};padding:24px 0;">
 <tr><td align="center" valign="top">
 
   <!-- Wrapper -->
-  <table border="0" cellpadding="0" cellspacing="0" width="680" style="background-color:#FFFFFF;">
+  <table border="0" cellpadding="0" cellspacing="0" width="720" style="background-color:#FFFFFF;border:1px solid ${theme.line};box-shadow:0 13px 19px #00000012;">
 
     <!-- ═══ EN-TÊTE ═══ -->
     <tr>
-      <td bgcolor="${d.primaryColor}" style="background-color:${d.primaryColor} !important;padding:20px 32px;">
+      <td bgcolor="${theme.primary}" style="background-color:${theme.primary} !important;padding:22px 36px 18px;">
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
-            <td bgcolor="${d.primaryColor}" style="background-color:${d.primaryColor} !important;vertical-align:middle;">${logoEl}</td>
-            <td align="right" bgcolor="${d.primaryColor}" style="background-color:${d.primaryColor} !important;vertical-align:middle;">
+            <td bgcolor="${theme.primary}" style="background-color:${theme.primary} !important;vertical-align:middle;">${logoEl}</td>
+            <td align="right" bgcolor="${theme.primary}" style="background-color:${theme.primary} !important;vertical-align:middle;">
               <table border="0" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td bgcolor="${d.primaryColor}" style="background-color:${d.primaryColor} !important;border:1px solid rgba(255,255,255,0.4);border-radius:20px;padding:4px 12px;">
-                    <font color="#FFFFFF"><span class="force-white" style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#FFFFFF !important;letter-spacing:1px;text-transform:uppercase;">Compte-rendu</span></font>
+                  <td bgcolor="${theme.primaryAlt}" style="background-color:${theme.primaryAlt} !important;border:1px solid ${theme.line};border-radius:8px;padding:6px 12px;">
+                    <font color="${theme.primaryText}"><span style="font-family:Arial,sans-serif;font-size:10px;font-weight:800;color:${theme.primaryText} !important;letter-spacing:1px;text-transform:uppercase;">Compte-rendu</span></font>
                   </td>
                 </tr>
               </table>
@@ -405,32 +463,30 @@ function generateEmailHTML(d) {
 
     <!-- ═══ TITRE ═══ -->
     <tr>
-      <td bgcolor="${d.accentColor}" style="background-color:${d.accentColor};padding:16px 32px 18px;">
-        <div style="font-family:Arial,sans-serif;font-size:20px;font-weight:800;line-height:1.3;margin:0 0 4px 0;"><span style="color:#FFFFFF;">${escHtml(d.meeting || 'Réunion sans titre')}</span></div>
-        <div style="font-family:Arial,sans-serif;font-size:13px;margin:0;"><span style="color:#FFD6EE;">${escHtml(d.mission || '')}</span></div>
+      <td bgcolor="${theme.primary}" style="background-color:${theme.primary};padding:16px 36px 32px;border-bottom:5px solid ${theme.accent};">
+        <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:800;line-height:1.3;margin:0 0 10px 0;text-transform:uppercase;letter-spacing:1.8px;"><span style="color:#D4EAF6;">CR Master Export</span></div>
+        <div style="font-family:Arial,sans-serif;font-size:34px;font-weight:800;line-height:1.12;margin:0 0 10px 0;"><span style="color:#FFFFFF;">${escHtml(d.meeting || 'Reunion sans titre')}</span></div>
+        <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;margin:0;"><span style="color:#ECECEC;">${escHtml(d.mission || '')}</span></div>
       </td>
     </tr>
 
     <!-- ═══ MÉTA-DONNÉES ═══ -->
     <tr>
-      <td bgcolor="#F8FAFC" style="background-color:#F8FAFC;padding:16px 32px;border-bottom:2px solid #E2E8F0;">
+      <td bgcolor="${theme.soft}" style="background-color:${theme.soft};padding:18px 30px;border-bottom:1px solid ${theme.line};">
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
-            <td width="25%" style="vertical-align:top;padding-right:12px;">
-              <div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Date</div>
-              <div style="font-family:Arial,sans-serif;font-size:13px;color:#1E293B;font-weight:600;">${dateStr}</div>
-            </td>
-            <td width="25%" style="vertical-align:top;padding-right:12px;">
-              <div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Lieu / Modalité</div>
-              <div style="font-family:Arial,sans-serif;font-size:13px;color:#1E293B;font-weight:600;">${escHtml(d.location||'–')}</div>
-            </td>
-            <td width="25%" style="vertical-align:top;padding-right:12px;">
-              <div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Animateur</div>
-              <div style="font-family:Arial,sans-serif;font-size:13px;color:#1E293B;font-weight:600;">${escHtml(d.facilitator||'–')}</div>
-            </td>
+            ${metaCard('Date', dateStr, theme.accent)}
+            ${metaCard('Lieu / Modalite', escHtml(d.location||'–'), theme.primary)}
+            ${metaCard('Animateur', escHtml(d.facilitator||'–'), theme.success)}
             <td width="25%" style="vertical-align:top;">
-              <div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Statut</div>
-              ${badge(statusMap[d.status]||'Brouillon', statusBg[d.status]||'#FEF3C7', statusColors[d.status]||'#7C4700', statusBorder[d.status]||'#F59E0B')}
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border:1px solid ${theme.line};border-radius:8px;background-color:#FFFFFF;">
+                <tr>
+                  <td style="padding:12px 12px 11px;border-top:4px solid ${theme.accent};">
+                    <div style="font-family:Arial,sans-serif;font-size:9px;font-weight:800;color:${theme.muted};text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Statut</div>
+                    ${badge(statusMap[d.status]||'Brouillon', statusBg[d.status]||'#FEF3C7', statusColors[d.status]||'#7C4700', statusBorder[d.status]||'#F59E0B')}
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
@@ -439,21 +495,21 @@ function generateEmailHTML(d) {
 
     <!-- ═══ RÉDACTEUR ═══ -->
     ${d.author ? `<tr>
-      <td style="padding:10px 32px;background-color:#FFFFFF;border-bottom:1px solid #E2E8F0;">
-        <span style="font-family:Arial,sans-serif;font-size:12px;color:#64748B;">Rédigé par : <strong style="color:#334155;font-weight:700;">${escHtml(d.author)}</strong></span>
+      <td style="padding:12px 36px;background-color:#FFFFFF;border-bottom:1px solid ${theme.line};">
+        <span style="font-family:Arial,sans-serif;font-size:12px;color:${theme.muted};">Redige par : <strong style="color:${theme.text};font-weight:800;">${escHtml(d.author)}</strong></span>
       </td>
     </tr>` : ''}
 
     <!-- ═══ PARTICIPANTS ═══ -->
     ${d.activeModules.includes('participants') ? `<tr>
-      <td style="padding:24px 32px 0;background-color:#FFFFFF;">
+      <td style="padding:28px 36px 0;background-color:#FFFFFF;">
         ${sectionTitle(_getSectionTitle('sectionParticipants', 'Participants'))}
-        <table border="1" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border:1px solid #CBD5E1;">
-          <tr bgcolor="${d.primaryColor}" style="background-color:${d.primaryColor};">
-            ${th('','5%',d.primaryColor)}
-            ${th('Nom','31%',d.primaryColor)}
-            ${th('Société / Entité','33%',d.primaryColor)}
-            ${th('Rôle','31%',d.primaryColor)}
+        <table border="1" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border:1px solid ${theme.line};">
+          <tr bgcolor="${theme.primary}" style="background-color:${theme.primary};">
+            ${th('','5%',theme.primary)}
+            ${th('Nom','31%',theme.primary)}
+            ${th('Société / Entité','33%',theme.primary)}
+            ${th('Rôle','31%',theme.primary)}
           </tr>
           ${partRows}
         </table>
@@ -462,14 +518,14 @@ function generateEmailHTML(d) {
 
     <!-- ═══ SUIVI DES ACTIONS ═══ -->
     ${d.activeModules.includes('actions') ? `<tr>
-      <td style="padding:24px 32px 0;background-color:#FFFFFF;">
+      <td style="padding:28px 36px 0;background-color:#FFFFFF;">
         ${sectionTitle(_getSectionTitle('sectionActions', 'Suivi des actions'))}
-        <table border="1" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border:1px solid #CBD5E1;">
-          <tr bgcolor="${d.primaryColor}" style="background-color:${d.primaryColor};">
-            ${th('Action','42%',d.primaryColor)}
-            ${th('Porteur','22%',d.primaryColor)}
-            ${th('Échéance','18%',d.primaryColor)}
-            ${th('Statut','18%',d.primaryColor)}
+        <table border="1" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border:1px solid ${theme.line};">
+          <tr bgcolor="${theme.primary}" style="background-color:${theme.primary};">
+            ${th('Action','42%',theme.primary)}
+            ${th('Porteur','22%',theme.primary)}
+            ${th('Échéance','18%',theme.primary)}
+            ${th('Statut','18%',theme.primary)}
           </tr>
           ${actionRows}
         </table>
@@ -478,7 +534,7 @@ function generateEmailHTML(d) {
 
     <!-- ═══ POINTS STRUCTURANTS ═══ -->
     ${d.activeModules.includes('key_points') ? `<tr>
-      <td style="padding:24px 32px 0;background-color:#FFFFFF;">
+      <td style="padding:28px 36px 0;background-color:#FFFFFF;">
         ${sectionTitle(_getSectionTitle('sectionKeyPoints', 'Points structurants'))}
         ${keyPointsRendered}
       </td>
@@ -489,7 +545,7 @@ function generateEmailHTML(d) {
       const renderedContent = _renderSectionForEmail(s, d.primaryColor);
       if (!renderedContent) return '';
       return `<tr>
-        <td style="padding:24px 32px 0;background-color:#FFFFFF;">
+        <td style="padding:28px 36px 0;background-color:#FFFFFF;">
           ${sectionTitle(s.label)}
           ${renderedContent}
         </td>
@@ -498,17 +554,17 @@ function generateEmailHTML(d) {
 
     <!-- ═══ PIED DE PAGE ═══ -->
     <tr>
-      <td style="padding:20px 32px 24px;background-color:#FFFFFF;">
-        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top:2px solid ${d.primaryColor};padding-top:12px;">
+      <td style="padding:24px 36px 28px;background-color:#FFFFFF;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top:3px solid ${theme.accent};padding-top:12px;">
           <tr>
             <td style="padding-top:12px;">
-              <span style="font-family:Arial,sans-serif;font-size:11px;color:#94A3B8;">
-                Rédigé par <strong style="color:#64748B;">${escHtml(d.author||'–')}</strong>
-                &nbsp;·&nbsp; Généré par <strong style="color:#64748B;">${escHtml(d.orgName)} CR Master</strong>
+              <span style="font-family:Arial,sans-serif;font-size:11px;color:${theme.muted};">
+                Redige par <strong style="color:${theme.text};">${escHtml(d.author||'–')}</strong>
+                &nbsp;·&nbsp; Genere par <strong style="color:${theme.text};">${escHtml(d.orgName)} CR Master</strong>
               </span>
             </td>
             <td align="right" style="padding-top:12px;white-space:nowrap;">
-              <span style="font-family:Arial,sans-serif;font-size:11px;color:#94A3B8;">${new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})}</span>
+              <span style="font-family:Arial,sans-serif;font-size:11px;color:${theme.muted};">${new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})}</span>
             </td>
           </tr>
         </table>
