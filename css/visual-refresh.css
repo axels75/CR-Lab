@@ -1,4 +1,4 @@
-/* =====================================================
+orts/* =====================================================
    WAVESTONE CR MASTER — LIFTING VISUEL 2026
    Surcouche sur style.css : modernisation des ombres,
    bordures, typographie, micro-interactions et densité.
@@ -547,43 +547,34 @@ h1, h2, h3, h4 {
 }
 
 /* =====================================================
-   13. EXPORT BAR — NÉOMORPHIQUE
+   13. EXPORT BAR — classique épuré
    ===================================================== */
 .export-bar {
-  background: #EFF2F7;
-  border: none;
-  border-radius: 14px;
-  box-shadow:
-    6px 6px 14px rgba(15, 23, 42, .08),
-    -6px -6px 14px rgba(255, 255, 255, .84),
-    inset 0 1px 0 rgba(255, 255, 255, .6);
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
   padding: 18px 24px;
   backdrop-filter: none;
 }
 
 .btn-export {
   border-radius: 10px;
-  border: none;
+  border: 1px solid rgba(15, 23, 42, .06);
   font-weight: 600;
   padding: 10px 18px;
   transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out), background .18s var(--ease-out);
-  box-shadow:
-    3px 3px 8px rgba(15, 23, 42, .07),
-    -3px -3px 8px rgba(255, 255, 255, .9);
+  box-shadow: var(--shadow-xs);
 }
 
 .btn-export:hover {
   transform: translateY(-1px);
-  box-shadow:
-    5px 5px 12px rgba(15, 23, 42, .10),
-    -5px -5px 12px rgba(255, 255, 255, 1);
+  box-shadow: var(--shadow);
 }
 
 .btn-export:active {
-  transform: translateY(1px);
-  box-shadow:
-    inset 2px 2px 6px rgba(15, 23, 42, .08),
-    inset -2px -2px 6px rgba(255, 255, 255, .7);
+  transform: translateY(0);
+  box-shadow: var(--shadow-xs);
 }
 
 .btn-email  { background: #FCE7F0; color: #B0004E; }
@@ -859,33 +850,25 @@ h1, h2, h3, h4 {
   border-color: rgba(255, 255, 255, .06);
 }
 
-/* Dark mode neumorphic exports */
+/* Dark mode export bar — épuré */
 .dark-mode .export-bar {
-  background: #1A2332;
-  border: none;
-  box-shadow:
-    8px 8px 16px rgba(0, 0, 0, .35),
-    -6px -6px 14px rgba(255, 255, 255, .03),
-    inset 0 1px 0 rgba(255, 255, 255, .025);
+  background: rgba(30, 41, 59, .8);
+  border: 1px solid rgba(255, 255, 255, .06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .25);
   backdrop-filter: none;
 }
 
 .dark-mode .btn-export {
-  box-shadow:
-    4px 4px 10px rgba(0, 0, 0, .32),
-    -3px -3px 8px rgba(255, 255, 255, .025);
+  border-color: rgba(255, 255, 255, .06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
 }
 
 .dark-mode .btn-export:hover {
-  box-shadow:
-    6px 6px 14px rgba(0, 0, 0, .40),
-    -4px -4px 10px rgba(255, 255, 255, .04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .35);
 }
 
 .dark-mode .btn-export:active {
-  box-shadow:
-    inset 3px 3px 8px rgba(0, 0, 0, .38),
-    inset -2px -2px 6px rgba(255, 255, 255, .015);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
 }
 
 .dark-mode .btn-email { background: rgba(232, 0, 125, .16); color: #F472B6; }

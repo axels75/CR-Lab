@@ -379,20 +379,11 @@ function generateEmailHTML(d) {
          </tr></table>`;
   })();
 
-  /* ---- Titre de section Outlook-safe ---- */
+  /* ---- Titre de section Outlook-safe — sobre avec barre gauche ---- */
   const sectionTitle = (label) =>
     `<table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:12px;">
       <tr>
-        <td width="38" valign="middle">
-          <table border="0" cellpadding="0" cellspacing="0" width="30" height="30">
-            <tr>
-              <td bgcolor="${theme.accent}" style="background-color:${theme.accent};border-radius:8px;width:30px;height:30px;text-align:center;vertical-align:middle;">
-                <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:800;color:${theme.accentText};line-height:30px;">•</span>
-              </td>
-            </tr>
-          </table>
-        </td>
-        <td valign="middle">
+        <td style="border-left:4px solid ${theme.accent};padding:4px 0 4px 14px;">
           <span style="font-family:${d.fontFamily},Arial,sans-serif;font-size:16px;font-weight:800;color:${theme.text};text-transform:uppercase;letter-spacing:.2px;">${label}</span>
         </td>
       </tr>
@@ -1209,6 +1200,19 @@ async function exportWord() {
 
   // Charger le logo en base64
   d.logoSrc = await getLogoBase64();
+
+  // Chargement paresseux de docx.js
+  try {
+    await new Promise((resolve) => {
+      if (typeof _ensureDocx === 'function') {
+        _ensureDocx(resolve);
+      } else {
+        resolve(); // déjà chargé
+      }
+    });
+  } catch (e) {
+    console.warn('docx lazy-load error:', e);
+  }
 
   try {
   showToast(t('export_word_generating'), 'info');
