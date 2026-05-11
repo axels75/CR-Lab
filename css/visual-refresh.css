@@ -547,27 +547,51 @@ h1, h2, h3, h4 {
 }
 
 /* =====================================================
-   13. EXPORT BAR
+   13. EXPORT BAR — NÉOMORPHIQUE
    ===================================================== */
 .export-bar {
-  border-radius: var(--radius);
-  border: 1px solid rgba(15, 23, 42, .06);
-  box-shadow: var(--shadow-sm);
+  background: #EFF2F7;
+  border: none;
+  border-radius: 14px;
+  box-shadow:
+    6px 6px 14px rgba(15, 23, 42, .08),
+    -6px -6px 14px rgba(255, 255, 255, .84),
+    inset 0 1px 0 rgba(255, 255, 255, .6);
   padding: 18px 24px;
-  background: var(--surface-glass-heavy);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 }
 
 .btn-export {
-  border-radius: 9px;
+  border-radius: 10px;
+  border: none;
   font-weight: 600;
   padding: 10px 18px;
-  transition: all .18s var(--ease-out);
+  transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out), background .18s var(--ease-out);
+  box-shadow:
+    3px 3px 8px rgba(15, 23, 42, .07),
+    -3px -3px 8px rgba(255, 255, 255, .9);
 }
+
 .btn-export:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+  box-shadow:
+    5px 5px 12px rgba(15, 23, 42, .10),
+    -5px -5px 12px rgba(255, 255, 255, 1);
 }
+
+.btn-export:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 2px 2px 6px rgba(15, 23, 42, .08),
+    inset -2px -2px 6px rgba(255, 255, 255, .7);
+}
+
+.btn-email  { background: #FCE7F0; color: #B0004E; }
+.btn-email:hover { background: #F8D0E0; }
+.btn-word   { background: #E8ECF4; color: #00245A; }
+.btn-word:hover  { background: #DCE3F0; }
+.btn-pdf    { background: #FDE8E8; color: #B91C1C; }
+.btn-pdf:hover   { background: #FCD0D0; }
 
 /* =====================================================
    14. QUILL EDITOR — finition
@@ -830,11 +854,48 @@ h1, h2, h3, h4 {
   background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
 }
 .dark-mode .form-section,
-.dark-mode .cr-card,
-.dark-mode .export-bar {
+.dark-mode .cr-card {
   background: rgba(30, 41, 59, .6);
   border-color: rgba(255, 255, 255, .06);
 }
+
+/* Dark mode neumorphic exports */
+.dark-mode .export-bar {
+  background: #1A2332;
+  border: none;
+  box-shadow:
+    8px 8px 16px rgba(0, 0, 0, .35),
+    -6px -6px 14px rgba(255, 255, 255, .03),
+    inset 0 1px 0 rgba(255, 255, 255, .025);
+  backdrop-filter: none;
+}
+
+.dark-mode .btn-export {
+  box-shadow:
+    4px 4px 10px rgba(0, 0, 0, .32),
+    -3px -3px 8px rgba(255, 255, 255, .025);
+}
+
+.dark-mode .btn-export:hover {
+  box-shadow:
+    6px 6px 14px rgba(0, 0, 0, .40),
+    -4px -4px 10px rgba(255, 255, 255, .04);
+}
+
+.dark-mode .btn-export:active {
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, .38),
+    inset -2px -2px 6px rgba(255, 255, 255, .015);
+}
+
+.dark-mode .btn-email { background: rgba(232, 0, 125, .16); color: #F472B6; }
+.dark-mode .btn-email:hover { background: rgba(232, 0, 125, .28); }
+
+.dark-mode .btn-word { background: rgba(0, 45, 114, .20); color: #93B4F5; }
+.dark-mode .btn-word:hover { background: rgba(0, 45, 114, .32); }
+
+.dark-mode .btn-pdf { background: rgba(239, 68, 68, .18); color: #FCA5A5; }
+.dark-mode .btn-pdf:hover { background: rgba(239, 68, 68, .30); }
 .dark-mode .empty-state {
   background: rgba(30, 41, 59, .5);
   border-color: rgba(255, 255, 255, .12);

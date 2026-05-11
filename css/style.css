@@ -1124,16 +1124,14 @@ body {
 /* Export Bar */
 .export-bar {
   background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  border-radius: 14px;
   padding: 18px 24px;
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 10px;
-  margin-bottom: 24px;
+  margin-top: 14px;
+  margin-bottom: 28px;
 }
 
 .export-label {
@@ -1147,8 +1145,8 @@ body {
 }
 
 .btn-export {
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  border-radius: 10px;
   font-size: .875rem;
   font-weight: 600;
   font-family: var(--font);
@@ -1156,18 +1154,8 @@ body {
   display: flex;
   align-items: center;
   gap: 7px;
-  border: 2px solid transparent;
-  transition: all var(--transition);
+  transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out), background .18s var(--ease-out);
 }
-
-.btn-email { background: rgba(232,0,125,.1); color: var(--accent); border-color: var(--accent); }
-.btn-email:hover { background: var(--accent); color: var(--white); }
-
-.btn-word  { background: rgba(0,45,114,.1); color: var(--primary); border-color: var(--primary); }
-.btn-word:hover  { background: var(--primary); color: var(--white); }
-
-.btn-pdf   { background: rgba(239,68,68,.1); color: var(--danger); border-color: var(--danger); }
-.btn-pdf:hover   { background: var(--danger); color: var(--white); }
 
 /* =====================================================
    BOUTONS GÉNÉRAUX
