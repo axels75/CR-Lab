@@ -43,9 +43,13 @@ async function getLogoBase64() {
    ===================================================== */
 function buildCRData() {
   // Utiliser les settings actifs (projet courant s'il a un template, sinon global)
-  const settings    = (typeof getActiveSettings === 'function') ? getActiveSettings() : STATE.settings;
-  const primaryColor = settings.primaryColor || '#002D72';
-  const accentColor  = settings.accentColor  || '#E8007D';
+  const settings       = (typeof getActiveSettings === 'function') ? getActiveSettings() : STATE.settings;
+  const activeTemplate = STATE._activeTemplate || {};
+  const templateMeta   = activeTemplate.config?.__template_meta || {};
+  const templateColor  = activeTemplate.color || templateMeta.color || '';
+  const templateName   = activeTemplate.name || templateMeta.name || '';
+  const primaryColor   = settings.primaryColor || '#002D72';
+  const accentColor    = templateColor || settings.accentColor || '#E8007D';
   const orgName      = settings.orgName       || 'Wavestone';
   // Police : extraire le premier nom de famille (compatible email/Word)
   const fontRaw     = settings.font || 'Arial, sans-serif';
@@ -108,6 +112,11 @@ function buildCRData() {
 
   // ── Collecter TOUTES les sections visibles dans l'ordre DOM ──
   const allVisibleSections = [];
+  const moduleColor = (key, fallback = accentColor) => {
+    const cfg = activeTemplate.config?.[key] || {};
+    const mod = (typeof CR_MODULES !== 'undefined') ? CR_MODULES[key] : null;
+    return cfg.color || mod?.color || fallback;
+  };
 
   // Sections standards optionnelles
   const STD_SECTIONS = [
@@ -129,6 +138,7 @@ function buildCRData() {
     if (!hasContent) return;
     // Titre personnalisé éventuel
     const customTitle = sect.querySelector('.section-title-text, h3')?.textContent?.trim();
+    const sectionColor = moduleColor(key);
     allVisibleSections.push({
       id,
       label:        customTitle || labelFr,
@@ -137,6 +147,7 @@ function buildCRData() {
       planningRows: data.planningRows || [],
       bgColor,
       borderColor,
+      accentColor:  sectionColor,
       isStd: true,
     });
   });
@@ -171,6 +182,7 @@ function buildCRData() {
       : (content && content.trim() && content.trim() !== '<p><br></p>');
     if (!hasContent2) return;
     customSections.push({ title, content, layout, planningRows, id: sectId });
+    const sectionColor = sect.dataset.sectionColor || activeTemplate.config?.[sectId]?.color || accentColor;
     allVisibleSections.push({
       id:           sectId,
       label:        title,
@@ -179,12 +191,13 @@ function buildCRData() {
       planningRows: planningRows,
       bgColor:      '#F8FAFC',
       borderColor:  '#E2E8F0',
+      accentColor:  sectionColor,
       isCustom: true,
     });
   });
 
   return {
-    primaryColor, accentColor, orgName, fontFamily, fontSize, logoSrc,
+    primaryColor, accentColor, templateColor, templateName, orgName, fontFamily, fontSize, logoSrc,
     mission, meeting, date, location, facilitator, author, status,
     participants, actions, keyPointsHTML,
     // Layout actif pour key points
@@ -244,6 +257,7 @@ function generateEmailHTML(d) {
     canvas: _mix(primary, '#FFFFFF', 0.94),
     soft: _mix(primary, '#FFFFFF', 0.97),
     line: _mix(primary, '#FFFFFF', 0.82),
+    headerMuted: _mix(primary, primaryText, 0.78),
     text: '#252B42',
     muted: '#737373',
     accent,
@@ -373,7 +387,7 @@ function generateEmailHTML(d) {
           <table border="0" cellpadding="0" cellspacing="0" width="30" height="30">
             <tr>
               <td bgcolor="${theme.accent}" style="background-color:${theme.accent};border-radius:8px;width:30px;height:30px;text-align:center;vertical-align:middle;">
-                <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:800;color:#FFFFFF;line-height:30px;">•</span>
+                <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:800;color:${theme.accentText};line-height:30px;">•</span>
               </td>
             </tr>
           </table>
@@ -464,9 +478,9 @@ function generateEmailHTML(d) {
     <!-- ═══ TITRE ═══ -->
     <tr>
       <td bgcolor="${theme.primary}" style="background-color:${theme.primary};padding:16px 36px 32px;border-bottom:5px solid ${theme.accent};">
-        <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:800;line-height:1.3;margin:0 0 10px 0;text-transform:uppercase;letter-spacing:1.8px;"><span style="color:#D4EAF6;">CR Master Export</span></div>
-        <div style="font-family:Arial,sans-serif;font-size:34px;font-weight:800;line-height:1.12;margin:0 0 10px 0;"><span style="color:#FFFFFF;">${escHtml(d.meeting || 'Reunion sans titre')}</span></div>
-        <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;margin:0;"><span style="color:#ECECEC;">${escHtml(d.mission || '')}</span></div>
+        <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:800;line-height:1.3;margin:0 0 10px 0;text-transform:uppercase;letter-spacing:1.8px;"><span style="color:${theme.headerMuted};">${escHtml(d.templateName || 'CR Master Export')}</span></div>
+        <div style="font-family:Arial,sans-serif;font-size:34px;font-weight:800;line-height:1.12;margin:0 0 10px 0;"><span style="color:${theme.primaryText};">${escHtml(d.meeting || 'Reunion sans titre')}</span></div>
+        <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;margin:0;"><span style="color:${theme.headerMuted};">${escHtml(d.mission || '')}</span></div>
       </td>
     </tr>
 

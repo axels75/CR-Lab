@@ -318,12 +318,18 @@ function applyTemplate(templateId, isCustom = false) {
   _applyModulesToForm(modules, config, tpl);
 
   // Sauvegarder le template actif dans STATE
-  STATE._activeTemplate = { id: templateId, modules, config, isCustom };
+  const lang = (typeof getCurrentLang === 'function') ? getCurrentLang() : 'fr';
+  const name = isCustom ? tpl.name : (lang === 'en' ? tpl.name_en : tpl.name_fr);
+  const templateMeta = {
+    color: tpl.color || '#6366F1',
+    icon:  tpl.icon  || 'fa-file-lines',
+    name,
+  };
+  config.__template_meta = templateMeta;
+  STATE._activeTemplate = { id: templateId, modules, config, isCustom, ...templateMeta };
 
   closeModal('modalTemplateLibrary');
 
-  const lang = (typeof getCurrentLang === 'function') ? getCurrentLang() : 'fr';
-  const name = isCustom ? tpl.name : (lang === 'en' ? tpl.name_en : tpl.name_fr);
   if (typeof showToast === 'function') {
     showToast(`Template "${name}" appliqué.`, 'success');
   }

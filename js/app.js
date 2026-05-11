@@ -1346,13 +1346,6 @@ function restoreReportTemplate(cr) {
       let config = {};
       try { config = JSON.parse(cr.template_config || '{}'); } catch(e) { config = {}; }
       const isCustom = !['tpl_standard','tpl_copil','tpl_workshop','tpl_quick','tpl_project'].includes(cr.template_id);
-      STATE._activeTemplate = {
-        id: cr.template_id,
-        modules,
-        config,
-        isCustom,
-      };
-
       if (typeof _applyModulesToForm === 'function') {
         let tpl = null;
         try {
@@ -1360,6 +1353,25 @@ function restoreReportTemplate(cr) {
             tpl = DEFAULT_TEMPLATES.find(t => t.id === cr.template_id) || null;
           }
         } catch(e) {}
+
+        const meta = config.__template_meta || {};
+        const lang = (typeof getCurrentLang === 'function') ? getCurrentLang() : 'fr';
+        const templateName = tpl
+          ? (lang === 'en' ? (tpl.name_en || tpl.name_fr || tpl.id) : (tpl.name_fr || tpl.name_en || tpl.id))
+          : (meta.name || cr.template_id);
+        const templateMeta = {
+          color: tpl?.color || meta.color || '#6366F1',
+          icon:  tpl?.icon  || meta.icon  || 'fa-file-lines',
+          name:  templateName,
+        };
+        config.__template_meta = templateMeta;
+        STATE._activeTemplate = {
+          id: cr.template_id,
+          modules,
+          config,
+          isCustom,
+          ...templateMeta,
+        };
 
         _applyModulesToForm(modules, config, tpl || {
           id: cr.template_id,
