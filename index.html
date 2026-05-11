@@ -27,8 +27,8 @@
     })();
   </script>
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Google Fonts (chargement asynchrone pour ne pas bloquer le rendu) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" />
   <!-- Quill WYSIWYG Editor -->
@@ -43,6 +43,39 @@
   <link rel="stylesheet" href="css/responsive.css?v=20260506" />
 </head>
 <body>
+
+<!-- ===== LOADER DÉMARRAGE (affiche immédiatement un spinner pour éviter le blanc) ===== -->
+<style>
+  @keyframes appLoaderSpin { to { transform:rotate(360deg); } }
+  @keyframes appLoaderFadeOut { to { opacity:0; visibility:hidden; } }
+  #appLoader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #F8F9FB; /* gray-50 fallback avant chargement CSS */
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+  }
+  .app-ready #appLoader {
+    animation: appLoaderFadeOut .3s ease forwards;
+    pointer-events: none;
+  }
+  #appLoader .loader-spinner {
+    width: 42px; height: 42px;
+    border: 4px solid #E4E8EE; /* gray-200 fallback */
+    border-top-color: #002D72; /* primary fallback */
+    border-radius: 50%;
+    animation: appLoaderSpin .7s linear infinite;
+  }
+  #appLoader .loader-text {
+    font-family: Inter, Arial, sans-serif;
+    font-size: .85rem;
+    color: #6B7585; /* gray-500 fallback */
+    font-weight: 500;
+  }
+</style>
+<div id="appLoader">
+  <div class="loader-spinner"></div>
+  <span class="loader-text">Chargement de CR Master…</span>
+</div>
 
 <!-- ===================================================
      ÉCRAN DE CONNEXION — Redesign split-screen v2

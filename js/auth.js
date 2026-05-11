@@ -95,6 +95,7 @@ async function checkAuthAndInit(options = {}) {
 
 function showAppScreen() {
   document.documentElement.classList.remove('auth-restoring');
+  document.body.classList.add('app-ready');
   const login = document.getElementById('loginScreen');
   const app   = document.getElementById('appRoot');
   if (login) login.style.display = 'none';
@@ -106,6 +107,7 @@ function showAppScreen() {
 
 function showLoginScreen() {
   document.documentElement.classList.remove('auth-restoring');
+  document.body.classList.add('app-ready');
   document.getElementById('loginScreen')?.removeAttribute('style');
   const app = document.getElementById('appRoot');
   if (app) app.style.display = 'none';

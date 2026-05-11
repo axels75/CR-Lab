@@ -63,15 +63,16 @@ const _PROJECT_PREFETCH = {
    INIT
    ===================================================== */
 document.addEventListener('DOMContentLoaded', async () => {
-  // Failsafe : si rien ne s'affiche au bout de 3s, forcer l'écran de login
+  // Failsafe : si rien ne s'affiche au bout de 1.5s, forcer l'écran de login + cacher le loader
   const failsafeTimer = setTimeout(() => {
     document.documentElement.classList.remove('auth-restoring');
+    document.body.classList.add('app-ready');
     const login = document.getElementById('loginScreen');
     const app   = document.getElementById('appRoot');
     if (login && login.style.display === 'none' && app && app.style.display === 'none') {
       login.style.display = 'flex';
     }
-  }, 3000);
+  }, 1500);
 
   // Vérifier silencieusement que le proxy Cloudflare fonctionne
   setTimeout(_checkApiConnectivity, 2000);
@@ -95,6 +96,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       clearTimeout(failsafeTimer);
     }
 
+    // Afficher l'écran d'application immédiatement (pas de loader pendant les fetchs)
+    if (typeof showAppScreen === 'function') showAppScreen();
+    renderSidebar();
+    showView('viewDashboard');
+
     // fetchProjects doit finir avant fetchReports (fetchReports filtre sur STATE.projects)
     await Promise.allSettled([fetchProjects(), fetchUserProfile()]);
     await fetchReports();
@@ -108,10 +114,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     // Les profils sont chargés après, afin d'inclure ceux des projets partagés
     await fetchParticipantProfiles();
+    // Re-render après chargement des données
     renderSidebar();
     renderDashboard();
-    showView('viewDashboard');
-    if (typeof showAppScreen === 'function') showAppScreen();
     bindEvents();
     initQuill();
     updateUserWidget();
