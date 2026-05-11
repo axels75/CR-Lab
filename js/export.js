@@ -266,7 +266,7 @@ function generateEmailHTML(d) {
   };
   // Logo : data: URI directement (custom ou base64 pré-chargé), sinon texte fallback
   const logoEl = (d.logoSrc && d.logoSrc.startsWith('data:'))
-    ? `<img src="${d.logoSrc}" alt="${escAttr(d.orgName)}" style="height:30px;width:auto;display:inline-block;" />`
+    ? `<img src="${d.logoSrc}" alt="${escAttr(d.orgName)}" style="height:42px;width:auto;display:inline-block;" />`
     : `<span style="font-size:18px;font-weight:800;color:${theme.primaryText};letter-spacing:1px;font-family:Arial,sans-serif;display:inline-block;">${escHtml(d.orgName)}</span>`;
 
   const dateStr = d.date ? formatDate(d.date) : '–';
@@ -469,7 +469,6 @@ function generateEmailHTML(d) {
     <!-- ═══ TITRE ═══ -->
     <tr>
       <td bgcolor="${theme.primary}" style="background-color:${theme.primary};padding:16px 36px 32px;border-bottom:5px solid ${theme.accent};">
-        <div style="font-family:Arial,sans-serif;font-size:11px;font-weight:800;line-height:1.3;margin:0 0 10px 0;text-transform:uppercase;letter-spacing:1.8px;"><span style="color:${theme.headerMuted};">${escHtml(d.templateName || 'CR Master Export')}</span></div>
         <div style="font-family:Arial,sans-serif;font-size:34px;font-weight:800;line-height:1.12;margin:0 0 10px 0;"><span style="color:${theme.primaryText};">${escHtml(d.meeting || 'Reunion sans titre')}</span></div>
         <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;margin:0;"><span style="color:${theme.headerMuted};">${escHtml(d.mission || '')}</span></div>
       </td>
