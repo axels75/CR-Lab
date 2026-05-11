@@ -851,16 +851,24 @@ function renderDashboard() {
   // Hero stats enrichis
   document.getElementById('heroStats').innerHTML = `
     <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-folder-tree"></i></div>
       <div class="stat-val">${totalProjects}</div>
       <div class="stat-label">${lang==='en'?'Projects':'Projets'}</div>
     </div>
     <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-file-lines"></i></div>
       <div class="stat-val">${totalCRs}</div>
       <div class="stat-label">${lang==='en'?'Total notes':'CRs totaux'}</div>
     </div>
     <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
       <div class="stat-val">${finalCRs}</div>
       <div class="stat-label">${lang==='en'?'Finalized':'Finalisés'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+      <div class="stat-val">${draftCRs}</div>
+      <div class="stat-label">${lang==='en'?'Drafts':'Brouillons'}</div>
     </div>`;
 
   const grid = document.getElementById('dashboardGrid');
@@ -946,6 +954,10 @@ function renderDashboard() {
             ${statusBadges}
           </div>
           <div class="pc-last-update">${lastLabel}</div>
+          <div class="pc-open-hint">
+            <span>${lang==='en'?'Open workspace':'Ouvrir le workspace'}</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
         </div>
         <div class="pc-progress-bar">
           <div class="pc-progress-fill" style="width:${count>0?Math.round(finalCount/count*100):0}%;background:${color}"></div>
