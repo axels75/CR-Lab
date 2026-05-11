@@ -359,7 +359,7 @@ function generateEmailHTML(d) {
     const kpLayout = d.keyPointsLayout || 'text';
     if (kpLayout === 'table' && d.keyPointsHTML) {
       // Tableau éditable inline
-      const kpSect = { layout: 'table', html: d.keyPointsHTML, bgColor: theme.soft, borderColor: theme.line };
+      const kpSect = { layout: 'table', html: d.keyPointsHTML, bgColor: theme.soft, borderColor: theme.line, accentColor: theme.accent };
       return _renderSectionForEmail(kpSect, d.primaryColor);
     }
     if (kpLayout === 'image' && d.keyPointsHTML) {
@@ -771,10 +771,22 @@ function _formatDateExport(isoDate) {
    HELPER : Rendu d'une section selon son layout pour l'email
    ===================================================== */
 function _renderSectionForEmail(s, primaryColor) {
+  const sectionColor = s.accentColor || primaryColor;
+  const colorText = (hex) => {
+    if (!/^#[0-9A-Fa-f]{6}$/.test(String(hex || ''))) return '#FFFFFF';
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const lin = (v) => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    const lum = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    return lum > 0.52 ? '#111827' : '#FFFFFF';
+  };
+  const sectionText = colorText(sectionColor);
+
   // Pour le planning : vérifier planningRows, pas html
   if (s.layout === 'planning') {
     if (!s.planningRows || s.planningRows.length === 0) return '';
-    return _renderPlanningForEmail(s.html, primaryColor, s.planningRows);
+    return _renderPlanningForEmail(s.html, sectionColor, s.planningRows);
   }
   if (!s.html || s.html.trim() === '' || s.html.trim() === '<p><br></p>') return '';
 
@@ -798,12 +810,12 @@ function _renderSectionForEmail(s, primaryColor) {
       tbl.style.fontFamily = 'Arial, sans-serif';
       tbl.style.fontSize = '12px';
       tbl.querySelectorAll('th').forEach(th => {
-        th.style.backgroundColor = primaryColor;
-        th.style.color = '#FFFFFF';
+        th.style.backgroundColor = sectionColor;
+        th.style.color = sectionText;
         th.style.padding = '8px 10px';
         th.style.textAlign = 'left';
         th.style.fontWeight = '700';
-        th.style.border = `1px solid ${primaryColor}`;
+        th.style.border = `1px solid ${sectionColor}`;
       });
       tbl.querySelectorAll('td').forEach((td, i) => {
         td.style.padding = '7px 10px';
@@ -818,7 +830,7 @@ function _renderSectionForEmail(s, primaryColor) {
 
     case 'planning': {
       // déjà géré en haut de la fonction
-      return _renderPlanningForEmail(s.html, primaryColor, s.planningRows);
+      return _renderPlanningForEmail(s.html, sectionColor, s.planningRows);
     }
 
     case 'image': {
@@ -832,7 +844,7 @@ function _renderSectionForEmail(s, primaryColor) {
       if (!sanitized || sanitized.trim() === '') return '';
       return `<table border="0" cellpadding="0" cellspacing="0" width="100%">
         <tr>
-          <td bgcolor="${bgColor}" style="background-color:${bgColor};padding:16px 18px;border:1px solid ${borderColor};font-family:Arial,sans-serif;font-size:13px;color:#334155;line-height:1.75;">
+          <td bgcolor="${bgColor}" style="background-color:${bgColor};padding:16px 18px;border:1px solid ${borderColor};border-left:5px solid ${sectionColor};font-family:Arial,sans-serif;font-size:13px;color:#334155;line-height:1.75;">
             ${sanitized}
           </td>
         </tr>
