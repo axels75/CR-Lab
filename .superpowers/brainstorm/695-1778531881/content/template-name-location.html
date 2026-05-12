@@ -1,0 +1,80 @@
+<h2>Où apparaît le nom du template dans l'export email ?</h2>
+<p class="subtitle">Cliquez sur la zone qui affiche le nom/ID du template indésirable</p>
+
+<div class="mockup" style="max-width:600px;margin:0 auto;">
+  <div class="mockup-header">Aperçu structure de l'email généré</div>
+  <div class="mockup-body" style="padding:0;font-family:Arial,sans-serif;background:#E8EDF2;">
+
+    <!-- Zone A : En-tête -->
+    <div class="option" data-choice="zone-a" onclick="toggleSelect(this)" style="margin:0;border-radius:0;background:#002D72;padding:16px 24px;border:3px solid transparent;transition:border .2s;cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="background:#fff;border-radius:4px;padding:4px 8px;">
+            <span style="font-size:10px;font-weight:800;color:#002D72;letter-spacing:1px;">LOGO</span>
+          </div>
+          <span style="color:rgba(255,255,255,.5);font-size:11px;">← logo / org name</span>
+        </div>
+        <span style="background:rgba(255,255,255,.15);color:#fff;font-size:9px;font-weight:800;padding:4px 10px;border-radius:6px;letter-spacing:1px;">COMPTE-RENDU</span>
+      </div>
+      <div style="margin-top:6px;text-align:center;">
+        <span style="background:rgba(255,200,0,.18);color:#FFD700;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;">A – Zone en-tête</span>
+      </div>
+    </div>
+
+    <!-- Zone B : Titre (meeting + mission) -->
+    <div class="option" data-choice="zone-b" onclick="toggleSelect(this)" style="margin:0;border-radius:0;background:#001B4E;padding:18px 24px 22px;border:3px solid transparent;border-top:none;transition:border .2s;cursor:pointer;">
+      <div style="color:rgba(255,255,255,.45);font-size:11px;margin-bottom:4px;font-style:italic;">← mission / contexte projet</div>
+      <div style="color:#fff;font-size:22px;font-weight:800;line-height:1.2;margin-bottom:6px;">Entretien ZaaS (Mainframe) #1</div>
+      <div style="color:rgba(255,255,255,.55);font-size:12px;">Scoring Co2 SI</div>
+      <div style="margin-top:8px;text-align:center;">
+        <span style="background:rgba(255,200,0,.18);color:#FFD700;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;">B – Zone titre (mission + nom réunion)</span>
+      </div>
+    </div>
+
+    <!-- Zone C : Méta-données -->
+    <div class="option" data-choice="zone-c" onclick="toggleSelect(this)" style="margin:0;border-radius:0;background:#F8FAFC;padding:14px 24px;border:3px solid transparent;border-top:3px solid #E2E8F0;transition:border .2s;cursor:pointer;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        <div style="background:#fff;border-radius:6px;padding:8px;border-top:3px solid #E8007D;"><div style="font-size:8px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">DATE</div><div style="font-size:11px;font-weight:700;">17/04/2026</div></div>
+        <div style="background:#fff;border-radius:6px;padding:8px;border-top:3px solid #002D72;"><div style="font-size:8px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">LIEU</div><div style="font-size:11px;font-weight:700;">Teams</div></div>
+        <div style="background:#fff;border-radius:6px;padding:8px;border-top:3px solid #0E9E6E;"><div style="font-size:8px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">ANIMATEUR</div><div style="font-size:10px;font-weight:700;">Axel Suchet</div></div>
+        <div style="background:#fff;border-radius:6px;padding:8px;border-top:3px solid #E8007D;"><div style="font-size:8px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">STATUT</div><span style="background:#D1FAE5;color:#065F46;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;">Final</span></div>
+      </div>
+      <div style="margin-top:8px;text-align:center;">
+        <span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;">C – Zone méta (date, lieu, animateur, statut)</span>
+      </div>
+    </div>
+
+    <!-- Zone D : Corps / sections -->
+    <div class="option" data-choice="zone-d" onclick="toggleSelect(this)" style="margin:0;border-radius:0;background:#fff;padding:14px 24px;border:3px solid transparent;border-top:3px solid #E2E8F0;transition:border .2s;cursor:pointer;">
+      <div style="border-left:4px solid #E8007D;padding-left:12px;margin-bottom:10px;">
+        <span style="font-size:12px;font-weight:800;text-transform:uppercase;color:#252B42;">Participants</span>
+      </div>
+      <div style="border-left:4px solid #E8007D;padding-left:12px;margin-bottom:10px;">
+        <span style="font-size:12px;font-weight:800;text-transform:uppercase;color:#252B42;">Suivi des actions</span>
+      </div>
+      <div style="border-left:4px solid #E8007D;padding-left:12px;">
+        <span style="font-size:12px;font-weight:800;text-transform:uppercase;color:#252B42;">Points structurants...</span>
+      </div>
+      <div style="margin-top:8px;text-align:center;">
+        <span style="background:#EDE9FE;color:#5B21B6;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;">D – Corps du CR (sections)</span>
+      </div>
+    </div>
+
+    <!-- Zone E : Pied de page -->
+    <div class="option" data-choice="zone-e" onclick="toggleSelect(this)" style="margin:0;border-radius:0;background:#fff;padding:12px 24px;border:3px solid transparent;border-top:3px solid #E8007D;transition:border .2s;cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:10px;color:#737373;">Rédigé par <strong>Axel Suchet</strong> · Généré par <strong>CR Master</strong></span>
+        <span style="font-size:10px;color:#737373;">11 mai 2026</span>
+      </div>
+      <div style="margin-top:8px;text-align:center;">
+        <span style="background:#F3F4F6;color:#374151;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;">E – Pied de page</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.option { transition: border-color .2s, box-shadow .2s; }
+.option.selected { border-color: #6366F1 !important; box-shadow: 0 0 0 2px #6366F1; }
+</style>
