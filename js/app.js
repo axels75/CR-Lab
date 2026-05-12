@@ -1193,41 +1193,16 @@ async function showProjectCRs(pid) {
   const hasLocalReports = STATE.reports.some(r => r.project_id === pid);
   if (!hasLocalReports) _renderProjectCRSkeleton();
 
-  // Rendu immédiat depuis cache local pour fluidité perçue
+  // Rendu depuis le cache local — les données sont à jour grâce aux
+  // sauvegardes silencieuses (auto-save, collab polling, saveCR, etc.)
   _renderProjectCRList();
   renderFolderFilterBar(pid);
   setUiLoading(false);
 
-  // Refresh asynchrone — ne re-rend QUE si les données ont changé
-  try {
-    // Empreinte des CRs du projet avant refresh
-    const beforeFingerprint = STATE.reports
-      .filter(r => r.project_id === pid)
-      .map(r => r.id + '|' + (r.updated_at || 0) + '|' + (r.folder || ''))
-      .sort().join(',');
-
-    await fetchReports();
-    if (typeof fetchSharedReports === 'function') await fetchSharedReports();
-
-    const afterFingerprint = STATE.reports
-      .filter(r => r.project_id === pid)
-      .map(r => r.id + '|' + (r.updated_at || 0) + '|' + (r.folder || ''))
-      .sort().join(',');
-
-    // Re-render uniquement si les données ont vraiment changé
-    if (afterFingerprint !== beforeFingerprint) {
-      const container = document.getElementById('crListContainer');
-      const scrollTop = container ? container.parentElement?.scrollTop || 0 : 0;
-      _renderProjectCRList();
-      renderFolderFilterBar(pid);
-      // Restaurer la position de scroll
-      if (container && container.parentElement) {
-        requestAnimationFrame(() => {
-          container.parentElement.scrollTop = scrollTop;
-        });
-      }
-    }
-  } catch (e) { /* non bloquant */ }
+  // Rafraîchissement asynchrone léger en arrière-plan (met à jour STATE.reports
+  // sans re-rendre — le prochain showProjectCRs affichera les données fraîches)
+  fetchReports().catch(() => {});
+  if (typeof fetchSharedReports === 'function') fetchSharedReports().catch(() => {});
   } catch(e) {
     console.error('[CR Master] showProjectCRs failed:', e);
     if (typeof showToast === 'function') {
@@ -1665,7 +1640,6 @@ async function saveCR(e) {
     renderDashboard();
     document.getElementById('exportBar').style.display = 'flex';
     showToast(t('cr_saved'), 'success');
-    _setAutoSaveIndicator('saved');
     const project = STATE.projects.find(p => p.id === STATE.currentProjectId);
     setBreadcrumb([
       { label:t('breadcrumb_dashboard'), action:()=>goToDashboard() },
@@ -1675,7 +1649,6 @@ async function saveCR(e) {
   } catch(err) {
     console.error(err);
     showToast(t('cr_save_error'),'error');
-    _setAutoSaveIndicator('error');
   }
 }
 
@@ -1693,7 +1666,7 @@ const AUTOSAVE = {
   timer:       null,
   inflight:    false,
   queued:      false,
-  debounceMs:  1200,
+  debounceMs:  500,
   bound:       false,
 };
 
@@ -1718,7 +1691,7 @@ function scheduleAutoSave(delayMs) {
 
   const d = (delayMs == null) ? AUTOSAVE.debounceMs : delayMs;
   clearTimeout(AUTOSAVE.timer);
-  _setAutoSaveIndicator('dirty');
+  // Aucun indicateur visuel — sauvegarde silencieuse
   AUTOSAVE.timer = setTimeout(_runAutoSave, d);
 }
 window.scheduleAutoSave = scheduleAutoSave;
@@ -1729,12 +1702,10 @@ async function _runAutoSave() {
     return;
   }
   AUTOSAVE.inflight = true;
-  _setAutoSaveIndicator('saving');
 
   try {
     const payload = _buildCRPayload();
     if (!payload._meta.mission_required || !STATE.currentReportId) {
-      _setAutoSaveIndicator('dirty');
       return;
     }
     delete payload._meta;
@@ -1745,14 +1716,14 @@ async function _runAutoSave() {
       _REALTIME.lastUpdatedAt = saved.updated_at || Date.now();
     }
 
-    // Mettre à jour le STATE local (sans refetch complet)
+    // Mise à jour silencieuse du STATE local
     const idx = STATE.reports.findIndex(r => r.id === saved.id);
     if (idx !== -1) STATE.reports[idx] = saved;
 
-    _setAutoSaveIndicator('saved');
+    // Pas d'indicateur visuel — sauvegarde totalement transparente
   } catch (err) {
-    console.warn('[AutoSave] erreur :', err.message);
-    _setAutoSaveIndicator('error');
+    console.warn('[AutoSave] erreur silencieuse :', err.message);
+    // Pas de feedback utilisateur — on réessaiera à la prochaine frappe
   } finally {
     AUTOSAVE.inflight = false;
     if (AUTOSAVE.queued) {

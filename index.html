@@ -2286,9 +2286,9 @@
      CHATBOT FLOTTANT STYLE NOTION
      ══════════════════════════════════════════════════════ -->
 <!-- Bouton flottant animé -->
-<div id="floatingChatbot" class="floating-chatbot" title="Assistant IA — Poser une question" onclick="toggleFloatingChat()">
+<div id="floatingChatbot" class="floating-chatbot" title="Assistant IA — Poser une question" onclick="(function(){var p=document.getElementById('floatingChatPanel');var o=p.style.display==='flex';p.style.display=o?'none':'flex';if(!o){var m=document.getElementById('floatingChatModel');if(m&&window.AI){m.textContent=(window.AI.currentModel||window.AI.defaultModel||'').split('/').pop()||'—'}document.getElementById('floatingChatInput')?.focus()}})()">
   <div class="floating-chatbot-icon">
-    <i class="fa-solid fa-robot"></i>
+    <span class="floating-chatbot-emoji">🦊</span>
   </div>
   <div class="floating-chatbot-pulse"></div>
 </div>

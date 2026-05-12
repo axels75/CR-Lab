@@ -1115,18 +1115,9 @@ function _applyRemoteUpdate(remoteCR) {
   // MERGE champ-par-champ (fusion non destructive)
   _mergeRemoteFieldsIntoForm(remoteCR);
 
-  // Notification discrète + mise à jour du badge de présence
+  // Présence discrète uniquement — pas de toast intempestif
   const updaterName = remoteCR.last_modified_by_name || t('a_collaborator');
   _showPresenceBadge(updaterName);
-
-  // Toast "untouched" si c'est la première fois qu'on voit cet utilisateur taper
-  if (!_REALTIME._lastToastName || _REALTIME._lastToastName !== updaterName || (Date.now() - (_REALTIME._lastToastAt||0)) > 10000) {
-    if (typeof showToast === 'function') {
-      showToast(`✏️ ${updaterName} ${t('sync_modified_by')}`, 'info');
-    }
-    _REALTIME._lastToastName = updaterName;
-    _REALTIME._lastToastAt   = Date.now();
-  }
 }
 
 /**
