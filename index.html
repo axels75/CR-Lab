@@ -1216,10 +1216,10 @@
             <i class="fa-solid fa-xmark"></i> <span data-i18n="cancel">Annuler</span>
           </button>
           <button type="button" class="btn-ai" id="btnOpenAiAssistant" onclick="openAiAssistant()">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="ai_assistant_btn">Assistant IA</span>
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="ai_assistant_btn">✨ Rédaction IA</span>
           </button>
           <button type="button" class="btn-secondary btn-ai-model" id="btnOpenAiModelPicker" onclick="openAiModelPicker()" title="Choisir le modèle IA">
-            <i class="fa-solid fa-microchip"></i> <span data-i18n="ai_model_btn">Modèle IA</span>
+            <i class="fa-solid fa-microchip"></i> <span data-i18n="ai_model_btn">🧠 Modèles IA</span>
           </button>
           <span id="autoSaveIndicator" class="autosave-indicator" style="display:none;">
             <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="autosave_saved">Enregistré</span>
@@ -2279,6 +2279,65 @@
         <i class="fa-solid fa-floppy-disk"></i> Enregistrer
       </button>
     </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     CHATBOT FLOTTANT STYLE NOTION
+     ══════════════════════════════════════════════════════ -->
+<!-- Bouton flottant animé -->
+<div id="floatingChatbot" class="floating-chatbot" title="Assistant IA — Poser une question">
+  <div class="floating-chatbot-icon">
+    <i class="fa-solid fa-robot"></i>
+  </div>
+  <div class="floating-chatbot-pulse"></div>
+</div>
+
+<!-- Panneau de chat -->
+<div id="floatingChatPanel" class="floating-chat-panel" style="display:none;">
+  <div class="floating-chat-header">
+    <div class="floating-chat-header-left">
+      <div class="floating-chat-avatar" id="floatingChatAvatar">🤖</div>
+      <div>
+        <div class="floating-chat-name" id="floatingChatName">Assistant CR Master</div>
+        <div class="floating-chat-status">En ligne · <span id="floatingChatModel">—</span></div>
+      </div>
+    </div>
+    <div class="floating-chat-header-right">
+      <button class="floating-chat-btn-icon" title="Personnaliser" onclick="customizeChatbotAvatar()">
+        <i class="fa-solid fa-palette"></i>
+      </button>
+      <button class="floating-chat-btn-icon" title="Fermer" onclick="toggleFloatingChat()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+  <div class="floating-chat-messages" id="floatingChatMessages">
+    <div class="floating-chat-welcome">
+      <div class="floating-chat-welcome-icon">🤖</div>
+      <h4>Bonjour ! 👋</h4>
+      <p>Je suis votre assistant. Posez-moi des questions sur vos comptes-rendus, vos projets, ou votre espace de travail.</p>
+      <div class="floating-chat-suggestions">
+        <button class="floating-chat-suggestion" data-suggest="Fais-moi une synthèse de tous mes CRs récents">
+          📋 Synthèse des CRs récents
+        </button>
+        <button class="floating-chat-suggestion" data-suggest="Quelles sont les actions en cours ou en retard sur tous mes projets ?">
+          ⏰ Actions en cours
+        </button>
+        <button class="floating-chat-suggestion" data-suggest="Liste tous mes projets et le nombre de CRs par projet">
+          📊 Récap de mes projets
+        </button>
+        <button class="floating-chat-suggestion" data-suggest="Quels sont les risques les plus critiques identifiés dans mes CRs ?">
+          ⚠️ Risques critiques
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="floating-chat-input-bar">
+    <textarea id="floatingChatInput" rows="1" placeholder="Posez votre question…"></textarea>
+    <button type="button" class="floating-chat-send" id="floatingChatSendBtn" title="Envoyer">
+      <i class="fa-solid fa-paper-plane"></i>
+    </button>
   </div>
 </div>
 

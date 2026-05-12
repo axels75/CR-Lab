@@ -402,3 +402,254 @@ document.addEventListener('DOMContentLoaded', () => {
 window.openProjectChatbot  = openProjectChatbot;
 window.closeProjectChatbot = closeProjectChatbot;
 window.projectChatSend     = projectChatSend;
+
+/* =====================================================
+   FLOATING CHATBOT — STYLE NOTION
+   ===================================================== */
+const FLOATING_CHAT = {
+  open:       false,
+  running:    false,
+  history:    [],
+  avatar:     localStorage.getItem('wv_chatbot_avatar') || '🤖',
+  name:       localStorage.getItem('wv_chatbot_name')   || 'Assistant CR Master',
+};
+
+function toggleFloatingChat() {
+  const panel = document.getElementById('floatingChatPanel');
+  FLOATING_CHAT.open = !FLOATING_CHAT.open;
+  panel.style.display = FLOATING_CHAT.open ? 'flex' : 'none';
+  if (FLOATING_CHAT.open) {
+    _updateFloatingChatModel();
+    document.getElementById('floatingChatInput')?.focus();
+  }
+}
+
+window.toggleFloatingChat = toggleFloatingChat;
+
+/* Personnaliser l'avatar */
+function customizeChatbotAvatar() {
+  const emojis = ['🤖','🦊','🐱','🐶','🦉','🐼','🦄','👾','🧙','🦸','🧑‍💼','🕵️'];
+  const defaultAvatar = FLOATING_CHAT.avatar;
+  
+  // Créer un petit panneau de sélection d'emoji
+  let panel = document.getElementById('floatingEmojiPicker');
+  if (panel) { panel.remove(); return; }
+  
+  panel = document.createElement('div');
+  panel.id = 'floatingEmojiPicker';
+  panel.style.cssText = 'position:fixed;bottom:160px;right:24px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:10px;display:flex;flex-wrap:wrap;gap:6px;z-index:10000;width:240px;';
+  panel.innerHTML = `
+    <div style="width:100%;font-size:.75rem;font-weight:600;color:#64748B;margin-bottom:4px;padding:0 4px;">
+      Choisis un avatar
+      <input type="text" id="floatingChatNameInput" placeholder="Nom personnalisé" style="width:100%;margin-top:6px;padding:4px 8px;border:1px solid #E2E8F0;border-radius:6px;font-size:.75rem;font-family:inherit" value="${esc(FLOATING_CHAT.name)}" />
+    </div>
+    ${emojis.map(e => `<button class="floating-emoji-opt${FLOATING_CHAT.avatar===e?' selected':''}" style="font-size:24px;width:40px;height:40px;border-radius:8px;border:${FLOATING_CHAT.avatar===e?'2px solid #6366F1':'1px solid #E2E8F0'};background:${FLOATING_CHAT.avatar===e?'#EEF2FF':'#fff'};cursor:pointer;display:flex;align-items:center;justify-content:center">${e}</button>`).join('')}
+  `;
+
+  panel.querySelectorAll('.floating-emoji-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const emoji = btn.textContent.trim();
+      FLOATING_CHAT.avatar = emoji;
+      localStorage.setItem('wv_chatbot_avatar', emoji);
+      _applyFloatingChatAppearance();
+      panel.remove();
+    });
+  });
+
+  const nameInput = panel.querySelector('#floatingChatNameInput');
+  nameInput?.addEventListener('change', () => {
+    const name = nameInput.value.trim() || 'Assistant CR Master';
+    FLOATING_CHAT.name = name;
+    localStorage.setItem('wv_chatbot_name', name);
+    _applyFloatingChatAppearance();
+  });
+
+  document.body.appendChild(panel);
+  
+  // Fermer au clic extérieur
+  setTimeout(() => {
+    const close = (e) => {
+      if (!panel.contains(e.target) && e.target.closest('#floatingChatbot') === null) {
+        panel.remove();
+        document.removeEventListener('click', close);
+      }
+    };
+    document.addEventListener('click', close);
+  }, 100);
+}
+
+window.customizeChatbotAvatar = customizeChatbotAvatar;
+
+function _applyFloatingChatAppearance() {
+  const avatarEl = document.getElementById('floatingChatAvatar');
+  const nameEl   = document.getElementById('floatingChatName');
+  if (avatarEl) avatarEl.textContent = FLOATING_CHAT.avatar;
+  if (nameEl) nameEl.textContent = FLOATING_CHAT.name;
+}
+
+function _updateFloatingChatModel() {
+  const el = document.getElementById('floatingChatModel');
+  if (!el) return;
+  const modelId = (window.AI?.currentModel) || (window.AI?.defaultModel) || '—';
+  const shortName = modelId.split('/').pop() || modelId;
+  el.textContent = shortName;
+}
+
+/* Envoyer un message dans le chatbot flottant */
+async function floatingChatSend() {
+  if (FLOATING_CHAT.running) return;
+  const input = document.getElementById('floatingChatInput');
+  const question = input?.value?.trim();
+  if (!question) return;
+
+  if (!window.AI || !window.AI.configured) {
+    _addFloatingMessage('assistant', '⚠️ L\'IA n\'est pas configurée. Contactez votre administrateur.');
+    return;
+  }
+
+  FLOATING_CHAT.running = true;
+  if (input) { input.value = ''; input.style.height = 'auto'; }
+  const btn = document.getElementById('floatingChatSendBtn');
+  if (btn) btn.disabled = true;
+
+  _addFloatingMessage('user', question);
+  FLOATING_CHAT.history.push({ role: 'user', content: question });
+
+  // Construire le contexte
+  const projects = (window.STATE?.projects || []).filter(p => !p._shared);
+  const reports  = (window.STATE?.reports  || []).filter(r => r.user_id === (window.STATE?.userId || ''));
+  
+  let context = `Tu es un assistant pour l'application "CR Master". Réponds de façon concise et utile en français.\n\n`;
+  context += `Contexte utilisateur :\n`;
+  context += `- Nombre de projets : ${projects.length}\n`;
+  context += `- Nombre de CRs : ${reports.length}\n`;
+  
+  if (projects.length > 0) {
+    context += `- Projets : ${projects.map(p => p.name).join(', ')}\n`;
+  }
+  
+  if (reports.length > 0) {
+    const recent = reports.slice(0, 10);
+    context += `\nCRs récents :\n`;
+    recent.forEach(r => {
+      context += `- "${r.meeting_name || 'Sans titre'}" (${r.meeting_date || 'date inconnue'}, statut: ${r.status || 'brouillon'})\n`;
+      if (r.key_points_html) {
+        const txt = r.key_points_html.replace(/<[^>]+>/g, '').substring(0, 200);
+        context += `  Points clés : ${txt}...\n`;
+      }
+    });
+  }
+
+  context += `\nQuestion de l'utilisateur : ${question}\n\nRéponse :`;
+
+  try {
+    const model = window.AI.currentModel || window.AI.defaultModel;
+    const msgs = document.getElementById('floatingChatMessages');
+    
+    // Bulle assistant avec typing
+    const asstDiv = document.createElement('div');
+    asstDiv.style.alignSelf = 'flex-start';
+    asstDiv.style.maxWidth = '85%';
+    asstDiv.innerHTML = `<div class="floating-chat-typing"><span></span><span></span><span></span></div>`;
+    msgs.appendChild(asstDiv);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    const full = await (window.aiCallStream || aiCallStream)({
+      model,
+      messages: [
+        { role: 'system', content: context },
+        ...FLOATING_CHAT.history.slice(-6)
+      ],
+      onChunk: (partial) => {
+        asstDiv.innerHTML = '';
+        const bubble = _createFloatingBubble(partial);
+        asstDiv.appendChild(bubble);
+        msgs.scrollTop = msgs.scrollHeight;
+      },
+    });
+
+    asstDiv.innerHTML = '';
+    const bubble = _createFloatingBubble(full);
+    asstDiv.appendChild(bubble);
+
+    // Bouton copier
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.style.cssText = 'margin-top:4px;font-size:.68rem;color:#64748B;background:none;border:none;cursor:pointer;padding:2px 6px;';
+    copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copier';
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(full).then(() => {
+        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copié !';
+        setTimeout(() => { copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copier'; }, 1500);
+      });
+    });
+    asstDiv.appendChild(copyBtn);
+
+    FLOATING_CHAT.history.push({ role: 'assistant', content: full });
+    msgs.scrollTop = msgs.scrollHeight;
+
+  } catch (e) {
+    _addFloatingMessage('assistant', '❌ Erreur : ' + (e.message || 'inconnue'));
+    FLOATING_CHAT.history.pop();
+  } finally {
+    FLOATING_CHAT.running = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+window.floatingChatSend = floatingChatSend;
+
+function _addFloatingMessage(role, content) {
+  const msgs = document.getElementById('floatingChatMessages');
+  if (!msgs) return;
+  const div = document.createElement('div');
+  div.className = `floating-chat-bubble floating-chat-bubble--${role}`;
+  if (role === 'assistant') {
+    div.innerHTML = _renderMarkdownLite(content);
+  } else {
+    div.textContent = content;
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function _createFloatingBubble(content) {
+  const bubble = document.createElement('div');
+  bubble.className = 'floating-chat-bubble floating-chat-bubble--assistant';
+  bubble.innerHTML = _renderMarkdownLite(content);
+  return bubble;
+}
+
+/* Initialisation au chargement */
+document.addEventListener('DOMContentLoaded', () => {
+  _applyFloatingChatAppearance();
+
+  // Click bouton flottant → ouvrir/fermer
+  const btn = document.getElementById('floatingChatbot');
+  if (btn) btn.addEventListener('click', toggleFloatingChat);
+
+  // Envoyer avec Entrée
+  const input = document.getElementById('floatingChatInput');
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        floatingChatSend();
+      }
+    });
+  }
+
+  // Bouton envoyer
+  const sendBtn = document.getElementById('floatingChatSendBtn');
+  if (sendBtn) sendBtn.addEventListener('click', floatingChatSend);
+
+  // Suggestions cliquables
+  document.getElementById('floatingChatMessages')?.addEventListener('click', (e) => {
+    const sugg = e.target.closest('.floating-chat-suggestion');
+    if (!sugg) return;
+    const q = sugg.getAttribute('data-suggest') || '';
+    const inp = document.getElementById('floatingChatInput');
+    if (inp) inp.value = q;
+    floatingChatSend();
+  });
+});
