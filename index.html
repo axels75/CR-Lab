@@ -2288,7 +2288,7 @@
 <!-- Bouton flottant animé -->
 <div id="floatingChatbot" class="floating-chatbot" title="Assistant IA — Poser une question" onclick="(function(){var p=document.getElementById('floatingChatPanel');var o=p.style.display==='flex';p.style.display=o?'none':'flex';if(!o){var m=document.getElementById('floatingChatModel');if(m&&window.AI){m.textContent=(window.AI.currentModel||window.AI.defaultModel||'').split('/').pop()||'—'}document.getElementById('floatingChatInput')?.focus()}})()">
   <div class="floating-chatbot-icon">
-    <span class="floating-chatbot-emoji">🦊</span>
+    <span class="floating-chatbot-emoji" id="floatingChatButtonEmoji">🤖</span>
   </div>
   <div class="floating-chatbot-pulse"></div>
 </div>
@@ -2314,7 +2314,7 @@
   </div>
   <div class="floating-chat-messages" id="floatingChatMessages">
     <div class="floating-chat-welcome">
-      <div class="floating-chat-welcome-icon">🤖</div>
+      <div class="floating-chat-welcome-icon" id="floatingChatWelcomeIcon">🤖</div>
       <h4>Bonjour ! 👋</h4>
       <p>Je suis votre assistant. Posez-moi des questions sur vos comptes-rendus, vos projets, ou votre espace de travail.</p>
       <div class="floating-chat-suggestions">

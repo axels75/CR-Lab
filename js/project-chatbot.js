@@ -481,10 +481,15 @@ function customizeChatbotAvatar() {
 window.customizeChatbotAvatar = customizeChatbotAvatar;
 
 function _applyFloatingChatAppearance() {
-  const avatarEl = document.getElementById('floatingChatAvatar');
-  const nameEl   = document.getElementById('floatingChatName');
-  if (avatarEl) avatarEl.textContent = FLOATING_CHAT.avatar;
-  if (nameEl) nameEl.textContent = FLOATING_CHAT.name;
+  const avatarEl     = document.getElementById('floatingChatAvatar');
+  const nameEl       = document.getElementById('floatingChatName');
+  const welcomeIcon  = document.getElementById('floatingChatWelcomeIcon');
+  const buttonEmoji  = document.getElementById('floatingChatButtonEmoji');
+
+  if (avatarEl)    avatarEl.textContent    = FLOATING_CHAT.avatar;
+  if (nameEl)      nameEl.textContent      = FLOATING_CHAT.name;
+  if (welcomeIcon) welcomeIcon.textContent = FLOATING_CHAT.avatar;
+  if (buttonEmoji) buttonEmoji.textContent = FLOATING_CHAT.avatar;
 }
 
 function _updateFloatingChatModel() {

@@ -7152,9 +7152,31 @@ body.ui-loading {
 }
 
 .floating-chat-welcome-icon {
-  font-size: 48px;
-  margin-bottom: 10px;
-  animation: chatbot-bounce 2s ease-in-out infinite;
+  font-size: 72px;
+  margin-bottom: 12px;
+  animation: chatbot-bounce-3d 2.5s ease-in-out infinite;
+  /* Effet 3D par ombres superposées */
+  text-shadow:
+    0 1px 0 #ccc,
+    0 2px 0 #c9c9c9,
+    0 3px 0 #bbb,
+    0 4px 0 #b9b9b9,
+    0 5px 0 #aaa,
+    0 6px 1px rgba(0,0,0,.1),
+    0 0 5px rgba(0,0,0,.1),
+    0 1px 3px rgba(0,0,0,.3),
+    0 3px 5px rgba(0,0,0,.2),
+    0 5px 10px rgba(0,0,0,.15);
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.18));
+  cursor: default;
+  user-select: none;
+}
+
+@keyframes chatbot-bounce-3d {
+  0%, 100% { transform: translateY(0) rotateY(0deg); }
+  25%      { transform: translateY(-6px) rotateY(3deg); }
+  50%      { transform: translateY(0) rotateY(0deg); }
+  75%      { transform: translateY(-3px) rotateY(-3deg); }
 }
 
 .floating-chat-welcome h4 {
