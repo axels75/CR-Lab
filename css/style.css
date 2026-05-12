@@ -6828,6 +6828,61 @@ body.ui-loading {
   color: var(--gray-400);
 }
 
+/* ═══════════════════════════════════════════════════
+   FOLDER BADGE ON CR CARDS
+   ═══════════════════════════════════════════════════ */
+.cr-folder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: .72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #EEF2FF;
+  color: #4338CA;
+  border: 1px solid #C7D2FE;
+  margin-right: 4px;
+}
+
+.cr-folder-badge i { font-size: .65rem; }
+
+.cr-folder-badge--empty {
+  background: #F8FAFC;
+  color: #94A3B8;
+  border: 1px dashed #CBD5E1;
+  font-style: italic;
+}
+
+.dark-mode .cr-folder-badge {
+  background: rgba(99,102,241,.15);
+  color: #A5B4FC;
+  border-color: rgba(165,180,252,.25);
+}
+
+.dark-mode .cr-folder-badge--empty {
+  background: rgba(148,163,184,.1);
+  color: #64748B;
+  border-color: rgba(148,163,184,.2);
+}
+
+/* ═══════════════════════════════════════════════════
+   FOLDER HINT (quand aucun dossier)
+   ═══════════════════════════════════════════════════ */
+.folder-filter-hint {
+  font-size: .78rem;
+  color: var(--gray-400);
+  font-style: italic;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dark-mode .folder-filter-hint {
+  color: var(--gray-500);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .folder-filter-bar {

@@ -288,9 +288,15 @@ async function fetchReports() {
     );
     // Garder les CRs partagés déjà chargés
     const shared = STATE.reports.filter(r => r._shared);
+    // Préserver le cache local si l'API retourne une liste vide (évite le flash "disparition")
+    if (myReports.length === 0 && STATE.reports.length > 0) {
+      console.warn('[CR Master] fetchReports returned empty, keeping local cache');
+      return;
+    }
     STATE.reports = [...myReports, ...shared];
   } catch(e) {
     console.warn('[CR Master] fetchReports failed:', e.message);
+    // Ne pas écraser le cache local en cas d'échec réseau
     STATE.reports = STATE.reports || [];
   }
 }
@@ -1129,7 +1135,12 @@ async function showProjectCRs(pid) {
           <i class="fa-solid fa-plus"></i> Nouveau CR
         </button></div>`;
     } else {
-      container.innerHTML = reports.map(cr => `
+      container.innerHTML = reports.map(cr => {
+        const folderName = (cr.folder || '').trim();
+        const folderBadge = folderName
+          ? `<span class="cr-folder-badge" title="Dossier : ${esc(folderName)}"><i class="fa-solid fa-folder"></i> ${esc(folderName)}</span>`
+          : `<span class="cr-folder-badge cr-folder-badge--empty" title="Aucun dossier assigné"><i class="fa-solid fa-folder-open"></i> Sans dossier</span>`;
+        return `
         <div class="cr-card">
           <div class="cr-card-icon" style="background:${project.color||'#002D72'}" onclick="openReport('${cr.id}','${pid}')">
             <i class="fa-solid fa-file-lines"></i>
@@ -1144,6 +1155,7 @@ async function showProjectCRs(pid) {
             </div>
           </div>
           <div class="cr-card-actions">
+            ${folderBadge}
             <span class="status-badge ${cr.status||'draft'}">${labelStatus(cr.status)}</span>
             <button class="btn-icon edit" title="Modifier" onclick="openReport('${cr.id}','${pid}')">
               <i class="fa-solid fa-pencil"></i>
@@ -1155,7 +1167,7 @@ async function showProjectCRs(pid) {
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
-        </div>`).join('');
+        </div>`}).join('');
     }
   };
 
@@ -1191,6 +1203,7 @@ async function showProjectCRs(pid) {
     await fetchReports();
     if (typeof fetchSharedReports === 'function') await fetchSharedReports();
     _renderProjectCRList();
+    renderFolderFilterBar(pid);  // Réappliquer le filtre dossier actif après refresh
   } catch (e) { /* non bloquant */ }
   } catch(e) {
     console.error('[CR Master] showProjectCRs failed:', e);
@@ -1483,9 +1496,12 @@ function _participantColor(name) {
 
 function collectParticipants() {
   return Array.from(document.querySelectorAll('.participant-row')).map(row => {
-    const name    = row.querySelector('[data-field="name"]').value.trim();
-    const company = row.querySelector('[data-field="company"]').value.trim();
-    const role    = row.querySelector('[data-field="role"]').value.trim();
+    const nameEl  = row.querySelector('[data-field="name"]');
+    const compEl  = row.querySelector('[data-field="company"]');
+    const roleEl  = row.querySelector('[data-field="role"]');
+    const name    = nameEl?.value?.trim() || '';
+    const company = compEl?.value?.trim() || '';
+    const role    = roleEl?.value?.trim() || '';
     const wrap    = row.querySelector('.participant-row-avatar-wrap');
     // Récupérer la photo : depuis le wrap (data-photo), ou depuis le profil enregistré
     const profile = findParticipantProfile(name);
@@ -1594,14 +1610,14 @@ function _buildCRPayload() {
 
 async function saveCR(e) {
   if (e && e.preventDefault) e.preventDefault();
-  const payload = _buildCRPayload();
-  if (!payload._meta.mission_required) {
-    showToast(t('mission_required'),'error');
-    return;
-  }
-  delete payload._meta;
 
   try {
+    const payload = _buildCRPayload();
+    if (!payload._meta.mission_required) {
+      showToast(t('mission_required'),'error');
+      return;
+    }
+    delete payload._meta;
     let saved;
     if (STATE.currentReportId) {
       saved = await apiPut('meeting_reports', STATE.currentReportId, payload);
@@ -2687,7 +2703,8 @@ function renderFolderFilterBar(projectId) {
   )].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
 
   if (folders.length === 0) {
-    bar.style.display = 'none';
+    bar.style.display = 'flex';
+    pills.innerHTML = `<span class="folder-filter-hint"><i class="fa-solid fa-folder-plus"></i> Ouvrez un CR et remplissez le champ "Dossier" pour organiser vos comptes-rendus (ex&nbsp;: Ateliers, COPIL, Entretiens…)</span>`;
     return;
   }
 
