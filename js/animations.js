@@ -79,12 +79,28 @@ function animateEditor() {
   if (!_motionReady) return;
   try {
     const secs = document.querySelectorAll('.form-section');
-    if (!secs.length) return;
-    secs.forEach(s => { s.style.opacity = '1'; s.style.transform = 'none'; });
-    _animate(secs, { opacity: [0, 1], y: [15, 0] },
-      { delay: _stagger(0.05), duration: 0.4, easing: 'ease-out' });
+    if (secs.length) {
+      secs.forEach(s => { s.style.opacity = '1'; s.style.transform = 'none'; });
+      _animate(secs,
+        { opacity: [0, 1], y: [20, 0], scale: [0.98, 1] },
+        { delay: _stagger(0.07), duration: 0.5,
+          easing: _spring({ stiffness: 280, damping: 22 }) }
+      );
+    }
   } catch (e) {
     console.debug('[Animations] editor skipped:', e.message);
+  }
+  animateExportBar();
+}
+
+function animateExportBar() {
+  if (!_motionReady) return;
+  try {
+    const bar = document.querySelector('.export-bar');
+    if (!bar) return;
+    _animate(bar, { opacity: [0, 1], y: [12, 0] }, { duration: 0.35, easing: 'ease-out' });
+  } catch (e) {
+    console.debug('[Animations] export-bar skipped:', e.message);
   }
 }
 

@@ -47,7 +47,6 @@ function buildCRData() {
   const activeTemplate = STATE._activeTemplate || {};
   const templateMeta   = activeTemplate.config?.__template_meta || {};
   const templateColor  = activeTemplate.color || templateMeta.color || '';
-  const templateName   = activeTemplate.name || templateMeta.name || '';
   const primaryColor   = settings.primaryColor || '#002D72';
   const accentColor    = templateColor || settings.accentColor || '#E8007D';
   const orgName      = settings.orgName       || 'Wavestone';
@@ -197,7 +196,7 @@ function buildCRData() {
   });
 
   return {
-    primaryColor, accentColor, templateColor, templateName, orgName, fontFamily, fontSize, logoSrc,
+    primaryColor, accentColor, templateColor, orgName, fontFamily, fontSize, logoSrc,
     mission, meeting, date, location, facilitator, author, status,
     participants, actions, keyPointsHTML,
     // Layout actif pour key points

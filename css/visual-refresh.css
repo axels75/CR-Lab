@@ -1,4 +1,4 @@
-orts/* =====================================================
+/* =====================================================
    WAVESTONE CR MASTER — LIFTING VISUEL 2026
    Surcouche sur style.css : modernisation des ombres,
    bordures, typographie, micro-interactions et densité.
@@ -37,6 +37,21 @@ orts/* =====================================================
   /* Focus ring unifié */
   --focus-ring:       0 0 0 3px rgba(0, 45, 114, .18);
   --focus-ring-accent:0 0 0 3px rgba(232, 0, 125, .22);
+
+  /* ── Neumorphisme light (zone contenu) ── */
+  --neu-base:          #E8ECF1;
+  --neu-shadow-dark:   rgba(163, 177, 198, 0.6);
+  --neu-shadow-light:  rgba(255, 255, 255, 0.8);
+  --neu-raised:        6px 6px 16px var(--neu-shadow-dark), -6px -6px 16px var(--neu-shadow-light);
+  --neu-inset:         inset 4px 4px 10px var(--neu-shadow-dark), inset -4px -4px 10px var(--neu-shadow-light);
+  --neu-flat:          3px 3px 8px var(--neu-shadow-dark), -3px -3px 8px var(--neu-shadow-light);
+  --neu-transition:    box-shadow .22s var(--ease-out), transform .18s var(--ease-out);
+
+  /* ── Neumorphisme dark (sidebar) ── */
+  --neu-dark-shadow:   rgba(0, 12, 36, 0.7);
+  --neu-dark-light:    rgba(0, 55, 120, 0.4);
+  --neu-dark-raised:   4px 4px 12px var(--neu-dark-shadow), -4px -4px 12px var(--neu-dark-light);
+  --neu-dark-inset:    inset 3px 3px 8px var(--neu-dark-shadow), inset -3px -3px 8px var(--neu-dark-light);
 }
 
 /* =====================================================
@@ -1379,4 +1394,255 @@ body {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* =====================================================
+   26. NEUMORPHISME TOTAL — LIFTING 2026-05
+   Approche A : light (contenu) + dark (sidebar)
+   Vient en DERNIER pour écraser les sections précédentes.
+   ===================================================== */
+
+/* ── Fond global ── */
+body {
+  background: var(--neu-base) !important;
+  color: var(--ink);
+}
+
+.content-area {
+  background: var(--neu-base) !important;
+  background-image: none !important;
+}
+
+/* ── Sections formulaire : sortent de la surface ── */
+.form-section {
+  background: var(--neu-base) !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: var(--neu-raised) !important;
+  transition: var(--neu-transition) !important;
+}
+
+.form-section:hover {
+  box-shadow: 8px 8px 20px var(--neu-shadow-dark), -8px -8px 20px var(--neu-shadow-light) !important;
+}
+
+.section-header {
+  background: transparent !important;
+  border-bottom: none !important;
+}
+
+/* Icône de section : ressort de la surface */
+.section-icon {
+  background: var(--neu-base) !important;
+  color: var(--primary) !important;
+  box-shadow: var(--neu-raised) !important;
+  transition: var(--neu-transition) !important;
+}
+
+/* ── Inputs & éditeurs : s'enfoncent dans la surface ── */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: var(--neu-base) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: var(--neu-inset) !important;
+  transition: var(--neu-transition) !important;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  box-shadow: var(--neu-inset), 0 0 0 2px rgba(0, 45, 114, .25) !important;
+  outline: none !important;
+}
+
+.ql-toolbar {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: inset 2px 2px 6px var(--neu-shadow-dark), inset -2px -2px 6px var(--neu-shadow-light) !important;
+  border-radius: 10px 10px 0 0 !important;
+}
+
+.ql-container {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-inset) !important;
+  border-radius: 0 0 10px 10px !important;
+  transition: var(--neu-transition) !important;
+}
+
+.ql-container.ql-snow:focus-within {
+  box-shadow: var(--neu-inset), 0 0 0 2px rgba(0, 45, 114, .2) !important;
+}
+
+/* ── Barre d'export ── */
+.export-bar {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-raised) !important;
+  transition: var(--neu-transition) !important;
+}
+
+.btn-export {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-flat) !important;
+  transition: var(--neu-transition) !important;
+}
+
+.btn-export:hover {
+  box-shadow: var(--neu-raised) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-export:active {
+  box-shadow: var(--neu-inset) !important;
+  transform: translateY(0) !important;
+}
+
+.btn-email  { color: #B0004E !important; }
+.btn-word   { color: #00245A !important; }
+.btn-pdf    { color: #B91C1C !important; }
+
+/* ── Modales ── */
+.modal {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-raised), 0 25px 50px rgba(0, 0, 0, .15) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(163, 177, 198, .35) !important;
+}
+
+/* ── Pulse focus (btn-new-cr) ── */
+@keyframes neu-pulse {
+  0%, 100% { box-shadow: var(--neu-dark-raised); }
+  50%       { box-shadow: 6px 6px 18px rgba(0, 12, 36, 0.85), -4px -4px 14px rgba(0, 55, 120, 0.55); }
+}
+
+/* =====================================================
+   26B. DARK NEUMORPHISME — SIDEBAR
+   ===================================================== */
+
+.sidebar {
+  border-right: none !important;
+  box-shadow: var(--neu-dark-raised), 4px 0 20px rgba(0, 0, 0, .3) !important;
+}
+
+.sidebar-header {
+  background: rgba(0, 0, 0, .2) !important;
+  border-bottom: none !important;
+  box-shadow: var(--neu-dark-inset) !important;
+}
+
+/* Bouton Nouveau CR */
+.btn-new-cr {
+  box-shadow: var(--neu-dark-raised) !important;
+  border: none !important;
+  transition: var(--neu-transition) !important;
+}
+
+.btn-new-cr:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 6px 6px 18px rgba(0, 12, 36, .85), -4px -4px 12px rgba(0, 55, 120, .55) !important;
+}
+
+.btn-new-cr:active {
+  transform: translateY(0) !important;
+  box-shadow: var(--neu-dark-inset) !important;
+}
+
+.btn-new-cr:focus-visible {
+  animation: neu-pulse 1.4s ease-in-out infinite !important;
+}
+
+/* Items de navigation : hover → sortent, active → s'enfoncent */
+.cr-item,
+.project-header {
+  transition: var(--neu-transition), color .15s !important;
+  border-radius: 8px !important;
+}
+
+.cr-item:hover,
+.project-header:hover {
+  background: transparent !important;
+  box-shadow: var(--neu-dark-raised) !important;
+}
+
+.cr-item.active,
+.project-header.active {
+  background: transparent !important;
+  box-shadow: var(--neu-dark-inset) !important;
+}
+
+/* Champ de recherche sidebar */
+.sidebar-search input,
+#sidebarSearch {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: var(--neu-dark-inset) !important;
+  border-radius: 8px !important;
+  transition: var(--neu-transition) !important;
+}
+
+/* ── Dark mode : adapte le neumorphisme light ── */
+.dark-mode body {
+  background: #1A2235 !important;
+}
+
+.dark-mode .content-area {
+  background: #1A2235 !important;
+  background-image: none !important;
+}
+
+.dark-mode .form-section {
+  background: #1E2A3D !important;
+  box-shadow: 6px 6px 16px rgba(0, 0, 0, .45), -6px -6px 16px rgba(255, 255, 255, .04) !important;
+}
+
+.dark-mode .section-icon {
+  background: #1E2A3D !important;
+  color: #93B4F5 !important;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, .5), -4px -4px 10px rgba(255, 255, 255, .04) !important;
+}
+
+.dark-mode .form-group input,
+.dark-mode .form-group select,
+.dark-mode .form-group textarea {
+  background: #1A2235 !important;
+  box-shadow: inset 4px 4px 10px rgba(0, 0, 0, .5), inset -4px -4px 10px rgba(255, 255, 255, .03) !important;
+  color: #E2E8F0 !important;
+}
+
+.dark-mode .export-bar {
+  background: #1E2A3D !important;
+  box-shadow: 6px 6px 16px rgba(0, 0, 0, .5), -6px -6px 16px rgba(255, 255, 255, .04) !important;
+  border: none !important;
+}
+
+.dark-mode .btn-export {
+  background: #1E2A3D !important;
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, .45), -3px -3px 8px rgba(255, 255, 255, .04) !important;
+  color: #E2E8F0 !important;
+}
+
+.dark-mode .btn-export:hover {
+  box-shadow: 5px 5px 14px rgba(0, 0, 0, .55), -5px -5px 14px rgba(255, 255, 255, .05) !important;
+}
+
+.dark-mode .btn-export:active {
+  box-shadow: inset 4px 4px 10px rgba(0, 0, 0, .55), inset -4px -4px 10px rgba(255, 255, 255, .04) !important;
+}
+
+.dark-mode .modal {
+  background: #1E2A3D !important;
+  box-shadow: 6px 6px 20px rgba(0, 0, 0, .6), -6px -6px 20px rgba(255, 255, 255, .04), 0 25px 50px rgba(0, 0, 0, .4) !important;
+}
+
+.dark-mode .ql-toolbar,
+.dark-mode .ql-container {
+  background: #1A2235 !important;
+  box-shadow: inset 4px 4px 10px rgba(0, 0, 0, .5), inset -4px -4px 10px rgba(255, 255, 255, .03) !important;
 }
