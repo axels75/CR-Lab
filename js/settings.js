@@ -122,19 +122,11 @@ function _adaptLogo(mode) {
 function _applyProjectLogo(project) {
   const logo = document.getElementById('sidebarLogo');
   if (!logo) return;
-  if (project && project.template_logo) {
-    logo.src = project.template_logo;
-    logo.style.filter = 'none';
-    // ⚠️ On ne sauvegarde PAS le logo projet dans wv_logo (global).
-    // On le garde dans wv_logo_project pour ne pas écraser le logo
-    // personnalisé par l'utilisateur.
-    try { localStorage.setItem('wv_logo_project', project.template_logo); } catch {}
-  } else {
-    // Revenir au logo global ou au défaut Wavestone
-    logo.src = localStorage.getItem('wv_logo') || 'images/wavestone-logo.png';
-    logo.style.filter = 'none';
-    try { localStorage.removeItem('wv_logo_project'); } catch {}
-  }
+  // Le shell applicatif garde toujours le logo Wavestone par défaut.
+  // Ni le logo projet (template_logo) ni le logo custom (wv_logo)
+  // ne remplacent la marque Wavestone dans la sidebar.
+  logo.src = 'images/wavestone-logo.png';
+  logo.style.filter = 'none';
 }
 
 /* ══════════════════════════════════════════════════════════════════════

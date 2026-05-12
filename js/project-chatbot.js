@@ -494,20 +494,12 @@ function _updateFloatingChatModel() {
   const shortName = modelId.split('/').pop() || modelId;
   el.textContent = shortName;
 
-  // Synchroniser l'avatar avec le logo personnalisé (wv_logo)
+  // L'avatar du chatbot garde toujours l'emoji par défaut (pas de logo entreprise)
   const avatarEl = document.getElementById('floatingChatAvatar');
   if (avatarEl) {
-    const customLogo = localStorage.getItem('wv_logo');
-    if (customLogo && customLogo.startsWith('data:image')) {
-      // Logo image uploadé → l'afficher dans l'avatar du chatbot
-      avatarEl.innerHTML = `<img src="${customLogo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Logo" />`;
-      avatarEl.style.background = 'transparent';
-    } else {
-      // Sinon, garder l'emoji avatar
-      avatarEl.innerHTML = '';
-      avatarEl.textContent = FLOATING_CHAT.avatar;
-      avatarEl.style.background = '';
-    }
+    avatarEl.innerHTML = '';
+    avatarEl.textContent = FLOATING_CHAT.avatar;
+    avatarEl.style.background = '';
   }
 }
 

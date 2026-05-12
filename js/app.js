@@ -353,36 +353,8 @@ async function loadLogo() {
   const sidebarLogo = document.getElementById('sidebarLogo');
   if (!sidebarLogo) return;
 
-  // Priorité 1 : logo du projet courant
-  if (STATE.currentProjectId && STATE.projects) {
-    const proj = STATE.projects.find(p => p.id === STATE.currentProjectId);
-    if (proj && proj.template_logo && proj.template_logo.startsWith('data:')) {
-      sidebarLogo.src = proj.template_logo;
-      sidebarLogo.style.filter = 'none';
-      sidebarLogo.style.mixBlendMode = 'normal';
-      return;
-    }
-  }
-
-  // Priorité 2 : logo projet sauvegardé (wv_logo_project)
-  const projectLogo = localStorage.getItem('wv_logo_project');
-  if (projectLogo && projectLogo.startsWith('data:')) {
-    sidebarLogo.src = projectLogo;
-    sidebarLogo.style.filter = 'none';
-    sidebarLogo.style.mixBlendMode = 'normal';
-    return;
-  }
-
-  // Priorité 3 : logo global custom (wv_logo)
-  const savedLogo = localStorage.getItem('wv_logo');
-  if (savedLogo && savedLogo.startsWith('data:')) {
-    sidebarLogo.src = savedLogo;
-    sidebarLogo.style.filter = 'none';
-    sidebarLogo.style.mixBlendMode = 'normal';
-    return;
-  }
-
-  // Priorité 4 : logo Wavestone par défaut
+  // Logo Wavestone par défaut (le shell applicatif garde toujours la marque Wavestone)
+  // Le logo projet/client n'est utilisé que dans les exports (email/PDF/Word).
   sidebarLogo.src            = 'images/wavestone-logo.png';
   sidebarLogo.style.filter   = 'none';
   sidebarLogo.style.mixBlendMode = 'normal';
