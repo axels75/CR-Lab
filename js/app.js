@@ -591,6 +591,33 @@ function updateAvatarPreview() {
    SIDEBAR RENDER
    ===================================================== */
 function renderSidebar() {
+  _renderSidebarDebounced(0); // immédiat
+}
+
+/* Version debounced de renderSidebar pour éviter les flashs
+   quand plusieurs appels sont déclenchés en rafale (ex: saveCR
+   suivi d'un polling collab). */
+const _SIDEBAR_DEBOUNCE = { timer: null, pending: false };
+function _renderSidebarDebounced(delayMs) {
+  const d = (delayMs != null) ? delayMs : 150;
+  if (d === 0) {
+    clearTimeout(_SIDEBAR_DEBOUNCE.timer);
+    _SIDEBAR_DEBOUNCE.timer = null;
+    _SIDEBAR_DEBOUNCE.pending = false;
+    _doRenderSidebar();
+    return;
+  }
+  if (_SIDEBAR_DEBOUNCE.pending) return;
+  _SIDEBAR_DEBOUNCE.pending = true;
+  clearTimeout(_SIDEBAR_DEBOUNCE.timer);
+  _SIDEBAR_DEBOUNCE.timer = setTimeout(() => {
+    _SIDEBAR_DEBOUNCE.timer = null;
+    _SIDEBAR_DEBOUNCE.pending = false;
+    _doRenderSidebar();
+  }, d);
+}
+
+function _doRenderSidebar() {
   const container = document.getElementById('projectsList');
   container.innerHTML = '';
   const search = document.getElementById('searchInput').value.toLowerCase();
@@ -1649,8 +1676,9 @@ async function saveCR(e) {
     } else {
       STATE.reports.push(saved);
     }
-    renderSidebar();
-    renderDashboard();
+    // Mise à jour légère de la sidebar uniquement (pas de renderDashboard
+    // qui reconstruirait toute la grille inutilement depuis l'éditeur).
+    _renderSidebarDebounced();
     document.getElementById('exportBar').style.display = 'flex';
     showToast(t('cr_saved'), 'success');
     const project = STATE.projects.find(p => p.id === STATE.currentProjectId);
@@ -1690,7 +1718,7 @@ function cancelAutoSave() {
   AUTOSAVE.timer  = null;
   AUTOSAVE.queued = false;
   const el = document.getElementById('autoSaveIndicator');
-  if (el) el.style.display = 'none';
+  if (el) { el.style.visibility = 'hidden'; el.style.height = '0'; }
 }
 window.cancelAutoSave = cancelAutoSave;
 
@@ -1763,7 +1791,10 @@ function _setAutoSaveIndicator(state) {
   const el = document.getElementById('autoSaveIndicator');
   if (!el) return;
   el.classList.remove('saving','saved','error','dirty');
-  el.style.display = 'inline-flex';
+  // Utiliser visibility + height fixe au lieu de display:none
+  // pour éviter les reflows (micro-rafraîchissements) à chaque cycle.
+  el.style.visibility = 'visible';
+  el.style.height = 'auto';
   if (state === 'dirty') {
     el.classList.add('saving');
     el.innerHTML = '<i class="fa-solid fa-pen"></i> <span>Modifications non enregistrées</span>';
@@ -1773,7 +1804,12 @@ function _setAutoSaveIndicator(state) {
   } else if (state === 'saved') {
     el.classList.add('saved');
     el.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> <span>Enregistré</span>';
-    setTimeout(() => { if (el) el.style.display = 'none'; }, 2500);
+    setTimeout(() => {
+      if (el) {
+        el.style.visibility = 'hidden';
+        el.style.height = '0';
+      }
+    }, 2500);
   } else if (state === 'error') {
     el.classList.add('error');
     el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Erreur d\'enregistrement</span>';
@@ -2608,7 +2644,12 @@ function bindEvents() {
   document.getElementById('sidebarLogo')?.addEventListener('click', () => goToDashboard());
 
   // Recherche (bindé ici pour garantir que le DOM est prêt)
-  document.getElementById('searchInput')?.addEventListener('input', () => renderSidebar());
+  // Recherche sidebar avec debounce (évite rebuild DOM à chaque frappe)
+  let _searchTimer = null;
+  document.getElementById('searchInput')?.addEventListener('input', () => {
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(() => renderSidebar(), 200);
+  });
 
   // Import file
   document.getElementById('fileImportInput').addEventListener('change', e => {

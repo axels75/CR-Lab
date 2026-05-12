@@ -1114,6 +1114,12 @@ body {
 #viewEditor .form-save-bar #presenceIndicator {
   margin-left: auto;
 }
+/* Empêche les micro-rafraîchissements : hauteur fixe même quand invisible */
+#autoSaveIndicator {
+  line-height: 1.4;
+  min-height: 1.4em;
+  overflow: hidden;
+}
 
 /* Quill overrides */
 .ql-container { border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important; border-color: var(--gray-200) !important; font-family: var(--font) !important; font-size: .9rem !important; }

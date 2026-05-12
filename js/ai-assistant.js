@@ -48,18 +48,21 @@ async function aiInit() {
 
       // Si le modèle mémorisé n'existe PLUS dans le catalogue (modèle
       // déprécié côté NVIDIA), on bascule sur le modèle par défaut pour
-      // éviter les erreurs 404 lors des appels.
+      // éviter les erreurs 404/410 lors des appels.
       if (AI.currentModel && AI.models.length) {
-        const stillExists = AI.models.some(m => m.id === AI.currentModel);
-        if (!stillExists) {
-          console.warn('[AI] Modèle mémorisé obsolète :', AI.currentModel, '→ fallback');
+        const match = AI.models.find(m => m.id === AI.currentModel);
+        if (!match || match.deprecated) {
+          console.warn('[AI] Modèle mémorisé obsolète ou déprécié :', AI.currentModel, '→ fallback');
           AI.currentModel = null;
           try { localStorage.removeItem('wv_ai_model'); } catch {}
         }
       }
 
       if (!AI.currentModel) {
-        const def = AI.models.find(m => m.default) || AI.models[0];
+        // Priorité au modèle marqué 'default', sinon premier non-déprécié
+        const def = AI.models.find(m => m.default && !m.deprecated)
+                 || AI.models.find(m => !m.deprecated)
+                 || AI.models[0];
         AI.currentModel = def ? def.id : AI.defaultModel;
       }
     }
@@ -107,6 +110,26 @@ async function aiCall({ system, user, model, temperature = 0.4, max_tokens = 102
       let errBody = {};
       try { errBody = await r.json(); } catch {}
       const msg = errBody.message || errBody.error || `HTTP ${r.status}`;
+
+      // Si le modèle est déprécié (410), basculer automatiquement sur le défaut
+      if (r.status === 410 || errBody.error === 'MODEL_DEPRECATED') {
+        const fallback = AI.models.find(m => m.default && !m.deprecated)?.id
+                      || AI.models.find(m => !m.deprecated)?.id
+                      || AI.defaultModel;
+        console.warn('[AI] Modèle déprécié, bascule auto vers :', fallback);
+        AI.currentModel = fallback;
+        try { localStorage.setItem('wv_ai_model', fallback); } catch {}
+        renderAiModelSelect();
+        // Relancer l'appel avec le nouveau modèle
+        AI._running = false;
+        return aiCall({
+          system, user,
+          model: fallback,
+          temperature,
+          max_tokens,
+        });
+      }
+
       throw new Error(msg);
     }
 
@@ -145,7 +168,28 @@ async function aiCallStream({ system, user, model, temperature = 0.4, max_tokens
     if (!r.ok) {
       let errBody = {};
       try { errBody = await r.json(); } catch {}
-      throw new Error(errBody.message || `HTTP ${r.status}`);
+      const msg = errBody.message || errBody.error || `HTTP ${r.status}`;
+
+      // Si le modèle est déprécié (410), basculer automatiquement
+      if (r.status === 410 || errBody.error === 'MODEL_DEPRECATED') {
+        const fallback = AI.models.find(m => m.default && !m.deprecated)?.id
+                      || AI.models.find(m => !m.deprecated)?.id
+                      || AI.defaultModel;
+        console.warn('[AI] Modèle déprécié (stream), bascule auto vers :', fallback);
+        AI.currentModel = fallback;
+        try { localStorage.setItem('wv_ai_model', fallback); } catch {}
+        renderAiModelSelect();
+        AI._running = false;
+        return aiCallStream({
+          system, user,
+          model: fallback,
+          temperature,
+          max_tokens,
+          onChunk,
+        });
+      }
+
+      throw new Error(msg);
     }
 
     const reader  = r.body.getReader();

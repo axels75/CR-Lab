@@ -65,13 +65,17 @@ var MODEL_CATALOG = [
     tags:     ['raisonnement', 'français', 'qualité'],
     use_case: 'Modèle NVIDIA optimisé pour le raisonnement et la rédaction structurée.',
   },
+  // ⚠️ llama-3.1-405b-instruct a été déprécié par NVIDIA (HTTP 410 Gone).
+  // On le garde dans le catalogue avec le flag deprecated=true pour que
+  // le client puisse detecter le modèle obsolète et basculer automatiquement.
   {
-    id:       'meta/llama-3.1-405b-instruct',
-    label:    'Llama 3.1 405B (max qualité)',
-    family:   'Meta',
-    size:     '405B',
-    tags:     ['qualité max', 'long contexte'],
-    use_case: 'Meilleure qualité possible, plus lent. À utiliser pour les CRs longs et critiques.',
+    id:         'meta/llama-3.1-405b-instruct',
+    label:      'Llama 3.1 405B (indisponible)',
+    family:     'Meta',
+    size:       '405B',
+    tags:       ['déprécié'],
+    use_case:   '⚠️ Ce modèle n\'est plus disponible sur NVIDIA NIM. Veuillez utiliser Llama 3.3 70B.',
+    deprecated: true,
   },
   {
     id:       'mistralai/mixtral-8x22b-instruct-v0.1',
@@ -151,13 +155,22 @@ export async function onRequest(context) {
   var model = body.model || 'meta/llama-3.3-70b-instruct';
 
   // Vérifier que le modèle est dans le catalogue (curé OU live)
+  // et qu'il n'est PAS marqué comme déprécié.
   var catalog = await getMergedCatalog(apiKey);
-  var allowed = catalog.some(function(m) { return m.id === model; });
-  if (!allowed) {
+  var modelInfo = catalog.find(function(m) { return m.id === model; });
+  if (!modelInfo) {
     return jsonResp(400, {
       error:   'MODEL_NOT_ALLOWED',
       model:   model,
       allowed: catalog.map(function(m) { return m.id; }),
+    });
+  }
+  if (modelInfo.deprecated) {
+    return jsonResp(410, {
+      error:   'MODEL_DEPRECATED',
+      model:   model,
+      message: 'Le modèle ' + model + ' n\'est plus disponible. Veuillez utiliser un autre modèle.',
+      suggestion: catalog.find(function(m) { return m.default; })?.id || 'meta/llama-3.3-70b-instruct',
     });
   }
 
@@ -190,14 +203,19 @@ export async function onRequest(context) {
     });
   }
 
-  // Erreur upstream → relayer le body pour debug
+  // Erreur upstream → relayer le body pour debug, avec message clair pour 410
   if (!upstream.ok) {
     var errText = '';
     try { errText = await upstream.text(); } catch (e) {}
+    var errBody = errText.substring(0, 1000);
+    var message = 'UPSTREAM_ERROR';
+    if (upstream.status === 410) {
+      message = 'MODEL_DEPRECATED: Le modèle ' + model + ' n\'est plus disponible sur NVIDIA NIM (HTTP 410 Gone). Veuillez sélectionner un autre modèle (ex: meta/llama-3.3-70b-instruct).';
+    }
     return jsonResp(upstream.status, {
-      error:   'UPSTREAM_ERROR',
+      error:   message,
       status:  upstream.status,
-      body:    errText.substring(0, 1000),
+      body:    errBody,
     });
   }
 
