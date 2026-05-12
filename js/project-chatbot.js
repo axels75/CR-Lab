@@ -441,7 +441,7 @@ function customizeChatbotAvatar() {
   panel.innerHTML = `
     <div style="width:100%;font-size:.75rem;font-weight:600;color:#64748B;margin-bottom:4px;padding:0 4px;">
       Choisis un avatar
-      <input type="text" id="floatingChatNameInput" placeholder="Nom personnalisé" style="width:100%;margin-top:6px;padding:4px 8px;border:1px solid #E2E8F0;border-radius:6px;font-size:.75rem;font-family:inherit" value="${esc(FLOATING_CHAT.name)}" />
+      <input type="text" id="floatingChatNameInput" placeholder="Nom personnalisé" style="width:100%;margin-top:6px;padding:4px 8px;border:1px solid #E2E8F0;border-radius:6px;font-size:.75rem;font-family:inherit" value="${(typeof esc === 'function' ? esc(FLOATING_CHAT.name) : FLOATING_CHAT.name.replace(/</g,'&lt;').replace(/>/g,'&gt;'))}" />
     </div>
     ${emojis.map(e => `<button class="floating-emoji-opt${FLOATING_CHAT.avatar===e?' selected':''}" style="font-size:24px;width:40px;height:40px;border-radius:8px;border:${FLOATING_CHAT.avatar===e?'2px solid #6366F1':'1px solid #E2E8F0'};background:${FLOATING_CHAT.avatar===e?'#EEF2FF':'#fff'};cursor:pointer;display:flex;align-items:center;justify-content:center">${e}</button>`).join('')}
   `;
@@ -621,7 +621,7 @@ function _createFloatingBubble(content) {
 }
 
 /* Initialisation au chargement */
-document.addEventListener('DOMContentLoaded', () => {
+function _initFloatingChat() {
   _applyFloatingChatAppearance();
 
   // Click bouton flottant → ouvrir/fermer
@@ -652,4 +652,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inp) inp.value = q;
     floatingChatSend();
   });
-});
+}
+
+// Le DOM est peut-être déjà prêt (scripts defer)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _initFloatingChat);
+} else {
+  _initFloatingChat();
+}

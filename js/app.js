@@ -1141,7 +1141,7 @@ async function showProjectCRs(pid) {
           ? `<span class="cr-folder-badge" title="Dossier : ${esc(folderName)}"><i class="fa-solid fa-folder"></i> ${esc(folderName)}</span>`
           : `<span class="cr-folder-badge cr-folder-badge--empty" title="Aucun dossier assigné"><i class="fa-solid fa-folder-open"></i> Sans dossier</span>`;
         return `
-        <div class="cr-card" data-crid="${cr.id}" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','${cr.id}');this.classList.add('cr-card--dragging')" ondragend="this.classList.remove('cr-card--dragging')">
+        <div class="cr-card" data-crid="${cr.id}" draggable="true">
           <div class="cr-card-icon" style="background:${project.color||'#002D72'}" onclick="openReport('${cr.id}','${pid}')">
             <i class="fa-solid fa-file-lines"></i>
           </div>
@@ -2867,6 +2867,31 @@ function _applyFolderFilter(projectId, folder) {
     card.style.display = (cardFolder === folder) ? '' : 'none';
   });
 }
+
+/* ─── Drag & drop global (délégué sur le conteneur CR) ─── */
+(function _initDragDrop() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _initDragDrop);
+    return;
+  }
+  const container = document.getElementById('crListContainer');
+  if (!container) return;
+
+  container.addEventListener('dragstart', (e) => {
+    const card = e.target.closest('.cr-card');
+    if (!card) return;
+    const crId = card.getAttribute('data-crid');
+    if (!crId) return;
+    e.dataTransfer.setData('text/plain', crId);
+    e.dataTransfer.effectAllowed = 'move';
+    card.classList.add('cr-card--dragging');
+  });
+
+  container.addEventListener('dragend', (e) => {
+    const card = e.target.closest('.cr-card');
+    if (card) card.classList.remove('cr-card--dragging');
+  });
+})();
 
 window.renderFolderFilterBar = renderFolderFilterBar;
 
