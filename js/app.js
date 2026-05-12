@@ -1198,12 +1198,35 @@ async function showProjectCRs(pid) {
   renderFolderFilterBar(pid);
   setUiLoading(false);
 
-  // Refresh asynchrone des données puis rerender
+  // Refresh asynchrone — ne re-rend QUE si les données ont changé
   try {
+    // Empreinte des CRs du projet avant refresh
+    const beforeFingerprint = STATE.reports
+      .filter(r => r.project_id === pid)
+      .map(r => r.id + '|' + (r.updated_at || 0) + '|' + (r.folder || ''))
+      .sort().join(',');
+
     await fetchReports();
     if (typeof fetchSharedReports === 'function') await fetchSharedReports();
-    _renderProjectCRList();
-    renderFolderFilterBar(pid);  // Réappliquer le filtre dossier actif après refresh
+
+    const afterFingerprint = STATE.reports
+      .filter(r => r.project_id === pid)
+      .map(r => r.id + '|' + (r.updated_at || 0) + '|' + (r.folder || ''))
+      .sort().join(',');
+
+    // Re-render uniquement si les données ont vraiment changé
+    if (afterFingerprint !== beforeFingerprint) {
+      const container = document.getElementById('crListContainer');
+      const scrollTop = container ? container.parentElement?.scrollTop || 0 : 0;
+      _renderProjectCRList();
+      renderFolderFilterBar(pid);
+      // Restaurer la position de scroll
+      if (container && container.parentElement) {
+        requestAnimationFrame(() => {
+          container.parentElement.scrollTop = scrollTop;
+        });
+      }
+    }
   } catch (e) { /* non bloquant */ }
   } catch(e) {
     console.error('[CR Master] showProjectCRs failed:', e);
@@ -1631,7 +1654,13 @@ async function saveCR(e) {
     if (typeof _REALTIME !== 'undefined') {
       _REALTIME.lastUpdatedAt = saved.updated_at || Date.now();
     }
-    await fetchReports();
+    // Mise à jour locale du STATE (sans refetch — évite le saut d'écran)
+    const localIdx = STATE.reports.findIndex(r => r.id === saved.id);
+    if (localIdx !== -1) {
+      STATE.reports[localIdx] = saved;
+    } else {
+      STATE.reports.push(saved);
+    }
     renderSidebar();
     renderDashboard();
     document.getElementById('exportBar').style.display = 'flex';
@@ -1808,7 +1837,8 @@ function confirmDeleteReport(crid, pid) {
 async function deleteReport(crid, pid) {
   try {
     await apiDelete('meeting_reports', crid);
-    await fetchReports();
+    // Mise à jour locale (sans refetch)
+    STATE.reports = STATE.reports.filter(r => r.id !== crid);
     renderSidebar();
     if (STATE.currentReportId === crid) {
       STATE.currentReportId = null;
@@ -1848,7 +1878,8 @@ async function duplicateReport(crid, pid) {
       keywords:            cr.keywords || '',
     };
     const saved = await apiPost('meeting_reports', payload);
-    await fetchReports();
+    // Mise à jour locale (sans refetch)
+    STATE.reports.push(saved);
     renderSidebar();
     showToast(`${t('cr_duplicated')} "${newName}"`, 'success');
     openReport(saved.id, pid);
