@@ -125,6 +125,8 @@ function _applyProjectLogo(project) {
   if (project && project.template_logo) {
     logo.src = project.template_logo;
     logo.style.filter = 'none';
+    // Synchroniser avec localStorage pour que loadLogo() le retrouve au refresh
+    try { localStorage.setItem('wv_logo', project.template_logo); localStorage.setItem('wv_logo_custom', '1'); } catch {}
   } else {
     logo.src = localStorage.getItem('wv_logo') || 'images/wavestone-logo.png';
     logo.style.filter = 'none';

@@ -19,7 +19,7 @@
    STATE IA
    ===================================================== */
 const AI = {
-  endpoint:       'api/ai/nim',
+  endpoint:       '/api/ai/nim',
   models:         [],               // catalogue chargé depuis GET /api/ai/nim
   defaultModel:   'meta/llama-3.3-70b-instruct',
   currentModel:   null,             // surchargé depuis localStorage

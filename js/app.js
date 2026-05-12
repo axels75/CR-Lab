@@ -350,9 +350,22 @@ function findParticipantProfile(name) {
    LOGO
    ===================================================== */
 async function loadLogo() {
-  const savedLogo   = localStorage.getItem('wv_logo');
   const sidebarLogo = document.getElementById('sidebarLogo');
   if (!sidebarLogo) return;
+
+  // Priorité 1 : logo du projet courant
+  if (STATE.currentProjectId && STATE.projects) {
+    const proj = STATE.projects.find(p => p.id === STATE.currentProjectId);
+    if (proj && proj.template_logo && proj.template_logo.startsWith('data:')) {
+      sidebarLogo.src = proj.template_logo;
+      sidebarLogo.style.filter = 'none';
+      sidebarLogo.style.mixBlendMode = 'normal';
+      return;
+    }
+  }
+
+  // Priorité 2 : logo global custom
+  const savedLogo = localStorage.getItem('wv_logo');
   sidebarLogo.src            = savedLogo || 'images/wavestone-logo.png';
   sidebarLogo.style.filter   = 'none';
   sidebarLogo.style.mixBlendMode = 'normal';
@@ -1666,8 +1679,10 @@ const AUTOSAVE = {
   timer:       null,
   inflight:    false,
   queued:      false,
-  debounceMs:  500,
+  debounceMs:  2000,
   bound:       false,
+  _lastPayload: null,
+  _lastPayloadAt: 0,
 };
 
 function cancelAutoSave() {
@@ -1704,7 +1719,17 @@ async function _runAutoSave() {
   AUTOSAVE.inflight = true;
 
   try {
-    const payload = _buildCRPayload();
+    // Réutiliser le payload précédent s'il a moins de 3s (évite les requêtes DOM lourdes)
+    const now = Date.now();
+    let payload;
+    if (AUTOSAVE._lastPayload && (now - AUTOSAVE._lastPayloadAt) < 3000) {
+      payload = { ...AUTOSAVE._lastPayload };
+    } else {
+      payload = _buildCRPayload();
+      AUTOSAVE._lastPayload = payload;
+      AUTOSAVE._lastPayloadAt = now;
+    }
+
     if (!payload._meta.mission_required || !STATE.currentReportId) {
       return;
     }
@@ -1720,15 +1745,16 @@ async function _runAutoSave() {
     const idx = STATE.reports.findIndex(r => r.id === saved.id);
     if (idx !== -1) STATE.reports[idx] = saved;
 
-    // Pas d'indicateur visuel — sauvegarde totalement transparente
+    // Invalider le cache après une sauvegarde réussie
+    AUTOSAVE._lastPayload = null;
+    AUTOSAVE._lastPayloadAt = 0;
   } catch (err) {
     console.warn('[AutoSave] erreur silencieuse :', err.message);
-    // Pas de feedback utilisateur — on réessaiera à la prochaine frappe
   } finally {
     AUTOSAVE.inflight = false;
     if (AUTOSAVE.queued) {
       AUTOSAVE.queued = false;
-      scheduleAutoSave(300);
+      scheduleAutoSave(500);
     }
   }
 }
