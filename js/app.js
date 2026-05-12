@@ -1141,7 +1141,7 @@ async function showProjectCRs(pid) {
           ? `<span class="cr-folder-badge" title="Dossier : ${esc(folderName)}"><i class="fa-solid fa-folder"></i> ${esc(folderName)}</span>`
           : `<span class="cr-folder-badge cr-folder-badge--empty" title="Aucun dossier assigné"><i class="fa-solid fa-folder-open"></i> Sans dossier</span>`;
         return `
-        <div class="cr-card">
+        <div class="cr-card" data-crid="${cr.id}" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','${cr.id}');this.classList.add('cr-card--dragging')" ondragend="this.classList.remove('cr-card--dragging')">
           <div class="cr-card-icon" style="background:${project.color||'#002D72'}" onclick="openReport('${cr.id}','${pid}')">
             <i class="fa-solid fa-file-lines"></i>
           </div>
@@ -2702,22 +2702,53 @@ function renderFolderFilterBar(projectId) {
     reports.map(r => (r.folder || '').trim()).filter(Boolean)
   )].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
 
-  if (folders.length === 0) {
-    bar.style.display = 'flex';
-    pills.innerHTML = `<span class="folder-filter-hint"><i class="fa-solid fa-folder-plus"></i> Ouvrez un CR et remplissez le champ "Dossier" pour organiser vos comptes-rendus (ex&nbsp;: Ateliers, COPIL, Entretiens…)</span>`;
-    return;
-  }
-
   // Lire le filtre actif depuis sessionStorage (par projet) ou 'all'
   const storageKey = `cr_folder_filter_${projectId}`;
   let activeFolder = sessionStorage.getItem(storageKey) || 'all';
   // Si le dossier actif n'existe plus, revenir à 'all'
   if (activeFolder !== 'all' && !folders.includes(activeFolder)) {
-    activeFolder = 'all';
-    sessionStorage.removeItem(storageKey);
+    activeFolder = sessionStorage.getItem(storageKey);
+    if (activeFolder && activeFolder !== 'all' && !folders.includes(activeFolder)) {
+      activeFolder = 'all';
+      sessionStorage.removeItem(storageKey);
+    }
   }
 
   bar.style.display = 'flex';
+
+  /* ── Helper : rafraîchir toute la vue projet après un changement de dossier ── */
+  const _refreshView = () => {
+    if (typeof showProjectCRs === 'function') showProjectCRs(projectId);
+  };
+
+  /* ── Drag & drop : déposer une carte CR sur un dossier ── */
+  const _setupDropTarget = (el, folderName) => {
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      el.classList.add('folder-pill--drop-active');
+    });
+    el.addEventListener('dragleave', () => {
+      el.classList.remove('folder-pill--drop-active');
+    });
+    el.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      el.classList.remove('folder-pill--drop-active');
+      const crId = e.dataTransfer.getData('text/plain');
+      if (!crId) return;
+      // Mettre à jour le dossier du CR
+      try {
+        await apiPatch('meeting_reports', crId, { folder: folderName, updated_at: Date.now() });
+        // Mettre à jour le cache local
+        const cr = STATE.reports.find(r => r.id === crId);
+        if (cr) cr.folder = folderName;
+        showToast('CR déplacé dans « ' + esc(folderName) + ' »', 'success');
+        _refreshView();
+      } catch (err) {
+        console.error('[Folder DnD]', err);
+        showToast('Erreur lors du déplacement', 'error');
+      }
+    });
+  };
 
   const renderPills = () => {
     const total = reports.length;
@@ -2741,9 +2772,10 @@ function renderFolderFilterBar(projectId) {
       const pill = document.createElement('button');
       pill.className = 'folder-pill' + (activeFolder === f ? ' active' : '');
       pill.innerHTML = `<i class="fa-solid fa-folder"></i> ${esc(f)} <span class="folder-pill-count">${count}</span>`;
+      pill.setAttribute('data-folder', f);
+      _setupDropTarget(pill, f);
       pill.addEventListener('click', () => {
         if (activeFolder === f) {
-          // Déjà actif → désélectionner
           activeFolder = 'all';
           sessionStorage.removeItem(storageKey);
           _applyFolderFilter(projectId, null);
@@ -2756,6 +2788,57 @@ function renderFolderFilterBar(projectId) {
       });
       pills.appendChild(pill);
     });
+
+    /* ── Bouton "+" pour créer un nouveau dossier ── */
+    const addBtn = document.createElement('button');
+    addBtn.className = 'folder-pill folder-pill--add';
+    addBtn.title = 'Créer un nouveau dossier';
+    addBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Nouveau dossier';
+    addBtn.addEventListener('click', () => {
+      // Remplacer le bouton par un input inline
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'folder-pill-input';
+      input.placeholder = 'Nom du dossier…';
+      input.style.cssText = 'padding:5px 11px;border-radius:99px;font-size:.78rem;border:2px solid var(--primary);outline:none;width:150px;font-family:inherit;';
+      
+      const commit = () => {
+        const name = input.value.trim();
+        input.remove();
+        addBtn.style.display = '';
+        if (!name) return;
+        // Le dossier existe déjà ? on bascule dessus
+        if (folders.includes(name)) {
+          activeFolder = name;
+          sessionStorage.setItem(storageKey, name);
+          renderPills();
+          _applyFolderFilter(projectId, name);
+          return;
+        }
+        // Nouveau dossier : il sera effectif dès qu'un CR y sera déplacé
+        // On l'ajoute aux folders locaux et on active le filtre
+        folders.push(name);
+        folders.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+        activeFolder = name;
+        sessionStorage.setItem(storageKey, name);
+        renderPills();
+        _applyFolderFilter(projectId, name);
+        showToast('Dossier « ' + esc(name) + ' » créé. Faites glisser des CRs dedans !', 'info');
+      };
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); commit(); }
+        if (e.key === 'Escape') { input.remove(); addBtn.style.display = ''; }
+      });
+      input.addEventListener('blur', () => setTimeout(() => {
+        if (document.body.contains(input)) commit();
+      }, 150));
+
+      addBtn.style.display = 'none';
+      addBtn.parentNode.insertBefore(input, addBtn);
+      input.focus();
+    });
+    pills.appendChild(addBtn);
   };
 
   renderPills();
@@ -2777,9 +2860,9 @@ function _applyFolderFilter(projectId, folder) {
       card.style.display = '';
       return;
     }
-    const crid = (card.querySelector('[onclick*="openReport"]')?.getAttribute('onclick')?.match(/openReport\('([^']+)'/) || [])[1];
-    if (!crid) { card.style.display = ''; return; }
-    const cr = STATE.reports.find(r => r.id === crid);
+    const crId = card.getAttribute('data-crid');
+    if (!crId) { card.style.display = ''; return; }
+    const cr = STATE.reports.find(r => r.id === crId);
     const cardFolder = (cr?.folder || '').trim();
     card.style.display = (cardFolder === folder) ? '' : 'none';
   });

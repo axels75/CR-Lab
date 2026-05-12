@@ -6883,6 +6883,96 @@ body.ui-loading {
   color: var(--gray-500);
 }
 
+/* ═══════════════════════════════════════════════════
+   FOLDER PILL — NEW FOLDER BUTTON + INPUT
+   ═══════════════════════════════════════════════════ */
+.folder-pill--add {
+  border: 1px dashed var(--gray-300) !important;
+  background: transparent !important;
+  color: var(--primary) !important;
+  font-weight: 600;
+}
+
+.folder-pill--add:hover {
+  background: var(--primary) !important;
+  color: #fff !important;
+  border-color: var(--primary) !important;
+}
+
+.folder-pill-input {
+  padding: 5px 11px;
+  border-radius: 99px;
+  font-size: .78rem;
+  font-weight: 500;
+  border: 2px solid var(--primary);
+  outline: none;
+  width: 150px;
+  font-family: inherit;
+  background: #fff;
+}
+
+.dark-mode .folder-pill-input {
+  background: #1E293B;
+  color: #E2E8F0;
+}
+
+/* ═══════════════════════════════════════════════════
+   DRAG & DROP — CR CARDS + FOLDER DROP TARGETS
+   ═══════════════════════════════════════════════════ */
+.cr-card {
+  cursor: grab;
+  transition: opacity .2s, box-shadow .2s, transform .15s;
+}
+
+.cr-card:active { cursor: grabbing; }
+
+.cr-card--dragging {
+  opacity: .5;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  transform: scale(1.02);
+}
+
+.folder-pill--drop-active {
+  background: var(--primary) !important;
+  color: #fff !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px rgba(0,45,114,.2);
+  transform: scale(1.08);
+  transition: all .15s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   FOLDER FIELD — DANS LE FORMULAIRE CR (plus visible)
+   ═══════════════════════════════════════════════════ */
+#fieldFolder {
+  border: 2px solid #C7D2FE;
+  background: #EEF2FF;
+  color: #4338CA;
+  font-weight: 600;
+  transition: all .2s;
+}
+
+#fieldFolder:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+  background: #fff;
+}
+
+#fieldFolder::placeholder {
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+.dark-mode #fieldFolder {
+  background: rgba(99,102,241,.12);
+  border-color: rgba(165,180,252,.3);
+  color: #A5B4FC;
+}
+
+.dark-mode #fieldFolder:focus {
+  background: rgba(99,102,241,.18);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .folder-filter-bar {
