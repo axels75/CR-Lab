@@ -2786,10 +2786,6 @@ function renderFolderFilterBar(projectId) {
   bar.style.display = 'flex';
 
   /* ── Helper : rafraîchir toute la vue projet après un changement de dossier ── */
-  const _refreshView = () => {
-    if (typeof showProjectCRs === 'function') showProjectCRs(projectId);
-  };
-
   /* ── Drag & drop : déposer une carte CR sur un dossier ── */
   const _setupDropTarget = (el, folderName) => {
     el.addEventListener('dragover', (e) => {
@@ -2804,15 +2800,41 @@ function renderFolderFilterBar(projectId) {
       el.classList.remove('folder-pill--drop-active');
       const crId = e.dataTransfer.getData('text/plain');
       if (!crId) return;
-      // Mettre à jour le dossier du CR
+      // Mise à jour du dossier du CR — léger, sans rebuild complet
       try {
-        await apiPatch('meeting_reports', crId, { folder: folderName, updated_at: Date.now() });
-        // Mettre à jour le cache local
+        // Sauvegarder l'ancien dossier pour rollback éventuel
         const cr = STATE.reports.find(r => r.id === crId);
+        const prevFolder = cr?.folder || '';
+        if (cr) cr._prevFolder = prevFolder;
+
+        // API en arrière-plan (non bloquant pour l'UI)
+        const apiPromise = apiPatch('meeting_reports', crId, { folder: folderName, updated_at: Date.now() });
+
+        // Mise à jour immédiate du cache local + DOM (optimiste)
         if (cr) cr.folder = folderName;
+
+        // Mettre à jour le badge dossier sur la carte CR concernée
+        const crCard = document.querySelector(`.cr-card[data-crid="${crId}"]`);
+        if (crCard) {
+          const badge = crCard.querySelector('.cr-folder-badge');
+          if (badge) {
+            badge.className = 'cr-folder-badge';
+            badge.title = 'Dossier : ' + folderName;
+            badge.innerHTML = `<i class="fa-solid fa-folder"></i> ${esc(folderName)}`;
+          }
+        }
+
+        // Re-render les pills (compteurs mis à jour)
+        renderPills();
+        // Ré-appliquer le filtre actif si nécessaire
+        if (activeFolder !== 'all') _applyFolderFilter(projectId, activeFolder);
+
+        await apiPromise;
         showToast('CR déplacé dans « ' + esc(folderName) + ' »', 'success');
-        _refreshView();
       } catch (err) {
+        // Rollback local en cas d'échec
+        const cr = STATE.reports.find(r => r.id === crId);
+        if (cr) cr.folder = cr._prevFolder || '';
         console.error('[Folder DnD]', err);
         showToast('Erreur lors du déplacement', 'error');
       }

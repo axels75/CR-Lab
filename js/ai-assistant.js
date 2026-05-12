@@ -82,17 +82,24 @@ async function aiInit() {
    ===================================================== */
 /**
  * Appelle /api/ai/nim avec une liste de messages OpenAI-style.
+ * Accepte deux formats :
+ *   - { system, user } → construit [{role:'system'}, {role:'user'}]
+ *   - { messages }   → utilise le tableau tel quel (pour historique)
  * Retourne la string de sortie (non-streaming).
  */
-async function aiCall({ system, user, model, temperature = 0.4, max_tokens = 1024 }) {
+async function aiCall({ system, user, messages: msgs, model, temperature = 0.4, max_tokens = 1024 }) {
   if (AI._running) {
     throw new Error('AI_BUSY');
   }
   AI._running = true;
   try {
-    const messages = [];
-    if (system) messages.push({ role: 'system', content: system });
-    messages.push({ role: 'user', content: user });
+    const messages = Array.isArray(msgs) && msgs.length > 0
+      ? msgs
+      : [];
+    if (messages.length === 0) {
+      if (system) messages.push({ role: 'system', content: system });
+      messages.push({ role: 'user', content: user });
+    }
 
     const r = await fetch(AI.endpoint, {
       method:  'POST',
@@ -122,6 +129,10 @@ async function aiCall({ system, user, model, temperature = 0.4, max_tokens = 102
         renderAiModelSelect();
         // Relancer l'appel avec le nouveau modèle
         AI._running = false;
+        // Relancer avec le bon format (system/user ou messages)
+        if (Array.isArray(msgs) && msgs.length > 0) {
+          return aiCall({ messages: msgs, model: fallback, temperature, max_tokens });
+        }
         return aiCall({
           system, user,
           model: fallback,
@@ -143,15 +154,22 @@ async function aiCall({ system, user, model, temperature = 0.4, max_tokens = 102
 
 /**
  * Appel streaming SSE. Appelle onChunk(partialText) au fil de l'eau.
+ * Accepte deux formats :
+ *   - { system, user } → construit [{role:'system'}, {role:'user'}]
+ *   - { messages }   → utilise le tableau tel quel (pour historique)
  * Retourne la string finale.
  */
-async function aiCallStream({ system, user, model, temperature = 0.4, max_tokens = 1024, onChunk }) {
+async function aiCallStream({ system, user, messages: msgs, model, temperature = 0.4, max_tokens = 1024, onChunk }) {
   if (AI._running) throw new Error('AI_BUSY');
   AI._running = true;
   try {
-    const messages = [];
-    if (system) messages.push({ role: 'system', content: system });
-    messages.push({ role: 'user', content: user });
+    const messages = Array.isArray(msgs) && msgs.length > 0
+      ? msgs
+      : [];
+    if (messages.length === 0) {
+      if (system) messages.push({ role: 'system', content: system });
+      messages.push({ role: 'user', content: user });
+    }
 
     const r = await fetch(AI.endpoint, {
       method:  'POST',
@@ -180,6 +198,10 @@ async function aiCallStream({ system, user, model, temperature = 0.4, max_tokens
         try { localStorage.setItem('wv_ai_model', fallback); } catch {}
         renderAiModelSelect();
         AI._running = false;
+        // Relancer avec le bon format (system/user ou messages)
+        if (Array.isArray(msgs) && msgs.length > 0) {
+          return aiCallStream({ messages: msgs, model: fallback, temperature, max_tokens, onChunk });
+        }
         return aiCallStream({
           system, user,
           model: fallback,
