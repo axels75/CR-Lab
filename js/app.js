@@ -101,29 +101,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSidebar();
     showView('viewDashboard');
 
-    // fetchProjects doit finir avant fetchReports (fetchReports filtre sur STATE.projects)
+    // Batch 1 : projets + profil utilisateur (parallel) — affichage immédiat après
     await Promise.allSettled([fetchProjects(), fetchUserProfile()]);
-    await fetchReports();
-    // Charger les projets/CRs partagés via co-édition AVANT les profils de participants
-    // (pour que fetchParticipantProfiles puisse inclure les profils des projets partagés)
-    if (typeof fetchSharedProjects === 'function') {
-      // fetchSharedProjects DOIT finir avant fetchSharedReports
-      // (fetchSharedReports lit STATE.projects pour trouver les projets _shared)
-      await fetchSharedProjects();
-      await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
-    }
-    // Les profils sont chargés après, afin d'inclure ceux des projets partagés
-    await fetchParticipantProfiles();
-    // Re-render après chargement des données
     renderSidebar();
     renderDashboard();
+
+    // Batch 2 : CRs (doit attendre projets pour filtrer) — mise à jour de l'UI
+    await fetchReports();
+    renderSidebar();
+    renderDashboard();
+
+    // Batch 3-5 : shared + profils participants en arrière-plan (ne bloquent pas l'UI)
+    (async () => {
+      try {
+        if (typeof fetchSharedProjects === 'function') {
+          await fetchSharedProjects();
+          await Promise.allSettled([fetchSharedReports(), fetchProjectMembers()]);
+          renderSidebar();
+          renderDashboard();
+        }
+        await fetchParticipantProfiles();
+      } catch (e) {
+        console.debug('[CR Master] background fetch:', e.message);
+      }
+    })();
+
     bindEvents();
     initQuill();
     updateUserWidget();
     if (typeof initSettingsModal === 'function') initSettingsModal();
-    // Mise à jour badge invitations
     if (typeof updateInvitationsBadge === 'function') updateInvitationsBadge();
-    // Vérifier si l'URL contient un lien d'invitation
     if (typeof checkInviteLinkOnLoad === 'function') checkInviteLinkOnLoad();
     clearTimeout(failsafeTimer);
   } catch(err) {
