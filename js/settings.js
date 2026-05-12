@@ -125,11 +125,15 @@ function _applyProjectLogo(project) {
   if (project && project.template_logo) {
     logo.src = project.template_logo;
     logo.style.filter = 'none';
-    // Synchroniser avec localStorage pour que loadLogo() le retrouve au refresh
-    try { localStorage.setItem('wv_logo', project.template_logo); localStorage.setItem('wv_logo_custom', '1'); } catch {}
+    // ⚠️ On ne sauvegarde PAS le logo projet dans wv_logo (global).
+    // On le garde dans wv_logo_project pour ne pas écraser le logo
+    // personnalisé par l'utilisateur.
+    try { localStorage.setItem('wv_logo_project', project.template_logo); } catch {}
   } else {
+    // Revenir au logo global ou au défaut Wavestone
     logo.src = localStorage.getItem('wv_logo') || 'images/wavestone-logo.png';
     logo.style.filter = 'none';
+    try { localStorage.removeItem('wv_logo_project'); } catch {}
   }
 }
 

@@ -493,6 +493,22 @@ function _updateFloatingChatModel() {
   const modelId = (window.AI?.currentModel) || (window.AI?.defaultModel) || '—';
   const shortName = modelId.split('/').pop() || modelId;
   el.textContent = shortName;
+
+  // Synchroniser l'avatar avec le logo personnalisé (wv_logo)
+  const avatarEl = document.getElementById('floatingChatAvatar');
+  if (avatarEl) {
+    const customLogo = localStorage.getItem('wv_logo');
+    if (customLogo && customLogo.startsWith('data:image')) {
+      // Logo image uploadé → l'afficher dans l'avatar du chatbot
+      avatarEl.innerHTML = `<img src="${customLogo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Logo" />`;
+      avatarEl.style.background = 'transparent';
+    } else {
+      // Sinon, garder l'emoji avatar
+      avatarEl.innerHTML = '';
+      avatarEl.textContent = FLOATING_CHAT.avatar;
+      avatarEl.style.background = '';
+    }
+  }
 }
 
 /* Envoyer un message dans le chatbot flottant */
@@ -515,11 +531,11 @@ async function floatingChatSend() {
   _addFloatingMessage('user', question);
   FLOATING_CHAT.history.push({ role: 'user', content: question });
 
-  // Construire le contexte
+  // Construire le contexte (données projets/CRs pour le system prompt)
   const projects = (window.STATE?.projects || []).filter(p => !p._shared);
   const reports  = (window.STATE?.reports  || []).filter(r => r.user_id === (window.STATE?.userId || ''));
   
-  let context = `Tu es un assistant pour l'application "CR Master". Réponds de façon concise et utile en français.\n\n`;
+  let context = `Tu es un assistant pour l'application "CR Master". Réponds de façon concise et utile en français.\n`;
   context += `Contexte utilisateur :\n`;
   context += `- Nombre de projets : ${projects.length}\n`;
   context += `- Nombre de CRs : ${reports.length}\n`;
@@ -540,10 +556,8 @@ async function floatingChatSend() {
     });
   }
 
-  context += `\nQuestion de l'utilisateur : ${question}\n\nRéponse :`;
-
   try {
-    const model = window.AI.currentModel || window.AI.defaultModel;
+    const model = window.AI?.currentModel || window.AI?.defaultModel;
     const msgs = document.getElementById('floatingChatMessages');
     
     // Bulle assistant avec typing
@@ -554,12 +568,15 @@ async function floatingChatSend() {
     msgs.appendChild(asstDiv);
     msgs.scrollTop = msgs.scrollHeight;
 
+    // Appeler aiCallStream avec le format messages (system + historique)
     const full = await (window.aiCallStream || aiCallStream)({
       model,
       messages: [
         { role: 'system', content: context },
-        ...FLOATING_CHAT.history.slice(-6)
+        ...FLOATING_CHAT.history.slice(-8)
       ],
+      temperature: 0.5,
+      max_tokens: 1500,
       onChunk: (partial) => {
         asstDiv.innerHTML = '';
         const bubble = _createFloatingBubble(partial);

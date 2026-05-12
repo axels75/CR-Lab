@@ -364,9 +364,26 @@ async function loadLogo() {
     }
   }
 
-  // Priorité 2 : logo global custom
+  // Priorité 2 : logo projet sauvegardé (wv_logo_project)
+  const projectLogo = localStorage.getItem('wv_logo_project');
+  if (projectLogo && projectLogo.startsWith('data:')) {
+    sidebarLogo.src = projectLogo;
+    sidebarLogo.style.filter = 'none';
+    sidebarLogo.style.mixBlendMode = 'normal';
+    return;
+  }
+
+  // Priorité 3 : logo global custom (wv_logo)
   const savedLogo = localStorage.getItem('wv_logo');
-  sidebarLogo.src            = savedLogo || 'images/wavestone-logo.png';
+  if (savedLogo && savedLogo.startsWith('data:')) {
+    sidebarLogo.src = savedLogo;
+    sidebarLogo.style.filter = 'none';
+    sidebarLogo.style.mixBlendMode = 'normal';
+    return;
+  }
+
+  // Priorité 4 : logo Wavestone par défaut
+  sidebarLogo.src            = 'images/wavestone-logo.png';
   sidebarLogo.style.filter   = 'none';
   sidebarLogo.style.mixBlendMode = 'normal';
 }
